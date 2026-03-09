@@ -275,12 +275,19 @@ Optional but recommended: write `tests.py` in each app with view tests (status c
 
 ## What's Coming in Phase 3
 
+- Add agency dashboard view for staff, and editing capability. similar to model view.
+- Add phone number field to model profile, add contact information and applicant profile picture in applicant detail view.
+- Add ability to switch from model to agency and vice versa.
+- Add ability to delete model/agency
+- Add contacting capability to applicant detail view page (email)
+- Add ability for model agency to provide feedback to applicants (free text field in application model, visible to model in dashboard)
 - Polish and UX refinement (animations, loading states, empty states, error pages)
 - Profile completeness indicator logic
 - Email notifications (application submitted, status changed)
-- About / transparency static pages
-- SEO: meta tags, Open Graph, structured data
 - Image optimization (thumbnails, compression, lazy loading)
+
+## Future Improvements
+- Resources section fleshing out
 - Production deployment prep (whitenoise, S3 storage, `production.py` settings)
 - Security hardening (rate limiting, CSRF review, input sanitization audit)
 - Performance (query optimization, select_related/prefetch_related audit, caching)
