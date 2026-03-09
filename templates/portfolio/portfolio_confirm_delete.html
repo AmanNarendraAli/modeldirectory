@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Delete Post — The Modelling Directory{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto px-4 py-20 text-center">
+    <div class="bg-white rounded-2xl border border-stone-200 shadow-sm p-8">
+        <h1 class="font-display text-2xl font-bold text-stone-900 mb-2">Delete this post?</h1>
+        <p class="text-stone-500 text-sm mb-6">
+            "<strong>{{ post.title }}</strong>" will be permanently deleted, including all images.
+        </p>
+        <form method="post" class="flex gap-3 justify-center">
+            {% csrf_token %}
+            <a href="{% url 'portfolio-detail' post.slug %}"
+                class="border border-stone-300 text-stone-700 text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-stone-50 transition-colors">Cancel</a>
+            <button type="submit"
+                class="bg-red-600 text-white text-sm font-semibold px-5 py-2.5 rounded-lg hover:bg-red-700 transition-colors">Delete</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Apply to {{ agency.name }} — The Modelling Directory{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <a href="{% url 'agency-detail' agency.slug %}"
+        class="text-sm text-stone-500 hover:text-stone-800 mb-6 inline-block">← {{ agency.name }}</a>
+
+    <h1 class="font-display text-3xl font-bold text-stone-900 mb-2">Apply to {{ agency.name }}</h1>
+    <p class="text-stone-500 text-sm mb-8">Your profile information will be submitted along with your cover note.</p>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <!-- Form -->
+        <div class="lg:col-span-2">
+            <form method="post" novalidate class="space-y-6">
+                {% csrf_token %}
+
+                <!-- Profile summary (read-only) -->
+                <div class="bg-stone-50 rounded-xl border border-stone-200 p-5">
+                    <h2 class="font-semibold text-stone-900 text-sm mb-4">Your Profile Details</h2>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div><span class="text-stone-400 text-xs block">Name</span>{{ profile.public_display_name }}
+                        </div>
+                        <div><span class="text-stone-400 text-xs block">City</span>{{ profile.city|default:"—" }}</div>
+                        {% if profile.height_cm %}<div><span class="text-stone-400 text-xs block">Height</span>{{
+                            profile.height_cm }} cm</div>{% endif %}
+                        {% if profile.gender %}<div><span class="text-stone-400 text-xs block">Gender</span>{{
+                            profile.get_gender_display }}</div>{% endif %}
+                    </div>
+                    <a href="{% url 'dashboard' %}#edit-profile"
+                        class="text-xs text-stone-500 hover:text-stone-800 mt-3 inline-block">Edit your profile →</a>
+                </div>
+
+                <!-- Cover note -->
+                <div class="bg-white rounded-xl border border-stone-200 p-5">
+                    <h2 class="font-semibold text-stone-900 text-sm mb-3">{{ form.cover_note.label }}</h2>
+                    {{ form.cover_note }}
+                    {% if form.cover_note.errors %}
+                    <p class="text-red-600 text-xs mt-1">{{ form.cover_note.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+
+                {% if recent_posts %}
+                <!-- Portfolio preview -->
+                <div class="bg-white rounded-xl border border-stone-200 p-5">
+                    <h2 class="font-semibold text-stone-900 text-sm mb-3">Portfolio included</h2>
+                    <div class="grid grid-cols-3 gap-2">
+                        {% for post in recent_posts %}
+                        <div class="aspect-square rounded-lg overflow-hidden bg-stone-100">
+                            {% if post.cover_image %}
+                            <img src="{{ post.cover_image.url }}" alt="{{ post.title }}"
+                                class="w-full h-full object-cover">
+                            {% else %}
+                            <div class="w-full h-full flex items-center justify-center">
+                                <span class="text-xs text-stone-400 text-center px-1">{{ post.title }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <p class="text-xs text-stone-400 mt-2">Your {{ recent_posts|length }} most recent public posts will
+                        be included.</p>
+                </div>
+                {% endif %}
+
+                <div class="flex gap-3 justify-end">
+                    <a href="{% url 'agency-detail' agency.slug %}"
+                        class="border border-stone-300 text-stone-600 text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-stone-50 transition-colors">Cancel</a>
+                    <button type="submit"
+                        class="bg-stone-900 text-white font-semibold px-6 py-2.5 rounded-lg hover:bg-stone-700 transition-colors">
+                        Submit Application
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sidebar agency info -->
+        <div>
+            <div class="bg-white border border-stone-200 rounded-xl p-5 sticky top-24">
+                {% if agency.logo %}
+                <img src="{{ agency.logo.url }}" alt="" class="w-12 h-12 rounded-lg object-cover mb-3">
+                {% endif %}
+                <h2 class="font-semibold text-stone-900">{{ agency.name }}</h2>
+                {% if agency.city %}<p class="text-xs text-stone-400 mt-0.5">{{ agency.city }}</p>{% endif %}
+                {% if agency.short_tagline %}<p class="text-stone-500 text-sm mt-2">{{ agency.short_tagline }}</p>{%
+                endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

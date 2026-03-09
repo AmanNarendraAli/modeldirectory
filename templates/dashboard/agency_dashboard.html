@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Agency Dashboard — {{ agency.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="mb-8">
+        <h1 class="font-display text-3xl font-bold text-stone-900">{{ agency.name }}</h1>
+        <p class="text-stone-500 text-sm mt-1">Applications Inbox</p>
+    </div>
+
+    <!-- Filters -->
+    <form method="get" class="flex flex-wrap gap-3 mb-6 items-end">
+        <div>
+            <label class="block text-xs font-medium text-stone-600 mb-1">Status</label>
+            <select name="status"
+                class="border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+                <option value="">All Statuses</option>
+                {% for val, label in status_choices %}
+                <option value="{{ val }}" {% if val==status_filter %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-stone-600 mb-1">City</label>
+            <input type="text" name="city" value="{{ city_filter }}" placeholder="Filter by city…"
+                class="border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400 w-40">
+        </div>
+        <button type="submit"
+            class="bg-stone-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-stone-700 transition-colors">Filter</button>
+        {% if status_filter or city_filter %}
+        <a href="{% url 'dashboard' %}" class="text-sm text-stone-500 hover:text-stone-800 py-2">Clear</a>
+        {% endif %}
+    </form>
+
+    <!-- Applications table -->
+    <div class="bg-white rounded-xl border border-stone-200 overflow-hidden">
+        {% if applications %}
+        <table class="w-full text-sm">
+            <thead class="bg-stone-50 border-b border-stone-200">
+                <tr>
+                    <th class="text-left py-3 px-4 font-medium text-stone-600">Applicant</th>
+                    <th class="text-left py-3 px-4 font-medium text-stone-600 hidden md:table-cell">City</th>
+                    <th class="text-left py-3 px-4 font-medium text-stone-600 hidden md:table-cell">Height</th>
+                    <th class="text-left py-3 px-4 font-medium text-stone-600">Status</th>
+                    <th class="text-left py-3 px-4 font-medium text-stone-600 hidden sm:table-cell">Submitted</th>
+                    <th class="py-3 px-4"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-stone-100">
+                {% for app in applications %}
+                <tr class="hover:bg-stone-50 transition-colors">
+                    <td class="py-3 px-4">
+                        <p class="font-medium text-stone-900">{{ app.applicant_profile.public_display_name }}</p>
+                        {% if app.applicant_profile.gender %}<p class="text-xs text-stone-400">{{
+                            app.applicant_profile.get_gender_display }}</p>{% endif %}
+                    </td>
+                    <td class="py-3 px-4 text-stone-500 hidden md:table-cell">{{ app.applicant_profile.city|default:"—"
+                        }}</td>
+                    <td class="py-3 px-4 text-stone-500 hidden md:table-cell">{{
+                        app.applicant_profile.height_cm|default:"—" }}{% if app.applicant_profile.height_cm %} cm{%
+                        endif %}</td>
+                    <td class="py-3 px-4">
+                        <span class="text-xs font-medium px-2.5 py-1 rounded-full
+                            {% if app.status == 'submitted' %}bg-blue-100 text-blue-700
+                            {% elif app.status == 'shortlisted' %}bg-emerald-100 text-emerald-700
+                            {% elif app.status == 'rejected' %}bg-red-100 text-red-600
+                            {% elif app.status == 'under_review' %}bg-amber-100 text-amber-700
+                            {% elif app.status == 'contacted' %}bg-purple-100 text-purple-700
+                            {% else %}bg-stone-100 text-stone-500{% endif %}">
+                            {{ app.get_status_display }}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 text-stone-400 text-xs hidden sm:table-cell">{{ app.submitted_at|date:"d M
+                        Y"|default:"—" }}</td>
+                    <td class="py-3 px-4 text-right">
+                        <a href="{% url 'applicant-detail' app.id %}"
+                            class="text-xs font-medium text-stone-600 hover:text-stone-900 border border-stone-200 px-3 py-1.5 rounded-lg hover:bg-stone-50 transition-colors">Review</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-16 text-stone-400">
+            <p>No applications yet{% if status_filter or city_filter %} matching your filters{% endif %}.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

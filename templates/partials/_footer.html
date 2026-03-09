@@ -1,0 +1,34 @@
+<footer class="bg-stone-900 text-stone-400 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div>
+                <span class="font-display text-white text-lg font-semibold">The Modelling Directory</span>
+                <p class="mt-2 text-sm leading-relaxed">Connecting models with agencies across India. Build your
+                    portfolio, discover opportunities.</p>
+            </div>
+            <div>
+                <h4 class="text-white text-sm font-semibold mb-3">Explore</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="{% url 'agency-list' %}" class="hover:text-white transition-colors">Agencies</a></li>
+                    <li><a href="{% url 'model-list' %}" class="hover:text-white transition-colors">Models</a></li>
+                    <li><a href="{% url 'resource-list' %}" class="hover:text-white transition-colors">Resources</a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white text-sm font-semibold mb-3">Account</h4>
+                <ul class="space-y-2 text-sm">
+                    {% if user.is_authenticated %}
+                    <li><a href="{% url 'dashboard' %}" class="hover:text-white transition-colors">Dashboard</a></li>
+                    {% else %}
+                    <li><a href="{% url 'signup' %}" class="hover:text-white transition-colors">Sign Up</a></li>
+                    <li><a href="{% url 'login' %}" class="hover:text-white transition-colors">Login</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+        <div class="border-t border-stone-800 mt-8 pt-6 text-xs text-center">
+            © 2025 The Modelling Directory. All rights reserved.
+        </div>
+    </div>
+</footer>

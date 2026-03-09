@@ -5,9 +5,34 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+
+    # Auth (Django built-in: login, logout, password reset, etc.)
     path("accounts/", include("django.contrib.auth.urls")),
     path("accounts/", include("apps.accounts.urls")),
+
+    # Core (landing page)
     path("", include("apps.core.urls")),
+
+    # Agencies
+    path("agencies/", include("apps.agencies.urls")),
+
+    # Models
+    path("models/", include("apps.models_app.urls")),
+
+    # Portfolio
+    path("portfolio/", include("apps.portfolio.urls")),
+
+    # Applications
+    path("agencies/", include("apps.applications.urls")),
+
+    # Discovery toggles (save/follow)
+    path("", include("apps.discovery.urls")),
+
+    # Dashboard (model + agency, role-routed)
+    path("dashboard/", include("apps.dashboard.urls")),
+
+    # Resources / transparency
+    path("resources/", include("apps.resources.urls")),
 ]
 
 if settings.DEBUG:

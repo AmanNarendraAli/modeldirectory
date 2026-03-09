@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}{{ application.applicant_profile.public_display_name }} — Application Review{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <a href="{% url 'dashboard' %}" class="text-sm text-stone-500 hover:text-stone-800 mb-6 inline-block">← Inbox</a>
+
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="font-display text-2xl font-bold text-stone-900">{{ application.applicant_profile.public_display_name
+            }}</h1>
+        <span class="text-xs font-medium px-3 py-1 rounded-full
+            {% if application.status == 'submitted' %}bg-blue-100 text-blue-700
+            {% elif application.status == 'shortlisted' %}bg-emerald-100 text-emerald-700
+            {% elif application.status == 'rejected' %}bg-red-100 text-red-600
+            {% elif application.status == 'under_review' %}bg-amber-100 text-amber-700
+            {% elif application.status == 'contacted' %}bg-purple-100 text-purple-700
+            {% else %}bg-stone-100 text-stone-500{% endif %}">
+            {{ application.get_status_display }}
+        </span>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <!-- Main info -->
+        <div class="lg:col-span-2 space-y-6">
+
+            <!-- Snapshot / profile -->
+            <div class="bg-white rounded-xl border border-stone-200 p-6">
+                <h2 class="font-semibold text-stone-900 mb-4">Applicant Details</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+                    {% if snapshot %}
+                    <div><span class="text-stone-400 text-xs block">Name</span>{{ snapshot.applicant_name }}</div>
+                    <div><span class="text-stone-400 text-xs block">City</span>{{ snapshot.city|default:"—" }}</div>
+                    {% if snapshot.height_cm %}<div><span class="text-stone-400 text-xs block">Height</span>{{
+                        snapshot.height_cm }} cm</div>{% endif %}
+                    {% if snapshot.bust_cm %}<div><span class="text-stone-400 text-xs block">Bust</span>{{
+                        snapshot.bust_cm }} cm</div>{% endif %}
+                    {% if snapshot.waist_cm %}<div><span class="text-stone-400 text-xs block">Waist</span>{{
+                        snapshot.waist_cm }} cm</div>{% endif %}
+                    {% if snapshot.hips_cm %}<div><span class="text-stone-400 text-xs block">Hips</span>{{
+                        snapshot.hips_cm }} cm</div>{% endif %}
+                    {% else %}
+                    <div class="col-span-3 text-stone-400 text-sm">No snapshot available.</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Cover note -->
+            {% if application.cover_note %}
+            <div class="bg-white rounded-xl border border-stone-200 p-6">
+                <h2 class="font-semibold text-stone-900 mb-3">Cover Note</h2>
+                <p class="text-stone-600 text-sm leading-relaxed whitespace-pre-line">{{ application.cover_note }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Portfolio -->
+            {% if portfolio_posts %}
+            <div class="bg-white rounded-xl border border-stone-200 p-6">
+                <h2 class="font-semibold text-stone-900 mb-4">Portfolio</h2>
+                <div class="grid grid-cols-3 gap-3">
+                    {% for post in portfolio_posts %}
+                    <a href="{% url 'portfolio-detail' post.slug %}" target="_blank"
+                        class="aspect-square rounded-lg overflow-hidden bg-stone-100 block group">
+                        {% if post.cover_image %}
+                        <img src="{{ post.cover_image.url }}" alt="{{ post.title }}"
+                            class="w-full h-full object-cover group-hover:opacity-90">
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center">
+                            <span class="text-xs text-stone-400 text-center px-1">{{ post.title }}</span>
+                        </div>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+        <!-- Sidebar: actions -->
+        <div>
+            <div class="bg-white border border-stone-200 rounded-xl p-5 sticky top-24">
+                <h3 class="font-semibold text-stone-900 text-sm mb-4">Update Status</h3>
+                <form method="post" action="{% url 'update-application-status' application.id %}">
+                    {% csrf_token %}
+                    <select name="status"
+                        class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400 mb-3">
+                        {% for val, label in status_choices %}
+                        <option value="{{ val }}" {% if val==application.status %}selected{% endif %}>{{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit"
+                        class="w-full bg-stone-900 text-white text-sm font-medium py-2.5 rounded-lg hover:bg-stone-700 transition-colors">
+                        Update Status
+                    </button>
+                </form>
+
+                <div class="mt-4 pt-4 border-t border-stone-100 text-xs text-stone-400 space-y-1">
+                    <p>Submitted: {{ application.submitted_at|date:"d M Y"|default:"—" }}</p>
+                    {% if application.reviewed_at %}<p>Last reviewed: {{ application.reviewed_at|date:"d M Y" }}</p>{%
+                    endif %}
+                    {% if application.reviewed_by %}<p>By: {{ application.reviewed_by.full_name }}</p>{% endif %}
+                </div>
+
+                <div class="mt-4">
+                    <a href="{% url 'model-detail' application.applicant_profile.slug %}" target="_blank"
+                        class="block text-center text-xs text-stone-600 hover:text-stone-900 border border-stone-200 py-2 rounded-lg hover:bg-stone-50 transition-colors">
+                        View Public Profile →
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

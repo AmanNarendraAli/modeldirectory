@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Resources — The Modelling Directory{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="mb-10">
+        <h1 class="font-display text-4xl font-bold text-stone-900">Resources</h1>
+        <p class="text-stone-500 mt-2">Guides, tips, and transparency for the Indian modelling industry.</p>
+    </div>
+
+    {% if articles %}
+    <div class="space-y-6">
+        {% for article in articles %}
+        <a href="{% url 'resource-detail' article.slug %}"
+            class="group block bg-white rounded-xl border border-stone-200 overflow-hidden hover:shadow-md transition-shadow">
+            <div class="flex flex-col sm:flex-row">
+                {% if article.hero_image %}
+                <div class="sm:w-48 h-36 sm:h-auto flex-shrink-0 overflow-hidden">
+                    <img src="{{ article.hero_image.url }}" alt=""
+                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                </div>
+                {% endif %}
+                <div class="p-6">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-xs font-medium text-stone-500 bg-stone-100 px-2 py-0.5 rounded-full">{{
+                            article.get_category_display }}</span>
+                        {% if article.published_at %}<span class="text-xs text-stone-400">{{
+                            article.published_at|date:"d M Y" }}</span>{% endif %}
+                    </div>
+                    <h2 class="font-display text-xl font-bold text-stone-900 group-hover:text-stone-700 mb-2">{{
+                        article.title }}</h2>
+                    {% if article.summary %}<p class="text-stone-500 text-sm leading-relaxed line-clamp-2">{{
+                        article.summary }}</p>{% endif %}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-20 text-stone-400">
+        <p>No articles published yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

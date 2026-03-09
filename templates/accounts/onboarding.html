@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}Complete Your Profile — The Modelling Directory{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-12">
+    <div class="mb-8">
+        <p class="text-stone-400 text-sm uppercase tracking-widest font-medium mb-2">Getting started</p>
+        <h1 class="font-display text-4xl font-bold text-stone-900 mb-2">Set up your profile</h1>
+        <p class="text-stone-500">Fill in as much as you can. You can always edit it later from your dashboard.</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" novalidate class="space-y-8">
+        {% csrf_token %}
+
+        <!-- Basic Info -->
+        <section class="bg-white rounded-xl border border-stone-200 p-6">
+            <h2 class="font-semibold text-stone-900 text-lg mb-5">Basic Information</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.public_display_name.label }}</label>
+                    {{ form.public_display_name }}
+                    {% if form.public_display_name.errors %}<p class="text-red-600 text-xs mt-1">{{
+                        form.public_display_name.errors|join:", " }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.city.label }}</label>
+                    {{ form.city }}
+                    {% if form.city.errors %}<p class="text-red-600 text-xs mt-1">{{ form.city.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.date_of_birth.label }}</label>
+                    {{ form.date_of_birth }}
+                    {% if form.date_of_birth.errors %}<p class="text-red-600 text-xs mt-1">{{
+                        form.date_of_birth.errors|join:", " }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.gender.label }}</label>
+                    {{ form.gender }}
+                    {% if form.gender.errors %}<p class="text-red-600 text-xs mt-1">{{ form.gender.errors|join:", " }}
+                    </p>{% endif %}
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.bio.label }}</label>
+                    {{ form.bio }}
+                    {% if form.bio.errors %}<p class="text-red-600 text-xs mt-1">{{ form.bio.errors|join:", " }}</p>
+                    {%endif %}
+                </div>
+            </div>
+        </section>
+
+        <!-- Measurements -->
+        <section class="bg-white rounded-xl border border-stone-200 p-6">
+            <h2 class="font-semibold text-stone-900 text-lg mb-1">Measurements <span
+                    class="text-stone-400 font-normal text-sm">(optional)</span></h2>
+            <p class="text-stone-400 text-sm mb-5">All height/measurement values in cm.</p>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.height_cm.label }}</label>
+                    {{ form.height_cm }}
+                    {% if form.height_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.height_cm.errors|join:",
+                        " }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.bust_cm.label }}</label>
+                    {{ form.bust_cm }}
+                    {% if form.bust_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.bust_cm.errors|join:", " }}
+                    </p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.waist_cm.label }}</label>
+                    {{ form.waist_cm }}
+                    {% if form.waist_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.waist_cm.errors|join:", "
+                        }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.hips_cm.label }}</label>
+                    {{ form.hips_cm }}
+                    {% if form.hips_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.hips_cm.errors|join:", " }}
+                    </p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.shoe_size.label }}</label>
+                    {{ form.shoe_size }}
+                    {% if form.shoe_size.errors %}<p class="text-red-600 text-xs mt-1">{{ form.shoe_size.errors|join:",
+                        " }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.hair_color.label }}</label>
+                    {{ form.hair_color }}
+                    {% if form.hair_color.errors %}<p class="text-red-600 text-xs mt-1">{{
+                        form.hair_color.errors|join:", " }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.eye_color.label }}</label>
+                    {{ form.eye_color }}
+                    {% if form.eye_color.errors %}<p class="text-red-600 text-xs mt-1">{{ form.eye_color.errors|join:",
+                        " }}</p>{% endif %}
+                </div>
+            </div>
+        </section>
+
+        <!-- Photos -->
+        <section class="bg-white rounded-xl border border-stone-200 p-6">
+            <h2 class="font-semibold text-stone-900 text-lg mb-5">Photos</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.profile_image.label }}</label>
+                    {{ form.profile_image }}
+                    {% if form.profile_image.errors %}<p class="text-red-600 text-xs mt-1">{{
+                        form.profile_image.errors|join:", " }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.cover_image.label }}</label>
+                    {{ form.cover_image }}
+                    {% if form.cover_image.errors %}<p class="text-red-600 text-xs mt-1">{{
+                        form.cover_image.errors|join:", " }}</p>{% endif %}
+                </div>
+            </div>
+        </section>
+
+        <!-- Links -->
+        <section class="bg-white rounded-xl border border-stone-200 p-6">
+            <h2 class="font-semibold text-stone-900 text-lg mb-5">Links & Contact</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.instagram_url.label }}</label>
+                    {{ form.instagram_url }}
+                    {% if form.instagram_url.errors %}<p class="text-red-600 text-xs mt-1">{{
+                        form.instagram_url.errors|join:", " }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.website_url.label }}</label>
+                    {{ form.website_url }}
+                    {% if form.website_url.errors %}<p class="text-red-600 text-xs mt-1">{{
+                        form.website_url.errors|join:", " }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.contact_email.label }}</label>
+                    {{ form.contact_email }}
+                    {% if form.contact_email.errors %}<p class="text-red-600 text-xs mt-1">{{
+                        form.contact_email.errors|join:", " }}</p>{% endif %}
+                </div>
+            </div>
+        </section>
+
+        <!-- Availability -->
+        <section class="bg-white rounded-xl border border-stone-200 p-6">
+            <h2 class="font-semibold text-stone-900 text-lg mb-5">Availability</h2>
+            <div class="grid grid-cols-2 gap-3">
+                <label
+                    class="flex items-center gap-3 border border-stone-200 rounded-xl px-4 py-3 cursor-pointer hover:border-stone-400 transition-colors">
+                    {{ form.available_for_editorial }}
+                    <span class="text-sm text-stone-800">{{ form.available_for_editorial.label }}</span>
+                </label>
+                <label
+                    class="flex items-center gap-3 border border-stone-200 rounded-xl px-4 py-3 cursor-pointer hover:border-stone-400 transition-colors">
+                    {{ form.available_for_runway }}
+                    <span class="text-sm text-stone-800">{{ form.available_for_runway.label }}</span>
+                </label>
+                <label
+                    class="flex items-center gap-3 border border-stone-200 rounded-xl px-4 py-3 cursor-pointer hover:border-stone-400 transition-colors">
+                    {{ form.available_for_commercial }}
+                    <span class="text-sm text-stone-800">{{ form.available_for_commercial.label }}</span>
+                </label>
+                <label
+                    class="flex items-center gap-3 border border-stone-200 rounded-xl px-4 py-3 cursor-pointer hover:border-stone-400 transition-colors">
+                    {{ form.available_for_fittings }}
+                    <span class="text-sm text-stone-800">{{ form.available_for_fittings.label }}</span>
+                </label>
+            </div>
+        </section>
+
+        <!-- Visibility -->
+        <section class="bg-white rounded-xl border border-stone-200 p-6">
+            <h2 class="font-semibold text-stone-900 text-lg mb-5">Visibility</h2>
+            <div class="space-y-3">
+                <label class="flex items-center gap-3 cursor-pointer">
+                    {{ form.is_public }}
+                    <div>
+                        <span class="text-sm font-medium text-stone-800 block">{{ form.is_public.label }}</span>
+                        <span class="text-xs text-stone-400">Show your profile to the public</span>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer">
+                    {{ form.is_discoverable }}
+                    <div>
+                        <span class="text-sm font-medium text-stone-800 block">{{ form.is_discoverable.label }}</span>
+                        <span class="text-xs text-stone-400">Appear in the model explore page</span>
+                    </div>
+                </label>
+            </div>
+        </section>
+
+        <div class="flex justify-end">
+            <button type="submit"
+                class="bg-stone-900 text-white font-semibold px-8 py-3 rounded-lg hover:bg-stone-700 transition-colors">
+                Save Profile & Continue
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

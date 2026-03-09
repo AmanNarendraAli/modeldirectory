@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Models — The Modelling Directory{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="mb-8">
+        <h1 class="font-display text-4xl font-bold text-stone-900">Models</h1>
+        <p class="text-stone-500 mt-2">Discover models across India.</p>
+    </div>
+
+    <!-- Filters -->
+    <form method="get" class="flex flex-wrap gap-3 mb-8 items-end">
+        <div>
+            <label class="block text-xs font-medium text-stone-600 mb-1">Search</label>
+            <input type="text" name="q" value="{{ search }}" placeholder="Name…"
+                class="border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400 w-48">
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-stone-600 mb-1">City</label>
+            <select name="city"
+                class="border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+                <option value="">All Cities</option>
+                {% for c in cities %}
+                <option value="{{ c }}" {% if c == selected_city %}selected{% endif %}>{{ c }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-stone-600 mb-1">Gender</label>
+            <select name="gender"
+                class="border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+                <option value="">Any</option>
+                {% for val, label in gender_choices %}
+                <option value="{{ val }}" {% if va == selected_gender %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-stone-600 mb-1">Represented</label>
+            <select name="represented"
+                class="border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+                <option value="">Any</option>
+                <option value="yes" {% if selected_represente == "yes" %}selected{% endif %}>Represented</option>
+                <option value="no" {% if selected_represented == "no" %}selected{% endif %}>Independent</option>
+            </select>
+        </div>
+        <button type="submit"
+            class="bg-stone-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-stone-700 transition-colors">Filter</button>
+        {% if search or selected_city or selected_gender or selected_represented %}
+        <a href="{% url 'model-list' %}" class="text-sm text-stone-500 hover:text-stone-800 py-2">Clear</a>
+        {% endif %}
+    </form>
+
+    {% if profiles %}
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
+        {% for profile in profiles %}
+        <a href="{% url 'model-detail' profile.slug %}"
+            class="group bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden hover:shadow-md transition-shadow">
+            <div class="aspect-[3/4] bg-stone-100 overflow-hidden">
+                {% if profile.profile_image %}
+                <img src="{{ profile.profile_image.url }}" alt="{{ profile.public_display_name }}"
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                {% else %}
+                <div>
+                    class="w-full h-full flex items-center justify-center bg-gradient-to-br from-stone-200 to-stone-300">
+                    <span class="font-display text-4xl font-bold text-stone-400">{{
+                        profile.public_display_name|slice:":1" }}</span>
+                </div>
+                {% endif %}
+            </div>
+            <div class="p-3">
+                <h2 class="font-semibold text-stone-900 text-sm truncate">{{ profile.public_display_name }}</h2>
+                <p class="text-xs text-stone-400">{{ profile.city }}{% if profile.height_cm %} · {{ profile.height_cm
+                    }}cm{% endif %}</p>
+                {% if profile.represented_by_agency %}
+                <p class="text-xs text-stone-500 mt-1 truncate">{{ profile.represented_by_agency.name }}</p>
+                {% else %}
+                <p class="text-xs text-stone-400 mt-1">Independent</p>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-20 text-stone-400">
+        <p class="text-lg">No models found.</p>
+        {% if search or selected_city or selected_gender %}<a href="{% url 'model-list' %}"
+            class="mt-2 inline-block text-sm text-stone-600 hover:text-stone-900">Clear filters</a>{% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

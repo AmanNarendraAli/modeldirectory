@@ -1,11 +1,67 @@
 {% extends "base.html" %}
 {% block title %}Sign Up — The Modelling Directory{% endblock %}
+
 {% block content %}
-<h1>Create Account</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Create Account</button>
-</form>
-<p><a href="{% url 'login' %}">Already have an account? Login</a></p>
+<div class="min-h-screen bg-stone-50 flex items-center justify-center py-12 px-4">
+    <div class="bg-white rounded-2xl shadow-sm border border-stone-200 w-full max-w-md p-8">
+        <div class="mb-8 text-center">
+            <h1 class="font-display text-3xl font-bold text-stone-900 mb-1">Create your account</h1>
+            <p class="text-stone-500 text-sm">Join The Modelling Directory</p>
+        </div>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <!-- Role selection -->
+            <div class="mb-6">
+                <p class="text-sm font-medium text-stone-700 mb-3">I am a…</p>
+                <div class="grid grid-cols-2 gap-3">
+                    {% for radio in form.role %}
+                    <label
+                        class="flex items-center gap-3 border border-stone-200 rounded-xl p-4 cursor-pointer hover:border-stone-400 transition-colors has-[:checked]:border-stone-900 has-[:checked]:bg-stone-50">
+                        {{ radio.tag }}
+                        <span class="text-sm font-medium text-stone-800">{{ radio.choice_label }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% if form.role.errors %}
+                <p class="text-red-600 text-xs mt-1">{{ form.role.errors|join:", " }}</p>
+                {% endif %}
+            </div>
+
+            {% for field in form %}
+            {% if field.name != "role" %}
+            <div class="mb-4">
+                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-stone-700 mb-1">
+                    {{ field.label }}{% if field.field.required %} <span class="text-red-400">*</span>{% endif %}
+                </label>
+                <input type="{{ field.field.widget.input_type }}" name="{{ field.html_name }}"
+                    id="{{ field.id_for_label }}" {% if field.value %}value="{{ field.value }}" {% endif %}
+                    class="w-full border {% if field.errors %}border-red-400{% else %}border-stone-300{% endif %} rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
+                    {% if field.field.required %}required{% endif %}>
+                {% if field.errors %}
+                <p class="text-red-600 text-xs mt-1">{{ field.errors|join:", " }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% endfor %}
+
+            {% if form.non_field_errors %}
+            <div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 mb-4">
+                {{ form.non_field_errors|join:", " }}
+            </div>
+            {% endif %}
+
+            <button type="submit"
+                class="w-full bg-stone-900 text-white font-semibold py-3 rounded-lg hover:bg-stone-700 transition-colors mt-2">
+                Create Account
+            </button>
+        </form>
+
+        <p class="text-center text-sm text-stone-500 mt-6">
+            Already have an account? <a href="{% url 'login' %}" class="text-stone-900 font-medium hover:underline">Log
+                in</a>
+        </p>
+    </div>
+</div>
 {% endblock %}

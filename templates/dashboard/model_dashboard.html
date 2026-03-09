@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — The Modelling Directory{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <h1 class="font-display text-3xl font-bold text-stone-900">Your Dashboard</h1>
+            <p class="text-stone-500 text-sm mt-1">Hello, {{ profile.public_display_name }}</p>
+        </div>
+        <a href="{% url 'portfolio-create' %}"
+            class="bg-stone-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-stone-700 transition-colors">+
+            New Post</a>
+    </div>
+
+    <!-- Profile completeness -->
+    {% if completeness < 100 %} <div
+        class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex items-center gap-4">
+        <div class="flex-1">
+            <p class="text-sm font-medium text-amber-800 mb-1">Profile {{ completeness }}% complete</p>
+            <div class="h-2 bg-amber-200 rounded-full overflow-hidden">
+                <div class="h-full bg-amber-500 rounded-full" style="width: {{ completeness }}%"></div>
+            </div>
+        </div>
+        <a href="{% url 'edit-profile' %}"
+            class="text-xs font-medium text-amber-700 hover:text-amber-900 whitespace-nowrap">Complete Profile →</a>
+</div>
+{% endif %}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <!-- Left column -->
+    <div class="lg:col-span-2 space-y-8">
+
+        <!-- Applications -->
+        <section class="bg-white rounded-xl border border-stone-200 p-6">
+            <h2 class="font-semibold text-stone-900 mb-4">Applications</h2>
+            {% if applications %}
+            <div class="space-y-3">
+                {% for app in applications %}
+                <div class="flex items-center justify-between py-3 border-b border-stone-100 last:border-0">
+                    <div>
+                        <a href="{% url 'agency-detail' app.agency.slug %}"
+                            class="font-medium text-stone-900 text-sm hover:underline">{{ app.agency.name }}</a>
+                        <p class="text-xs text-stone-400 mt-0.5">{{ app.submitted_at|date:"d M Y" }}</p>
+                    </div>
+                    <span class="text-xs font-medium px-2.5 py-1 rounded-full
+                            {% if app.status == 'submitted' %}bg-blue-100 text-blue-700
+                            {% elif app.status == 'shortlisted' %}bg-emerald-100 text-emerald-700
+                            {% elif app.status == 'rejected' %}bg-red-100 text-red-600
+                            {% elif app.status == 'under_review' %}bg-amber-100 text-amber-700
+                            {% elif app.status == 'contacted' %}bg-purple-100 text-purple-700
+                            {% else %}bg-stone-100 text-stone-500{% endif %}">
+                        {{ app.get_status_display }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-stone-400 text-sm">No applications yet. <a href="{% url 'agency-list' %}"
+                    class="text-stone-700 hover:underline">Browse agencies →</a></p>
+            {% endif %}
+        </section>
+
+        <!-- Portfolio -->
+        <section class="bg-white rounded-xl border border-stone-200 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-semibold text-stone-900">Portfolio</h2>
+                <a href="{% url 'portfolio-create' %}" class="text-xs text-stone-600 hover:text-stone-900">+ Add
+                    post</a>
+            </div>
+            {% if portfolio_posts %}
+            <div class="grid grid-cols-3 gap-3">
+                {% for post in portfolio_posts %}
+                <div class="relative group">
+                    <a href="{% url 'portfolio-detail' post.slug %}"
+                        class="block aspect-square rounded-lg overflow-hidden bg-stone-100">
+                        {% if post.cover_image %}
+                        <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover">
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center">
+                            <span class="text-xs text-stone-400 text-center px-1">{{ post.title }}</span>
+                        </div>
+                        {% endif %}
+                    </a>
+                    <div class="absolute top-1 right-1 hidden group-hover:flex gap-1">
+                        <a href="{% url 'portfolio-edit' post.slug %}"
+                            class="bg-white/90 text-stone-700 text-xs px-1.5 py-0.5 rounded">Edit</a>
+                        <a href="{% url 'portfolio-delete' post.slug %}"
+                            class="bg-white/90 text-red-600 text-xs px-1.5 py-0.5 rounded">Del</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-stone-400 text-sm">No portfolio posts yet.</p>
+            {% endif %}
+        </section>
+
+    </div>
+
+    <!-- Right column -->
+    <div class="space-y-6">
+
+        <!-- Profile card -->
+        <div class="bg-white border border-stone-200 rounded-xl p-5">
+            <div class="flex items-center gap-3 mb-4">
+                {% if profile.profile_image %}
+                <img src="{{ profile.profile_image.url }}" alt="" class="w-12 h-12 rounded-full object-cover">
+                {% else %}
+                <div class="w-12 h-12 rounded-full bg-stone-200 flex items-center justify-center">
+                    <span class="font-bold text-stone-500">{{ profile.public_display_name|slice:":1" }}</span>
+                </div>
+                {% endif %}
+                <div>
+                    <p class="font-semibold text-stone-900 text-sm">{{ profile.public_display_name }}</p>
+                    <p class="text-xs text-stone-400">{{ profile.city }}</p>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <a href="{% url 'edit-profile' %}"
+                    class="flex-1 text-center border border-stone-300 text-stone-700 text-xs font-medium py-1.5 rounded-lg hover:bg-stone-50 transition-colors">Edit
+                    Profile</a>
+                <a href="{% url 'model-detail' profile.slug %}"
+                    class="flex-1 text-center border border-stone-300 text-stone-700 text-xs font-medium py-1.5 rounded-lg hover:bg-stone-50 transition-colors">Public
+                    View</a>
+            </div>
+        </div>
+
+        <!-- Saved agencies -->
+        <div class="bg-white border border-stone-200 rounded-xl p-5">
+            <h3 class="font-semibold text-stone-900 text-sm mb-3">Saved Agencies</h3>
+            {% if saved_agencies %}
+            <ul class="space-y-2">
+                {% for saved in saved_agencies %}
+                <li class="flex items-center justify-between text-sm">
+                    <a href="{% url 'agency-detail' saved.agency.slug %}" class="text-stone-700 hover:text-stone-900">{{
+                        saved.agency.name }}</a>
+                    <form method="post" action="{% url 'save-agency' saved.agency.slug %}">{% csrf_token %}
+                        <button class="text-xs text-stone-400 hover:text-red-500">Remove</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-stone-400 text-xs">No saved agencies yet.</p>
+            {% endif %}
+        </div>
+
+        <!-- Following -->
+        <div class="bg-white border border-stone-200 rounded-xl p-5">
+            <h3 class="font-semibold text-stone-900 text-sm mb-3">Following</h3>
+            {% if followed_profiles %}
+            <ul class="space-y-2">
+                {% for follow in followed_profiles %}
+                <li class="flex items-center justify-between text-sm">
+                    <a href="{% url 'model-detail' follow.followed_profile.slug %}"
+                        class="text-stone-700 hover:text-stone-900">{{ follow.followed_profile.public_display_name
+                        }}</a>
+                    <form method="post" action="{% url 'follow-model' follow.followed_profile.slug %}">{% csrf_token %}
+                        <button class="text-xs text-stone-400 hover:text-red-500">Unfollow</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-stone-400 text-xs">Not following anyone yet.</p>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ post.title }} — The Modelling Directory{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <div class="mb-6">
+        <a href="{% url 'model-detail' post.owner_profile.slug %}"
+            class="text-sm text-stone-500 hover:text-stone-800 transition-colors">
+            ← {{ post.owner_profile.public_display_name }}
+        </a>
+    </div>
+
+    <h1 class="font-display text-3xl font-bold text-stone-900 mb-2">{{ post.title }}</h1>
+    {% if post.caption %}
+    <p class="text-stone-500 leading-relaxed mb-8">{{ post.caption }}</p>
+    {% endif %}
+
+    <!-- Image gallery -->
+    {% if assets %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+        {% for asset in assets %}
+        <div class="rounded-xl overflow-hidden bg-stone-100">
+            <img src="{{ asset.image.url }}" alt="{{ asset.alt_text|default:post.title }}" class="w-full object-cover">
+        </div>
+        {% endfor %}
+    </div>
+    {% elif post.cover_image %}
+    <div class="rounded-xl overflow-hidden bg-stone-100 mb-8">
+        <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="w-full max-h-[70vh] object-contain mx-auto">
+    </div>
+    {% endif %}
+
+    {% if user.is_authenticated and user == post.owner_profile.user %}
+    <div class="flex gap-3 mt-6">
+        <a href="{% url 'portfolio-edit' post.slug %}"
+            class="border border-stone-300 text-stone-700 text-sm font-medium px-4 py-2 rounded-lg hover:bg-stone-50 transition-colors">Edit
+            post</a>
+        <a href="{% url 'portfolio-delete' post.slug %}"
+            class="border border-red-200 text-red-600 text-sm font-medium px-4 py-2 rounded-lg hover:bg-red-50 transition-colors">Delete</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

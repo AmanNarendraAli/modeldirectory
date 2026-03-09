@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ article.title }} — The Modelling Directory{% endblock %}
+{% block meta_description %}{{ article.summary }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <a href="{% url 'resource-list' %}" class="text-sm text-stone-500 hover:text-stone-800 mb-6 inline-block">←
+        Resources</a>
+
+    <div class="flex items-center gap-2 mb-4">
+        <span class="text-xs font-medium text-stone-500 bg-stone-100 px-2 py-0.5 rounded-full">{{
+            article.get_category_display }}</span>
+        {% if article.published_at %}<span class="text-xs text-stone-400">{{ article.published_at|date:"d M Y"
+            }}</span>{% endif %}
+    </div>
+
+    <h1 class="font-display text-4xl font-bold text-stone-900 mb-4">{{ article.title }}</h1>
+    {% if article.summary %}<p class="text-stone-500 text-lg mb-8 leading-relaxed">{{ article.summary }}</p>{% endif %}
+
+    {% if article.hero_image %}
+    <div class="rounded-xl overflow-hidden mb-8 bg-stone-100">
+        <img src="{{ article.hero_image.url }}" alt="" class="w-full max-h-80 object-cover">
+    </div>
+    {% endif %}
+
+    <div class="prose prose-stone max-w-none text-stone-700 leading-relaxed whitespace-pre-line">
+        {{ article.content }}
+    </div>
+
+    {% if article.author %}
+    <div class="mt-10 pt-6 border-t border-stone-200">
+        <p class="text-xs text-stone-400">Written by <span class="text-stone-600 font-medium">{{
+                article.author.full_name }}</span></p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

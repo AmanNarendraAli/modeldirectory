@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Agencies — The Modelling Directory{% endblock %}
+{% block meta_description %}Browse and discover modelling agencies across India.{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <div class="mb-8">
+        <h1 class="font-display text-4xl font-bold text-stone-900">Agencies</h1>
+        <p class="text-stone-500 mt-2">Discover modelling agencies across India.</p>
+    </div>
+
+    <!-- Filters -->
+    <form method="get" class="flex flex-wrap gap-3 mb-8 items-end">
+        <div>
+            <label class="block text-xs font-medium text-stone-600 mb-1">Search</label>
+            <input type="text" name="q" value="{{ search }}" placeholder="Agency name…"
+                class="border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400 w-52">
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-stone-600 mb-1">City</label>
+            <select name="city"
+                class="border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+                <option value="">All Cities</option>
+                {% for c in cities %}
+                <option value="{{ c }}" {% if c == selected_city %}selected{% endif %}>{{ c }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-stone-600 mb-1">Applications</label>
+            <select name="accepting"
+                class="border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+                <option value="">Any</option>
+                <option value="1" {% if accepting == "1" %}selected{% endif %}>Open Only</option>
+            </select>
+        </div>
+        <button type="submit"
+            class="bg-stone-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-stone-700 transition-colors">
+            Filter
+        </button>
+        {% if search or selected_city or accepting %}
+        <a href="{% url 'agency-list' %}" class="text-sm text-stone-500 hover:text-stone-800 py-2">Clear</a>
+        {% endif %}
+    </form>
+
+    <!-- Grid -->
+    {% if agencies %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for agency in agencies %}
+        <a href="{% url 'agency-detail' agency.slug %}"
+            class="group bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden hover:shadow-md transition-shadow">
+            {% if agency.cover_image %}
+            <div class="h-40 bg-stone-100 overflow-hidden">
+                <img src="{{ agency.cover_image.url }}" alt="{{ agency.name }}"
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+            </div>
+            {% else %}
+            <div class="h-40 bg-gradient-to-br from-stone-200 to-stone-300 flex items-center justify-center">
+                <span class="font-display text-3xl font-bold text-stone-400">{{ agency.name|slice:":1" }}</span>
+            </div>
+            {% endif %}
+            <div class="p-5">
+                <div class="flex items-center gap-3 mb-1">
+                    {% if agency.logo %}
+                    <img src="{{ agency.logo.url }}" alt=""
+                        class="w-7 h-7 rounded-full object-cover border border-stone-100">
+                    {% endif %}
+                    <h2 class="font-semibold text-stone-900 text-sm leading-tight">{{ agency.name }}</h2>
+                </div>
+                {% if agency.city %}
+                <p class="text-xs text-stone-400 mb-2">{{ agency.city }}</p>
+                {% endif %}
+                {% if agency.short_tagline %}
+                <p class="text-stone-600 text-sm line-clamp-2 mb-3">{{ agency.short_tagline }}</p>
+                {% endif %}
+                {% if agency.is_accepting_applications %}
+                <span
+                    class="inline-block bg-emerald-100 text-emerald-700 text-xs font-medium px-2 py-0.5 rounded-full">Accepting
+                    Applications</span>
+                {% else %}
+                <span
+                    class="inline-block bg-stone-100 text-stone-500 text-xs font-medium px-2 py-0.5 rounded-full">Closed</span>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-20 text-stone-400">
+        <p class="text-lg">No agencies found.</p>
+        {% if search or selected_city or accepting %}
+        <a href="{% url 'agency-list' %}" class="mt-3 inline-block text-sm text-stone-600 hover:text-stone-900">Clear
+            filters</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
