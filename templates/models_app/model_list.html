@@ -70,8 +70,7 @@
             </div>
             <div class="p-3">
                 <h2 class="font-semibold text-stone-900 text-sm truncate">{{ profile.public_display_name }}</h2>
-                <p class="text-xs text-stone-400">{{ profile.city }}{% if profile.height_cm %} · {{ profile.height_cm
-                    }}cm{% endif %}</p>
+                <p class="text-xs text-stone-400">{{ profile.city }}{% if profile.height_cm %} · {{ profile.height_cm }}cm{% endif %}</p>
                 {% if profile.represented_by_agency %}
                 <p class="text-xs text-stone-500 mt-1 truncate">{{ profile.represented_by_agency.name }}</p>
                 {% else %}
