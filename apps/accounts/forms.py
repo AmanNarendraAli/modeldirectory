@@ -34,6 +34,7 @@ class OnboardingForm(forms.ModelForm):
             "bust_cm",
             "waist_cm",
             "hips_cm",
+            "inseam_cm",
             "shoe_size",
             "hair_color",
             "eye_color",

@@ -5,158 +5,239 @@
 <!-- Cover -->
 <div class="h-48 sm:h-64 bg-stone-200 overflow-hidden relative">
     {% if profile.cover_image %}
-    <img src="{{ profile.cover_image.url }}" alt="" class="w-full h-full object-cover">
+        <img src="{{ profile.cover_image.url }}" alt="" class="w-full h-full object-cover">
     {% else %}
-    <div class="w-full h-full bg-gradient-to-br from-stone-300 to-stone-400"></div>
+        <div class="w-full h-full bg-gradient-to-br from-stone-300 to-stone-400"></div>
     {% endif %}
 </div>
 
 <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
     <!-- Profile header -->
     <div class="flex flex-col sm:flex-row sm:items-end gap-5 -mt-16 mb-8 relative">
-        <div
-            class="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border-4 border-white bg-stone-100 overflow-hidden flex-shrink-0 shadow-sm">
+        <div class="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border-4 border-white bg-stone-100 overflow-hidden flex-shrink-0 shadow-sm">
             {% if profile.profile_image %}
-            <img src="{{ profile.profile_image.url }}" alt="" class="w-full h-full object-cover">
+                <img src="{{ profile.profile_image.url }}" alt="" class="w-full h-full object-cover">
             {% else %}
-            <div class="w-full h-full flex items-center justify-center bg-stone-200">
-                <span class="font-display text-4xl font-bold text-stone-400">{{ profile.public_display_name|slice:":1"
-                    }}</span>
-            </div>
+                <div class="w-full h-full flex items-center justify-center bg-stone-200">
+                    <span class="font-display text-4xl font-bold text-stone-400">
+                        {{ profile.public_display_name|slice:":1" }}
+                    </span>
+                </div>
             {% endif %}
         </div>
+
         <div class="flex-1 pb-1">
-            <h1 class="font-display text-3xl font-bold text-stone-900">{{ profile.public_display_name }}</h1>
+            <h1 class="font-display text-3xl font-bold text-stone-900">
+                {{ profile.public_display_name }}
+            </h1>
+
             <div class="flex flex-wrap gap-3 mt-1 text-sm text-stone-500">
-                {% if profile.city %}<span>{{ profile.city }}</span>{% endif %}
-                {% if profile.height_cm %}<span>· {{ profile.height_cm }} cm</span>{% endif %}
-                {% if profile.gender %}<span>· {{ profile.get_gender_display }}</span>{% endif %}
+                {% if profile.city %}
+                    <span>{{ profile.city }}</span>
+                {% endif %}
+                {% if profile.height_cm %}
+                    <span>· {{ profile.height_cm }} cm</span>
+                {% endif %}
+                {% if profile.gender %}
+                    <span>· {{ profile.get_gender_display }}</span>
+                {% endif %}
             </div>
+
             {% if profile.represented_by_agency %}
-            <a href="{% url 'agency-detail' profile.represented_by_agency.slug %}"
-                class="inline-block mt-2 text-xs font-medium text-stone-600 bg-stone-100 px-3 py-1 rounded-full hover:bg-stone-200 transition-colors">
-                {{ profile.represented_by_agency.name }}
-            </a>
+                <a href="{% url 'agency-detail' profile.represented_by_agency.slug %}"
+                   class="inline-block mt-2 text-xs font-medium text-stone-600 bg-stone-100 px-3 py-1 rounded-full hover:bg-stone-200 transition-colors">
+                    {{ profile.represented_by_agency.name }}
+                </a>
             {% else %}
-            <span
-                class="inline-block mt-2 text-xs font-medium text-stone-500 bg-stone-100 px-3 py-1 rounded-full">Independent</span>
+                <span class="inline-block mt-2 text-xs font-medium text-stone-500 bg-stone-100 px-3 py-1 rounded-full">
+                    Independent
+                </span>
             {% endif %}
         </div>
-        <!-- Follow -->
+
         {% if user.is_authenticated and user != profile.user %}
-        <form method="post" action="{% url 'follow-model' profile.slug %}">
-            {% csrf_token %}
-            <button type="submit"
-                class="border border-stone-300 text-stone-700 text-sm font-medium px-5 py-2 rounded-lg hover:bg-stone-50 transition-colors">
-                {% if is_following %}✓ Following{% else %}+ Follow{% endif %}
-            </button>
-        </form>
+            <form method="post" action="{% url 'follow-model' profile.slug %}">
+                {% csrf_token %}
+                <button type="submit"
+                        class="border border-stone-300 text-stone-700 text-sm font-medium px-5 py-2 rounded-lg hover:bg-stone-50 transition-colors">
+                    {% if is_following %}
+                        ✓ Following
+                    {% else %}
+                        + Follow
+                    {% endif %}
+                </button>
+            </form>
         {% endif %}
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 pb-16">
         <!-- Left -->
         <div class="lg:col-span-2">
-            <!-- Bio -->
             {% if profile.bio %}
-            <div class="mb-8">
-                <h2 class="font-display text-xl font-bold text-stone-900 mb-3">About</h2>
-                <p class="text-stone-600 leading-relaxed whitespace-pre-line">{{ profile.bio }}</p>
-            </div>
+                <div class="mb-8">
+                    <h2 class="font-display text-xl font-bold text-stone-900 mb-3">About</h2>
+                    <p class="text-stone-600 leading-relaxed whitespace-pre-line">{{ profile.bio }}</p>
+                </div>
             {% endif %}
 
-            <!-- Portfolio grid -->
             {% if portfolio_posts %}
-            <div class="mb-8">
-                <h2 class="font-display text-xl font-bold text-stone-900 mb-4">Portfolio</h2>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {% for post in portfolio_posts %}
-                    <a href="{% url 'portfolio-detail' post.slug %}"
-                        class="group aspect-square bg-stone-100 rounded-lg overflow-hidden block">
-                        {% if post.cover_image %}
-                        <img src="{{ post.cover_image.url }}" alt="{{ post.title }}"
-                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
-                        {% else %}
-                        <div class="w-full h-full flex items-center justify-center bg-stone-200">
-                            <span class="text-xs text-stone-400 font-medium text-center px-2">{{ post.title }}</span>
-                        </div>
-                        {% endif %}
-                    </a>
-                    {% endfor %}
+                <div class="mb-8">
+                    <h2 class="font-display text-xl font-bold text-stone-900 mb-4">Portfolio</h2>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        {% for post in portfolio_posts %}
+                            <a href="{% url 'portfolio-detail' post.slug %}"
+                               class="group aspect-square bg-stone-100 rounded-lg overflow-hidden block">
+                                {% if post.cover_image %}
+                                    <img src="{{ post.cover_image.url }}"
+                                         alt="{{ post.title }}"
+                                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                {% else %}
+                                    <div class="w-full h-full flex items-center justify-center bg-stone-200">
+                                        <span class="text-xs text-stone-400 font-medium text-center px-2">
+                                            {{ post.title }}
+                                        </span>
+                                    </div>
+                                {% endif %}
+                            </a>
+                        {% endfor %}
+                    </div>
                 </div>
-            </div>
             {% endif %}
         </div>
 
         <!-- Right sidebar -->
         <div class="space-y-6">
-            <!-- Stats -->
             <div class="bg-stone-50 rounded-xl border border-stone-100 p-5">
                 <h3 class="font-semibold text-stone-900 text-sm mb-4">Stats</h3>
                 <div class="space-y-2 text-sm">
-                    <div class="flex justify-between"><span class="text-stone-400">Followers</span><span
-                            class="font-medium">{{ follower_count }}</span></div>
-                    <div class="flex justify-between"><span class="text-stone-400">Portfolio posts</span><span
-                            class="font-medium">{{ portfolio_posts|length }}</span></div>
+                    <div class="flex justify-between">
+                        <span class="text-stone-400">Followers</span>
+                        <span class="font-medium">{{ follower_count }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-stone-400">Portfolio posts</span>
+                        <span class="font-medium">{{ portfolio_posts|length }}</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Measurements -->
-            {% if profile.height_cm or profile.bust_cm or profile.waist_cm or profile.hips_cm %}
-            <div class="bg-stone-50 rounded-xl border border-stone-100 p-5">
-                <h3 class="font-semibold text-stone-900 text-sm mb-4">Measurements</h3>
-                <div class="grid grid-cols-2 gap-2 text-sm">
-                    {% if profile.height_cm %}<div><span class="text-stone-400 text-xs block">Height</span>{{
-                        profile.height_cm }} cm</div>{% endif %}
-                    {% if profile.bust_cm %}<div><span class="text-stone-400 text-xs block">Bust</span>{{
-                        profile.bust_cm }} cm</div>{% endif %}
-                    {% if profile.waist_cm %}<div><span class="text-stone-400 text-xs block">Waist</span>{{
-                        profile.waist_cm }} cm</div>{% endif %}
-                    {% if profile.hips_cm %}<div><span class="text-stone-400 text-xs block">Hips</span>{{
-                        profile.hips_cm }} cm</div>{% endif %}
-                    {% if profile.shoe_size %}<div><span class="text-stone-400 text-xs block">Shoe</span>{{
-                        profile.shoe_size }}</div>{% endif %}
-                    {% if profile.hair_color %}<div><span class="text-stone-400 text-xs block">Hair</span>{{
-                        profile.hair_color }}</div>{% endif %}
-                    {% if profile.eye_color %}<div><span class="text-stone-400 text-xs block">Eyes</span>{{
-                        profile.eye_color }}</div>{% endif %}
+            {% if profile.height_cm or profile.bust_cm or profile.waist_cm or profile.hips_cm or profile.inseam_cm or profile.shoe_size or profile.hair_color or profile.eye_color %}
+                <div class="bg-stone-50 rounded-xl border border-stone-100 p-5">
+                    <h3 class="font-semibold text-stone-900 text-sm mb-4">Measurements</h3>
+                    <div class="grid grid-cols-2 gap-2 text-sm">
+                        {% if profile.height_cm %}
+                            <div>
+                                <span class="text-stone-400 text-xs block">Height</span>
+                                {{ profile.height_cm }} cm
+                            </div>
+                        {% endif %}
+
+                        {% if profile.bust_cm %}
+                            <div>
+                                <span class="text-stone-400 text-xs block">{{ profile.get_bust_chest_label }}</span>
+                                {{ profile.bust_cm }} cm
+                            </div>
+                        {% endif %}
+
+                        {% if profile.waist_cm %}
+                            <div>
+                                <span class="text-stone-400 text-xs block">Waist</span>
+                                {{ profile.waist_cm }} cm
+                            </div>
+                        {% endif %}
+
+                        {% if profile.hips_cm %}
+                            <div>
+                                <span class="text-stone-400 text-xs block">Hips</span>
+                                {{ profile.hips_cm }} cm
+                            </div>
+                        {% endif %}
+
+                        {% if profile.inseam_cm %}
+                            <div>
+                                <span class="text-stone-400 text-xs block">Inseam</span>
+                                {{ profile.inseam_cm }} cm
+                            </div>
+                        {% endif %}
+
+                        {% if profile.shoe_size %}
+                            <div>
+                                <span class="text-stone-400 text-xs block">Shoe</span>
+                                {{ profile.shoe_size }}
+                            </div>
+                        {% endif %}
+
+                        {% if profile.hair_color %}
+                            <div>
+                                <span class="text-stone-400 text-xs block">Hair</span>
+                                {{ profile.hair_color }}
+                            </div>
+                        {% endif %}
+
+                        {% if profile.eye_color %}
+                            <div>
+                                <span class="text-stone-400 text-xs block">Eyes</span>
+                                {{ profile.eye_color }}
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
-            </div>
             {% endif %}
 
-            <!-- Availability -->
-            {% if profile.available_for_editorial or profile.available_for_runway or profile.available_for_commercial or
-            profile.available_for_fittings %}
-            <div class="bg-stone-50 rounded-xl border border-stone-100 p-5">
-                <h3 class="font-semibold text-stone-900 text-sm mb-3">Available for</h3>
-                <div class="flex flex-wrap gap-2">
-                    {% if profile.available_for_editorial %}<span
-                        class="bg-stone-200 text-stone-700 text-xs px-2 py-1 rounded-full">Editorial</span>{% endif %}
-                    {% if profile.available_for_runway %}<span
-                        class="bg-stone-200 text-stone-700 text-xs px-2 py-1 rounded-full">Runway</span>{% endif %}
-                    {% if profile.available_for_commercial %}<span
-                        class="bg-stone-200 text-stone-700 text-xs px-2 py-1 rounded-full">Commercial</span>{% endif %}
-                    {% if profile.available_for_fittings %}<span
-                        class="bg-stone-200 text-stone-700 text-xs px-2 py-1 rounded-full">Fittings</span>{% endif %}
+            {% if profile.available_for_editorial or profile.available_for_runway or profile.available_for_commercial or profile.available_for_fittings %}
+                <div class="bg-stone-50 rounded-xl border border-stone-100 p-5">
+                    <h3 class="font-semibold text-stone-900 text-sm mb-3">Available for</h3>
+                    <div class="flex flex-wrap gap-2">
+                        {% if profile.available_for_editorial %}
+                            <span class="bg-stone-200 text-stone-700 text-xs px-2 py-1 rounded-full">Editorial</span>
+                        {% endif %}
+                        {% if profile.available_for_runway %}
+                            <span class="bg-stone-200 text-stone-700 text-xs px-2 py-1 rounded-full">Runway</span>
+                        {% endif %}
+                        {% if profile.available_for_commercial %}
+                            <span class="bg-stone-200 text-stone-700 text-xs px-2 py-1 rounded-full">Commercial</span>
+                        {% endif %}
+                        {% if profile.available_for_fittings %}
+                            <span class="bg-stone-200 text-stone-700 text-xs px-2 py-1 rounded-full">Fittings</span>
+                        {% endif %}
+                    </div>
                 </div>
-            </div>
             {% endif %}
 
-            <!-- Links -->
             {% if profile.instagram_url or profile.website_url or profile.contact_email %}
-            <div class="bg-stone-50 rounded-xl border border-stone-100 p-5 space-y-2 text-sm">
-                {% if profile.instagram_url %}<div><span class="text-stone-400 text-xs block">Instagram</span><a
-                        href="{{ profile.instagram_url }}" target="_blank"
-                        class="text-stone-700 hover:text-stone-900 break-all">{{ profile.instagram_url }}</a></div>{%
-                endif %}
-                {% if profile.website_url %}<div><span class="text-stone-400 text-xs block">Website</span><a
-                        href="{{ profile.website_url }}" target="_blank"
-                        class="text-stone-700 hover:text-stone-900 break-all">{{ profile.website_url }}</a></div>{%
-                endif %}
-                {% if profile.contact_email %}<div><span class="text-stone-400 text-xs block">Contact</span><a
-                        href="mailto:{{ profile.contact_email }}" class="text-stone-700 hover:text-stone-900">{{
-                        profile.contact_email }}</a></div>{% endif %}
-            </div>
+                <div class="bg-stone-50 rounded-xl border border-stone-100 p-5 space-y-2 text-sm">
+                    {% if profile.instagram_url %}
+                        <div>
+                            <span class="text-stone-400 text-xs block">Instagram</span>
+                            <a href="{{ profile.instagram_url }}"
+                               target="_blank"
+                               class="text-stone-700 hover:text-stone-900 break-all">
+                                {{ profile.instagram_url }}
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    {% if profile.website_url %}
+                        <div>
+                            <span class="text-stone-400 text-xs block">Website</span>
+                            <a href="{{ profile.website_url }}"
+                               target="_blank"
+                               class="text-stone-700 hover:text-stone-900 break-all">
+                                {{ profile.website_url }}
+                            </a>
+                        </div>
+                    {% endif %}
+
+                    {% if profile.contact_email %}
+                        <div>
+                            <span class="text-stone-400 text-xs block">Contact</span>
+                            <a href="mailto:{{ profile.contact_email }}"
+                               class="text-stone-700 hover:text-stone-900">
+                                {{ profile.contact_email }}
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
             {% endif %}
         </div>
     </div>

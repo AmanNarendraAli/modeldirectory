@@ -3,9 +3,12 @@
 
 {% block content %}
 <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-    <a href="{% url 'dashboard' %}" class="text-sm text-stone-500 hover:text-stone-800 mb-6 inline-block">←
-        Dashboard</a>
+    <a href="{% url 'dashboard' %}" class="text-sm text-stone-500 hover:text-stone-800 mb-6 inline-block">
+        ← Dashboard
+    </a>
+
     <h1 class="font-display text-3xl font-bold text-stone-900 mb-8">Edit Profile</h1>
+
     <form method="post" enctype="multipart/form-data" novalidate class="space-y-8">
         {% csrf_token %}
 
@@ -13,104 +16,245 @@
             <h2 class="font-semibold text-stone-900 text-lg mb-5">Basic Information</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="sm:col-span-2">
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.public_display_name.label
-                        }}</label>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">
+                        {{ form.public_display_name.label }}
+                    </label>
                     {{ form.public_display_name }}
-                    {% if form.public_display_name.errors %}<p class="text-red-600 text-xs mt-1">{{
-                        form.public_display_name.errors|join:", " }}</p>{% endif %}
+                    {% if form.public_display_name.errors %}
+                    <p class="text-red-600 text-xs mt-1">{{ form.public_display_name.errors|join:", " }}</p>
+                    {% endif %}
                 </div>
+
                 <div>
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.city.label }}</label>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">
+                        {{ form.city.label }}
+                    </label>
                     {{ form.city }}
-                    {% if form.city.errors %}<p class="text-red-600 text-xs mt-1">{{ form.city.errors|join:", " }}</p>{%
-                    endif %}
+                    {% if form.city.errors %}
+                    <p class="text-red-600 text-xs mt-1">{{ form.city.errors|join:", " }}</p>
+                    {% endif %}
                 </div>
+
                 <div>
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.date_of_birth.label }}</label>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">
+                        {{ form.date_of_birth.label }}
+                    </label>
                     {{ form.date_of_birth }}
-                    {% if form.date_of_birth.errors %}<p class="text-red-600 text-xs mt-1">{{
-                        form.date_of_birth.errors|join:", " }}</p>{% endif %}
+                    {% if form.date_of_birth.errors %}
+                    <p class="text-red-600 text-xs mt-1">{{ form.date_of_birth.errors|join:", " }}</p>
+                    {% endif %}
                 </div>
+
                 <div>
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.gender.label }}</label>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">
+                        {{ form.gender.label }}
+                    </label>
                     {{ form.gender }}
-                    {% if form.gender.errors %}<p class="text-red-600 text-xs mt-1">{{ form.gender.errors|join:", " }}
-                    </p>{% endif %}
+                    {% if form.gender.errors %}
+                    <p class="text-red-600 text-xs mt-1">{{ form.gender.errors|join:", " }}</p>
+                    {% endif %}
                 </div>
+
                 <div class="sm:col-span-2">
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.bio.label }}</label>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">
+                        {{ form.bio.label }}
+                    </label>
                     {{ form.bio }}
-                    {% if form.bio.errors %}<p class="text-red-600 text-xs mt-1">{{ form.bio.errors|join:", " }}</p>{%
-                    endif %}
+                    {% if form.bio.errors %}
+                    <p class="text-red-600 text-xs mt-1">{{ form.bio.errors|join:", " }}</p>
+                    {% endif %}
                 </div>
             </div>
         </section>
 
         <section class="bg-white rounded-xl border border-stone-200 p-6">
-            <h2 class="font-semibold text-stone-900 text-lg mb-4">Measurements <span
-                    class="text-stone-400 font-normal text-sm">(cm)</span></h2>
+            <h2 class="font-semibold text-stone-900 text-lg mb-4">
+                Measurements <span class="text-stone-400 font-normal text-sm">(cm)</span>
+            </h2>
+
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.height_cm.label }}</label>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">
+                        {{ form.height_cm.label }}
+                    </label>
                     {{ form.height_cm }}
-                    {% if form.height_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.height_cm.errors|join:",
-                        " }}</p>{% endif %}
+                    {% if form.height_cm.errors %}
+                    <p class="text-red-600 text-xs mt-1">{{ form.height_cm.errors|join:", " }}</p>
+                    {% endif %}
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.bust_cm.label }}</label>
+
+                <div id="field-bust">
+                    <label id="label-bust" class="block text-sm font-medium text-stone-700 mb-1">
+                        {{ form.bust_cm.label }}
+                    </label>
                     {{ form.bust_cm }}
-                    {% if form.bust_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.bust_cm.errors|join:", " }}
-                    </p>{% endif %}
+                    {% if form.bust_cm.errors %}
+                    <p class="text-red-600 text-xs mt-1">{{ form.bust_cm.errors|join:", " }}</p>
+                    {% endif %}
                 </div>
+
                 <div>
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.waist_cm.label }}</label>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">
+                        {{ form.waist_cm.label }}
+                    </label>
                     {{ form.waist_cm }}
-                    {% if form.waist_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.waist_cm.errors|join:", "
-                        }}</p>{% endif %}
+                    {% if form.waist_cm.errors %}
+                    <p class="text-red-600 text-xs mt-1">{{ form.waist_cm.errors|join:", " }}</p>
+                    {% endif %}
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.hips_cm.label }}</label>
+
+                <div id="field-hips">
+                    <label class="block text-sm font-medium text-stone-700 mb-1">
+                        {{ form.hips_cm.label }}
+                    </label>
                     {{ form.hips_cm }}
-                    {% if form.hips_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.hips_cm.errors|join:", " }}
-                    </p>{% endif %}
+                    {% if form.hips_cm.errors %}
+                    <p class="text-red-600 text-xs mt-1">{{ form.hips_cm.errors|join:", " }}</p>
+                    {% endif %}
                 </div>
+
+                <div id="field-inseam" style="display:none;">
+                    <label class="block text-sm font-medium text-stone-700 mb-1">
+                        {{ form.inseam_cm.label }}
+                    </label>
+                    {{ form.inseam_cm }}
+                    {% if form.inseam_cm.errors %}
+                    <p class="text-red-600 text-xs mt-1">{{ form.inseam_cm.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+
                 <div>
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.shoe_size.label }}</label>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">
+                        {{ form.shoe_size.label }}
+                    </label>
                     {{ form.shoe_size }}
-                    {% if form.shoe_size.errors %}<p class="text-red-600 text-xs mt-1">{{ form.shoe_size.errors|join:",
-                        " }}</p>{% endif %}
+                    {% if form.shoe_size.errors %}
+                    <p class="text-red-600 text-xs mt-1">{{ form.shoe_size.errors|join:", " }}</p>
+                    {% endif %}
                 </div>
+
                 <div>
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.hair_color.label }}</label>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">
+                        {{ form.hair_color.label }}
+                    </label>
                     {{ form.hair_color }}
-                    {% if form.hair_color.errors %}<p class="text-red-600 text-xs mt-1">{{
-                        form.hair_color.errors|join:", " }}</p>{% endif %}
+                    {% if form.hair_color.errors %}
+                    <p class="text-red-600 text-xs mt-1">{{ form.hair_color.errors|join:", " }}</p>
+                    {% endif %}
                 </div>
+
                 <div>
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.eye_color.label }}</label>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">
+                        {{ form.eye_color.label }}
+                    </label>
                     {{ form.eye_color }}
-                    {% if form.eye_color.errors %}<p class="text-red-600 text-xs mt-1">{{ form.eye_color.errors|join:",
-                        " }}</p>{% endif %}
+                    {% if form.eye_color.errors %}
+                    <p class="text-red-600 text-xs mt-1">{{ form.eye_color.errors|join:", " }}</p>
+                    {% endif %}
                 </div>
             </div>
         </section>
+
+        <script>
+            (function () {
+                const genderSelect = document.getElementById('id_gender');
+                const labelBust = document.getElementById('label-bust');
+                const fieldHips = document.getElementById('field-hips');
+                const fieldInseam = document.getElementById('field-inseam');
+
+                function updateMeasurementFields() {
+                    const gender = genderSelect ? genderSelect.value : '';
+
+                    if (gender === 'male') {
+                        labelBust.textContent = 'Chest (cm)';
+                        fieldHips.style.display = 'none';
+                        fieldInseam.style.display = '';
+                    } else {
+                        labelBust.textContent = 'Bust (cm)';
+                        fieldHips.style.display = '';
+                        fieldInseam.style.display = 'none';
+                    }
+                }
+
+                if (genderSelect) {
+                    genderSelect.addEventListener('change', updateMeasurementFields);
+                    updateMeasurementFields();
+                }
+            })();
+        </script>
 
         <section class="bg-white rounded-xl border border-stone-200 p-6">
             <h2 class="font-semibold text-stone-900 text-lg mb-4">Photos</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {% if profile.profile_image %}
-                <div>
-                    <p class="text-xs text-stone-400 mb-1">Current profile image</p>
-                    <img src="{{ profile.profile_image.url }}" alt="" class="h-20 w-20 rounded-lg object-cover mb-2">
+
+            <div class="space-y-6">
+                <!-- Profile Image Sector -->
+                <div class="flex flex-col sm:flex-row gap-6 items-start">
+                    {% if profile.profile_image %}
+                    <div class="flex-shrink-0">
+                        <p class="text-xs text-stone-400 mb-1">Current profile image</p>
+                        <img src="{{ profile.profile_image.url }}" alt=""
+                            class="h-24 w-24 rounded-lg object-cover border border-stone-200">
+                    </div>
+                    {% endif %}
+
+                    <div class="flex-1 space-y-3 w-full">
+                        <label class="block text-sm font-medium text-stone-700">
+                            {{ form.profile_image.label }}
+                        </label>
+                        {{ form.profile_image.errors }}
+
+                        <!-- File Input styled container -->
+                        <div class="flex items-center gap-4">
+                            <input type="file" name="{{ form.profile_image.name }}" accept="image/*"
+                                class="w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer"
+                                id="{{ form.profile_image.id_for_label }}">
+                        </div>
+
+                        <!-- Manual Clear Checkbox (only show if image exists) -->
+                        {% if profile.profile_image %}
+                        <div class="flex items-center gap-2 mt-2">
+                            <input type="checkbox" name="profile_image-clear" id="profile_image-clear_id"
+                                class="rounded border-stone-300 text-stone-900 focus:ring-stone-900">
+                            <label for="profile_image-clear_id" class="text-sm text-stone-600">Remove current profile
+                                image</label>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
-                {% endif %}
-                <div>
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.profile_image.label }}</label>
-                    {{ form.profile_image }}
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.cover_image.label }}</label>
-                    {{ form.cover_image }}
+
+                <hr class="border-stone-100">
+
+                <!-- Cover Image Sector -->
+                <div class="flex flex-col sm:flex-row gap-6 items-start">
+                    {% if profile.cover_image %}
+                    <div class="flex-shrink-0">
+                        <p class="text-xs text-stone-400 mb-1">Current cover image</p>
+                        <img src="{{ profile.cover_image.url }}" alt=""
+                            class="h-24 w-32 rounded-lg object-cover border border-stone-200">
+                    </div>
+                    {% endif %}
+
+                    <div class="flex-1 space-y-3 w-full">
+                        <label class="block text-sm font-medium text-stone-700">
+                            {{ form.cover_image.label }}
+                        </label>
+                        {{ form.cover_image.errors }}
+
+                        <div class="flex items-center gap-4">
+                            <input type="file" name="{{ form.cover_image.name }}" accept="image/*"
+                                class="w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer"
+                                id="{{ form.cover_image.id_for_label }}">
+                        </div>
+
+                        {% if profile.cover_image %}
+                        <div class="flex items-center gap-2 mt-2">
+                            <input type="checkbox" name="cover_image-clear" id="cover_image-clear_id"
+                                class="rounded border-stone-300 text-stone-900 focus:ring-stone-900">
+                            <label for="cover_image-clear_id" class="text-sm text-stone-600">Remove current cover
+                                image</label>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </section>
@@ -119,15 +263,23 @@
             <h2 class="font-semibold text-stone-900 text-lg mb-4">Links & Contact</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.instagram_url.label }}</label>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">
+                        {{ form.instagram_url.label }}
+                    </label>
                     {{ form.instagram_url }}
                 </div>
+
                 <div>
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.website_url.label }}</label>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">
+                        {{ form.website_url.label }}
+                    </label>
                     {{ form.website_url }}
                 </div>
+
                 <div>
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.contact_email.label }}</label>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">
+                        {{ form.contact_email.label }}
+                    </label>
                     {{ form.contact_email }}
                 </div>
             </div>
@@ -141,16 +293,19 @@
                     {{ form.available_for_editorial }}
                     <span class="text-sm text-stone-800">{{ form.available_for_editorial.label }}</span>
                 </label>
+
                 <label
                     class="flex items-center gap-3 border border-stone-200 rounded-xl px-4 py-3 cursor-pointer hover:border-stone-400 transition-colors">
                     {{ form.available_for_runway }}
                     <span class="text-sm text-stone-800">{{ form.available_for_runway.label }}</span>
                 </label>
+
                 <label
                     class="flex items-center gap-3 border border-stone-200 rounded-xl px-4 py-3 cursor-pointer hover:border-stone-400 transition-colors">
                     {{ form.available_for_commercial }}
                     <span class="text-sm text-stone-800">{{ form.available_for_commercial.label }}</span>
                 </label>
+
                 <label
                     class="flex items-center gap-3 border border-stone-200 rounded-xl px-4 py-3 cursor-pointer hover:border-stone-400 transition-colors">
                     {{ form.available_for_fittings }}
@@ -162,19 +317,27 @@
         <section class="bg-white rounded-xl border border-stone-200 p-6">
             <h2 class="font-semibold text-stone-900 text-lg mb-4">Visibility</h2>
             <div class="space-y-3">
-                <label class="flex items-center gap-3 cursor-pointer">{{ form.is_public }} <span
-                        class="text-sm text-stone-800">{{ form.is_public.label }}</span></label>
-                <label class="flex items-center gap-3 cursor-pointer">{{ form.is_discoverable }} <span
-                        class="text-sm text-stone-800">{{ form.is_discoverable.label }}</span></label>
+                <label class="flex items-center gap-3 cursor-pointer">
+                    {{ form.is_public }}
+                    <span class="text-sm text-stone-800">{{ form.is_public.label }}</span>
+                </label>
+
+                <label class="flex items-center gap-3 cursor-pointer">
+                    {{ form.is_discoverable }}
+                    <span class="text-sm text-stone-800">{{ form.is_discoverable.label }}</span>
+                </label>
             </div>
         </section>
 
         <div class="flex justify-end gap-3">
             <a href="{% url 'dashboard' %}"
-                class="border border-stone-300 text-stone-600 text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-stone-50 transition-colors">Cancel</a>
+                class="border border-stone-300 text-stone-600 text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-stone-50 transition-colors">
+                Cancel
+            </a>
             <button type="submit"
-                class="bg-stone-900 text-white font-semibold px-6 py-2.5 rounded-lg hover:bg-stone-700 transition-colors">Save
-                Changes</button>
+                class="bg-stone-900 text-white font-semibold px-6 py-2.5 rounded-lg hover:bg-stone-700 transition-colors">
+                Save Changes
+            </button>
         </div>
     </form>
 </div>

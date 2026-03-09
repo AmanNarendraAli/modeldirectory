@@ -50,11 +50,13 @@ def apply(request, agency_slug):
             ApplicationSnapshot.objects.create(
                 application=application,
                 applicant_name=profile.public_display_name or profile.user.full_name,
+                gender=profile.gender,
                 city=profile.city,
                 height_cm=profile.height_cm,
                 bust_cm=profile.bust_cm,
                 waist_cm=profile.waist_cm,
                 hips_cm=profile.hips_cm,
+                inseam_cm=profile.inseam_cm,
                 portfolio_summary=profile.bio,
                 selected_portfolio_posts=posts,
                 submission_payload={

@@ -40,7 +40,7 @@
             <select name="represented"
                 class="border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
                 <option value="">Any</option>
-                <option value="yes" {% if selected_represente == "yes" %}selected{% endif %}>Represented</option>
+                <option value="yes" {% if selected_represented == "yes" %}selected{% endif %}>Represented</option>
                 <option value="no" {% if selected_represented == "no" %}selected{% endif %}>Independent</option>
             </select>
         </div>
@@ -61,7 +61,7 @@
                 <img src="{{ profile.profile_image.url }}" alt="{{ profile.public_display_name }}"
                     class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                 {% else %}
-                <div>
+                <div
                     class="w-full h-full flex items-center justify-center bg-gradient-to-br from-stone-200 to-stone-300">
                     <span class="font-display text-4xl font-bold text-stone-400">{{
                         profile.public_display_name|slice:":1" }}</span>

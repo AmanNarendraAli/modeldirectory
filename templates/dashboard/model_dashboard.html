@@ -135,8 +135,7 @@
             <ul class="space-y-2">
                 {% for saved in saved_agencies %}
                 <li class="flex items-center justify-between text-sm">
-                    <a href="{% url 'agency-detail' saved.agency.slug %}" class="text-stone-700 hover:text-stone-900">{{
-                        saved.agency.name }}</a>
+                    <a href="{% url 'agency-detail' saved.agency.slug %}" class="text-stone-700 hover:text-stone-900">{{ saved.agency.name }}</a>
                     <form method="post" action="{% url 'save-agency' saved.agency.slug %}">{% csrf_token %}
                         <button class="text-xs text-stone-400 hover:text-red-500">Remove</button>
                     </form>

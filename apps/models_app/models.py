@@ -30,9 +30,10 @@ class ModelProfile(models.Model):
 
     # Measurements (in cm / numeric)
     height_cm = models.PositiveSmallIntegerField(null=True, blank=True)
-    bust_cm = models.PositiveSmallIntegerField(null=True, blank=True)
+    bust_cm = models.PositiveSmallIntegerField(null=True, blank=True)  # labelled "Chest" for male models
     waist_cm = models.PositiveSmallIntegerField(null=True, blank=True)
     hips_cm = models.PositiveSmallIntegerField(null=True, blank=True)
+    inseam_cm = models.PositiveSmallIntegerField(null=True, blank=True)  # primarily for male models
     shoe_size = models.CharField(max_length=10, blank=True)
     hair_color = models.CharField(max_length=50, blank=True)
     eye_color = models.CharField(max_length=50, blank=True)
@@ -69,6 +70,12 @@ class ModelProfile(models.Model):
     class Meta:
         ordering = ["-created_at"]
         verbose_name = "Model Profile"
+
+    def get_bust_chest_label(self):
+        """Returns the correct label for bust_cm based on gender."""
+        if self.gender == self.Gender.MALE:
+            return "Chest"
+        return "Bust"
 
     def __str__(self):
         return self.public_display_name or self.user.full_name

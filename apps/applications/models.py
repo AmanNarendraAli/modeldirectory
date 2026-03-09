@@ -47,11 +47,13 @@ class Application(models.Model):
 class ApplicationSnapshot(models.Model):
     application = models.OneToOneField(Application, on_delete=models.CASCADE, related_name="snapshot")
     applicant_name = models.CharField(max_length=255)
+    gender = models.CharField(max_length=20, blank=True)  # snapshot of gender at submission time
     city = models.CharField(max_length=100, blank=True)
     height_cm = models.PositiveSmallIntegerField(null=True, blank=True)
-    bust_cm = models.PositiveSmallIntegerField(null=True, blank=True)
+    bust_cm = models.PositiveSmallIntegerField(null=True, blank=True)  # also used as "chest" for male models
     waist_cm = models.PositiveSmallIntegerField(null=True, blank=True)
     hips_cm = models.PositiveSmallIntegerField(null=True, blank=True)
+    inseam_cm = models.PositiveSmallIntegerField(null=True, blank=True)
     portfolio_summary = models.TextField(blank=True)
     selected_portfolio_posts = models.JSONField(default=list, blank=True)
     submission_payload = models.JSONField(default=dict, blank=True)

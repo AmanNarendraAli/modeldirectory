@@ -17,7 +17,8 @@
             <h2 class="font-semibold text-stone-900 text-lg mb-5">Basic Information</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="sm:col-span-2">
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.public_display_name.label }}</label>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{
+                        form.public_display_name.label}}</label>
                     {{ form.public_display_name }}
                     {% if form.public_display_name.errors %}<p class="text-red-600 text-xs mt-1">{{
                         form.public_display_name.errors|join:", " }}</p>{% endif %}
@@ -25,8 +26,8 @@
                 <div>
                     <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.city.label }}</label>
                     {{ form.city }}
-                    {% if form.city.errors %}<p class="text-red-600 text-xs mt-1">{{ form.city.errors|join:", " }}</p>
-                    {% endif %}
+                    {% if form.city.errors %}<p class="text-red-600 text-xs mt-1">{{ form.city.errors|join:", " }}</p>{%
+                    endif %}
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.date_of_birth.label }}</label>
@@ -43,8 +44,8 @@
                 <div class="sm:col-span-2">
                     <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.bio.label }}</label>
                     {{ form.bio }}
-                    {% if form.bio.errors %}<p class="text-red-600 text-xs mt-1">{{ form.bio.errors|join:", " }}</p>
-                    {%endif %}
+                    {% if form.bio.errors %}<p class="text-red-600 text-xs mt-1">{{ form.bio.errors|join:", " }}</p>{%
+                    endif %}
                 </div>
             </div>
         </section>
@@ -61,8 +62,9 @@
                     {% if form.height_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.height_cm.errors|join:",
                         " }}</p>{% endif %}
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.bust_cm.label }}</label>
+                <div id="field-bust">
+                    <label id="label-bust" class="block text-sm font-medium text-stone-700 mb-1">{{ form.bust_cm.label
+                        }}</label>
                     {{ form.bust_cm }}
                     {% if form.bust_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.bust_cm.errors|join:", " }}
                     </p>{% endif %}
@@ -73,11 +75,17 @@
                     {% if form.waist_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.waist_cm.errors|join:", "
                         }}</p>{% endif %}
                 </div>
-                <div>
+                <div id="field-hips">
                     <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.hips_cm.label }}</label>
                     {{ form.hips_cm }}
                     {% if form.hips_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.hips_cm.errors|join:", " }}
                     </p>{% endif %}
+                </div>
+                <div id="field-inseam" style="display:none">
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.inseam_cm.label }}</label>
+                    {{ form.inseam_cm }}
+                    {% if form.inseam_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.inseam_cm.errors|join:",
+                        " }}</p>{% endif %}
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.shoe_size.label }}</label>
@@ -99,6 +107,34 @@
                 </div>
             </div>
         </section>
+
+        <script>
+            (function () {
+                const genderSelect = document.getElementById('id_gender');
+                const fieldBust = document.getElementById('field-bust');
+                const labelBust = document.getElementById('label-bust');
+                const fieldHips = document.getElementById('field-hips');
+                const fieldInseam = document.getElementById('field-inseam');
+
+                function updateMeasurementFields() {
+                    const gender = genderSelect ? genderSelect.value : '';
+                    if (gender === 'male') {
+                        labelBust.textContent = 'Chest (cm)';
+                        fieldHips.style.display = '';
+                        fieldInseam.style.display = '';
+                    } else {
+                        labelBust.textContent = 'Bust (cm)';
+                        fieldHips.style.display = '';
+                        fieldInseam.style.display = 'none';
+                    }
+                }
+
+                if (genderSelect) {
+                    genderSelect.addEventListener('change', updateMeasurementFields);
+                    updateMeasurementFields();
+                }
+            })();
+        </script>
 
         <!-- Photos -->
         <section class="bg-white rounded-xl border border-stone-200 p-6">
