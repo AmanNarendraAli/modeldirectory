@@ -76,5 +76,70 @@
         </div>
         {% endif %}
     </div>
+
+    <!-- Roster Management -->
+    <div class="mt-12 mb-6">
+        <h2 class="font-display text-2xl font-bold text-stone-900">Roster</h2>
+        <p class="text-stone-500 text-sm mt-1">Manage the models represented by your agency.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Roster List -->
+        <div class="lg:col-span-2 bg-white rounded-xl border border-stone-200 overflow-hidden">
+            {% if roster_models %}
+            <ul class="divide-y divide-stone-100">
+                {% for model in roster_models %}
+                <li class="p-4 flex items-center justify-between hover:bg-stone-50 transition-colors">
+                    <div class="flex items-center gap-4">
+                        {% if model.profile_image %}
+                        <img src="{{ model.profile_image.url }}" alt="" class="w-10 h-10 rounded-full object-cover border border-stone-200">
+                        {% else %}
+                        <div class="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 font-bold text-lg">
+                            {{ model.public_display_name|slice:":1" }}
+                        </div>
+                        {% endif %}
+                        <div>
+                            <a href="{% url 'model-detail' model.slug %}" target="_blank" class="font-medium text-stone-900 hover:text-stone-600 transition-colors">{{ model.public_display_name }}</a>
+                            <p class="text-xs text-stone-400">Linked to roster</p>
+                        </div>
+                    </div>
+                    {% if can_edit %}
+                    <form method="post" action="{% url 'unlink-model' agency.id model.id %}" onsubmit="return confirm('Remove {{ model.public_display_name }} from your roster?');">
+                        {% csrf_token %}
+                        <button type="submit" class="text-xs font-medium text-red-600 hover:text-red-800 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors">Remove</button>
+                    </form>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="p-8 text-center text-stone-400 text-sm">
+                No models currently on your roster.
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Add to Roster Form -->
+        {% if can_edit %}
+        <div>
+            <div class="bg-stone-50 border border-stone-200 rounded-xl p-5">
+                <h3 class="font-semibold text-stone-900 text-sm mb-2">Add Model to Roster</h3>
+                <p class="text-xs text-stone-500 mb-4">Enter the exact name of the model's profile to link them to your agency.</p>
+                <form method="post" action="{% url 'link-model' agency.id %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="block text-xs font-medium text-stone-600 mb-1">Model Name</label>
+                        <input type="text" name="model_name" required placeholder="e.g. Jane Doe"
+                            class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+                    </div>
+                    <button type="submit" class="w-full bg-stone-900 text-white text-sm font-medium py-2.5 rounded-lg hover:bg-stone-700 transition-colors">
+                        Add to Roster
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
 </div>
 {% endblock %}

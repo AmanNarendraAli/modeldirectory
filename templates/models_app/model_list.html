@@ -31,7 +31,7 @@
                 class="border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
                 <option value="">Any</option>
                 {% for val, label in gender_choices %}
-                <option value="{{ val }}" {% if va == selected_gender %}selected{% endif %}>{{ label }}</option>
+                <option value="{{ val }}" {% if val == selected_gender %}selected{% endif %}>{{ label }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -54,22 +54,29 @@
     {% if profiles %}
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
         {% for profile in profiles %}
+        {% if user.is_authenticated and profile.user == user %}
+        {# Own profile card — link to dashboard #}
+        <a href="{% url 'dashboard' %}"
+            class="group bg-white rounded-xl shadow-sm border-2 border-stone-800 overflow-hidden hover:shadow-md transition-shadow relative">
+        {% else %}
         <a href="{% url 'model-detail' profile.slug %}"
-            class="group bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden hover:shadow-md transition-shadow">
+            class="group bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden hover:shadow-md transition-shadow relative">
+        {% endif %}
+            {% if user.is_authenticated and profile.user == user %}
+            <span class="absolute top-2 right-2 z-10 bg-stone-900 text-white text-xs font-semibold px-2 py-0.5 rounded-full">You</span>
+            {% endif %}
             <div class="aspect-[3/4] bg-stone-100 overflow-hidden">
                 {% if profile.profile_image %}
                 <img src="{{ profile.profile_image.url }}" alt="{{ profile.public_display_name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">
                 {% else %}
-                <div
-                    class="w-full h-full flex items-center justify-center bg-gradient-to-br from-stone-200 to-stone-300">
-                    <span class="font-display text-4xl font-bold text-stone-400">{{
-                        profile.public_display_name|slice:":1" }}</span>
+                <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-stone-200 to-stone-300">
+                    <span class="font-display text-4xl font-bold text-stone-400">{{ profile.public_display_name|slice:":1" }}</span>
                 </div>
                 {% endif %}
             </div>
             <div class="p-3">
                 <h2 class="font-semibold text-stone-900 text-sm truncate">{{ profile.public_display_name }}</h2>
-                <p class="text-xs text-stone-400">{{ profile.city }}{% if profile.height_cm %} · {{ profile.height_cm }}cm{% endif %}</p>
+                <p class="text-xs text-stone-400">{{ profile.city }}{% if profile.height_cm %} · {{ profile.height_cm }} cm{% endif %}</p>
                 {% if profile.represented_by_agency %}
                 <p class="text-xs text-stone-500 mt-1 truncate">{{ profile.represented_by_agency.name }}</p>
                 {% else %}

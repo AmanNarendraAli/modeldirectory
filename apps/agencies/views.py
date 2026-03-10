@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
-from .models import Agency
+from .models import Agency, AgencyStaff
 
 
 def agency_list(request):
@@ -22,12 +22,19 @@ def agency_list(request):
 
     cities = Agency.objects.filter(is_active=True).exclude(city="").values_list("city", flat=True).distinct().order_by("city")
 
+    user_agency_ids = set()
+    if request.user.is_authenticated:
+        user_agency_ids = set(
+            AgencyStaff.objects.filter(user=request.user).values_list("agency_id", flat=True)
+        )
+
     return render(request, "agencies/agency_list.html", {
         "agencies": qs,
         "cities": cities,
         "search": search,
         "selected_city": city,
         "accepting": accepting,
+        "user_agency_ids": user_agency_ids,
     })
 
 

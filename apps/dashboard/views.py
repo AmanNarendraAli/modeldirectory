@@ -95,6 +95,8 @@ def agency_dashboard(request):
 
     can_edit = AgencyStaff.objects.filter(user=request.user, agency=agency, can_edit_agency=True).exists()
 
+    roster_models = agency.represented_models.all().order_by('public_display_name')
+
     return render(request, "dashboard/agency_dashboard.html", {
         "agency": agency,
         "applications": applications,
@@ -102,6 +104,7 @@ def agency_dashboard(request):
         "status_filter": status_filter,
         "city_filter": city_filter,
         "can_edit": can_edit,
+        "roster_models": roster_models,
     })
 
 
@@ -220,3 +223,53 @@ def contact_applicant(request, application_id):
         messages.success(request, f"Email sent to {recipient}.")
 
     return redirect("applicant-detail", application_id=application_id)
+
+
+@login_required
+def link_model(request, agency_id):
+    if request.method != "POST":
+        return redirect("dashboard")
+
+    agency = _get_agency_for_staff(request.user)
+    if not agency or agency.id != agency_id:
+        return redirect("home")
+
+    public_display_name = request.POST.get("model_name", "").strip()
+    if not public_display_name:
+        messages.error(request, "Please provide a model name.")
+        return redirect("dashboard")
+
+    try:
+        model_profile = ModelProfile.objects.get(public_display_name__iexact=public_display_name)
+    except ModelProfile.DoesNotExist:
+        messages.error(request, f"Could not find a model with exact name '{public_display_name}'.")
+        return redirect("dashboard")
+    except ModelProfile.MultipleObjectsReturned:
+        messages.error(request, f"Multiple models found for '{public_display_name}'.")
+        return redirect("dashboard")
+
+    if model_profile.represented_by_agency == agency:
+        messages.info(request, f"{model_profile.public_display_name} is already on the roster.")
+    else:
+        model_profile.represented_by_agency = agency
+        model_profile.save(update_fields=["represented_by_agency"])
+        messages.success(request, f"Added {model_profile.public_display_name} to the roster.")
+
+    return redirect("dashboard")
+
+
+@login_required
+def unlink_model(request, agency_id, model_id):
+    if request.method != "POST":
+        return redirect("dashboard")
+
+    agency = _get_agency_for_staff(request.user)
+    if not agency or agency.id != agency_id:
+        return redirect("home")
+
+    model_profile = get_object_or_404(ModelProfile, id=model_id, represented_by_agency=agency)
+    model_profile.represented_by_agency = None
+    model_profile.save(update_fields=["represented_by_agency"])
+
+    messages.success(request, f"Removed {model_profile.public_display_name} from the roster.")
+    return redirect("dashboard")

@@ -9,4 +9,6 @@ urlpatterns = [
     path("applications/<int:application_id>/status/", views.update_application_status, name="update-application-status"),
     path("applications/<int:application_id>/feedback/", views.submit_feedback, name="submit-feedback"),
     path("applications/<int:application_id>/contact/", views.contact_applicant, name="contact-applicant"),
+    path("agency/<int:agency_id>/link-model/", views.link_model, name="link-model"),
+    path("agency/<int:agency_id>/unlink-model/<int:model_id>/", views.unlink_model, name="unlink-model"),
 ]

@@ -68,16 +68,21 @@
             </div>
         </section>
 
-        <section class="bg-white rounded-xl border border-stone-200 p-6">
-            <h2 class="font-semibold text-stone-900 text-lg mb-4">
-                Measurements <span class="text-stone-400 font-normal text-sm">(cm)</span>
-            </h2>
+        <!-- Measurements with cm/in toggle -->
+        <section class="bg-white rounded-xl border border-stone-200 p-6" id="measurements-section">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-semibold text-stone-900 text-lg" id="measurements-heading">Measurements <span class="text-stone-400 font-normal text-sm" id="measurements-unit-label">(cm)</span></h2>
+                <div class="flex items-center gap-1 bg-stone-100 rounded-lg p-1 text-xs font-medium">
+                    <button type="button" id="unit-btn-cm" onclick="setMeasurementUnit('cm')"
+                        class="px-3 py-1.5 rounded-md transition-colors bg-white text-stone-900 shadow-sm">cm</button>
+                    <button type="button" id="unit-btn-in" onclick="setMeasurementUnit('in')"
+                        class="px-3 py-1.5 rounded-md transition-colors text-stone-500 hover:text-stone-700">in</button>
+                </div>
+            </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-stone-700 mb-1">
-                        {{ form.height_cm.label }}
-                    </label>
+                    <label class="block text-sm font-medium text-stone-700 mb-1" id="label-height">Height (cm)</label>
                     {{ form.height_cm }}
                     {% if form.height_cm.errors %}
                     <p class="text-red-600 text-xs mt-1">{{ form.height_cm.errors|join:", " }}</p>
@@ -85,9 +90,7 @@
                 </div>
 
                 <div id="field-bust">
-                    <label id="label-bust" class="block text-sm font-medium text-stone-700 mb-1">
-                        {{ form.bust_cm.label }}
-                    </label>
+                    <label class="block text-sm font-medium text-stone-700 mb-1" id="label-bust">Bust (cm)</label>
                     {{ form.bust_cm }}
                     {% if form.bust_cm.errors %}
                     <p class="text-red-600 text-xs mt-1">{{ form.bust_cm.errors|join:", " }}</p>
@@ -95,9 +98,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-stone-700 mb-1">
-                        {{ form.waist_cm.label }}
-                    </label>
+                    <label class="block text-sm font-medium text-stone-700 mb-1" id="label-waist">Waist (cm)</label>
                     {{ form.waist_cm }}
                     {% if form.waist_cm.errors %}
                     <p class="text-red-600 text-xs mt-1">{{ form.waist_cm.errors|join:", " }}</p>
@@ -105,9 +106,7 @@
                 </div>
 
                 <div id="field-hips">
-                    <label class="block text-sm font-medium text-stone-700 mb-1">
-                        {{ form.hips_cm.label }}
-                    </label>
+                    <label class="block text-sm font-medium text-stone-700 mb-1" id="label-hips">Hips (cm)</label>
                     {{ form.hips_cm }}
                     {% if form.hips_cm.errors %}
                     <p class="text-red-600 text-xs mt-1">{{ form.hips_cm.errors|join:", " }}</p>
@@ -115,9 +114,7 @@
                 </div>
 
                 <div id="field-inseam" style="display:none;">
-                    <label class="block text-sm font-medium text-stone-700 mb-1">
-                        {{ form.inseam_cm.label }}
-                    </label>
+                    <label class="block text-sm font-medium text-stone-700 mb-1" id="label-inseam">Inseam (cm)</label>
                     {{ form.inseam_cm }}
                     {% if form.inseam_cm.errors %}
                     <p class="text-red-600 text-xs mt-1">{{ form.inseam_cm.errors|join:", " }}</p>
@@ -157,44 +154,124 @@
         </section>
 
         <script>
-            (function () {
-                const genderSelect = document.getElementById('id_gender');
-                const labelBust = document.getElementById('label-bust');
-                const fieldHips = document.getElementById('field-hips');
-                const fieldInseam = document.getElementById('field-inseam');
+        (function () {
+            // Gender-based field switching
+            const genderSelect = document.getElementById('id_gender');
+            const labelBust = document.getElementById('label-bust');
+            const fieldHips = document.getElementById('field-hips');
+            const fieldInseam = document.getElementById('field-inseam');
 
-                function updateMeasurementFields() {
-                    const gender = genderSelect ? genderSelect.value : '';
+            function updateMeasurementFields() {
+                const gender = genderSelect ? genderSelect.value : '';
+                const unit = window._measureUnit || 'cm';
+                const bustLabel = gender === 'male' ? 'Chest' : 'Bust';
+                labelBust.textContent = bustLabel + ' (' + unit + ')';
+                if (gender === 'male') {
+                    fieldHips.style.display = 'none';
+                    fieldInseam.style.display = '';
+                } else {
+                    fieldHips.style.display = '';
+                    fieldInseam.style.display = 'none';
+                }
+            }
 
-                    if (gender === 'male') {
-                        labelBust.textContent = 'Chest (cm)';
-                        fieldHips.style.display = 'none';
-                        fieldInseam.style.display = '';
+            if (genderSelect) {
+                genderSelect.addEventListener('change', updateMeasurementFields);
+                updateMeasurementFields();
+            }
+
+            // cm / in toggle
+            const CM_FIELDS = ['id_height_cm', 'id_bust_cm', 'id_waist_cm', 'id_hips_cm', 'id_inseam_cm'];
+            const LABELS = {
+                'id_height_cm':  { label: document.getElementById('label-height'), base: 'Height' },
+                'id_bust_cm':    { label: document.getElementById('label-bust'),   base: null }, // dynamic base
+                'id_waist_cm':   { label: document.getElementById('label-waist'),  base: 'Waist' },
+                'id_hips_cm':    { label: document.getElementById('label-hips'),   base: 'Hips' },
+                'id_inseam_cm':  { label: document.getElementById('label-inseam'), base: 'Inseam' },
+            };
+
+            window._measureUnit = 'cm';
+            // Store original cm values
+            var cmValues = {};
+            CM_FIELDS.forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) cmValues[id] = el.value ? parseFloat(el.value) : null;
+            });
+
+            window.setMeasurementUnit = function(unit) {
+                window._measureUnit = unit;
+                CM_FIELDS.forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (!el) return;
+                    var cmVal = cmValues[id];
+                    if (unit === 'in') {
+                        el.dataset.cmValue = el.value || '';
+                        if (cmVal !== null && cmVal !== '' && !isNaN(cmVal)) {
+                            el.value = Math.round(cmVal / 2.54 * 10) / 10;
+                        }
                     } else {
-                        labelBust.textContent = 'Bust (cm)';
-                        fieldHips.style.display = '';
-                        fieldInseam.style.display = 'none';
+                        // Restore exact cm values
+                        if (cmValues[id] !== null && cmValues[id] !== undefined) {
+                            el.value = cmValues[id] !== null ? cmValues[id] : '';
+                        }
                     }
-                }
+                });
 
-                if (genderSelect) {
-                    genderSelect.addEventListener('change', updateMeasurementFields);
-                    updateMeasurementFields();
+                // Update labels
+                const unitLabel = document.getElementById('measurements-unit-label');
+                unitLabel.textContent = '(' + unit + ')';
+                const gender = genderSelect ? genderSelect.value : '';
+                const bustBase = gender === 'male' ? 'Chest' : 'Bust';
+                LABELS['id_bust_cm'].base = bustBase;
+                Object.keys(LABELS).forEach(function(id) {
+                    var info = LABELS[id];
+                    if (info.label && info.base) info.label.textContent = info.base + ' (' + unit + ')';
+                });
+
+                // Toggle button styles
+                document.getElementById('unit-btn-cm').className = 'px-3 py-1.5 rounded-md transition-colors ' +
+                    (unit === 'cm' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700');
+                document.getElementById('unit-btn-in').className = 'px-3 py-1.5 rounded-md transition-colors ' +
+                    (unit === 'in' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700');
+            };
+
+            // Before form submission, convert back to cm if in inch mode
+            document.querySelector('form').addEventListener('submit', function() {
+                if (window._measureUnit === 'in') {
+                    CM_FIELDS.forEach(function(id) {
+                        var el = document.getElementById(id);
+                        if (!el || !el.value) return;
+                        el.value = Math.round(parseFloat(el.value) * 2.54);
+                    });
                 }
-            })();
+                // Update stored cm values after submit
+                CM_FIELDS.forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (el) cmValues[id] = el.value ? parseFloat(el.value) : null;
+                });
+            });
+        })();
         </script>
 
         <section class="bg-white rounded-xl border border-stone-200 p-6">
             <h2 class="font-semibold text-stone-900 text-lg mb-4">Photos</h2>
 
             <div class="space-y-6">
-                <!-- Profile Image Sector -->
+                <!-- Profile Image -->
                 <div class="flex flex-col sm:flex-row gap-6 items-start">
                     {% if profile.profile_image %}
                     <div class="flex-shrink-0">
                         <p class="text-xs text-stone-400 mb-1">Current profile image</p>
-                        <img src="{{ profile.profile_image.url }}" alt=""
+                        <img src="{{ profile.profile_image.url }}" alt="" id="profileImgPreview"
                             class="h-24 w-24 rounded-lg object-cover border border-stone-200">
+                        <button type="button"
+                            data-recrop-input="{{ form.profile_image.id_for_label }}"
+                            data-recrop-url="{{ profile.profile_image.url }}"
+                            data-crop-min-width="400"
+                            data-crop-min-height="400"
+                            class="mt-2 text-xs text-stone-500 hover:text-stone-800 flex items-center gap-1 transition-colors">
+                            ✂ Recrop existing
+                        </button>
                     </div>
                     {% endif %}
 
@@ -203,19 +280,18 @@
                             {{ form.profile_image.label }}
                         </label>
                         {{ form.profile_image.errors }}
-
-                        <!-- File Input styled container -->
                         <div class="flex items-center gap-4">
-                            <input type="file" name="{{ form.profile_image.name }}" accept="image/*" class="w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer" id="{{ form.profile_image.id_for_label }}" data-crop data-crop-min-width="400" data-crop-min-height="400" data-filename="profile_image">
+                            <input type="file" name="{{ form.profile_image.name }}" accept="image/*"
+                                class="w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer"
+                                id="{{ form.profile_image.id_for_label }}"
+                                data-crop data-crop-min-width="400" data-crop-min-height="400"
+                                data-filename="profile_image" data-preview-target="profileImgPreview">
                         </div>
-
-                        <!-- Manual Clear Checkbox (only show if image exists) -->
                         {% if profile.profile_image %}
                         <div class="flex items-center gap-2 mt-2">
                             <input type="checkbox" name="profile_image-clear" id="profile_image-clear_id"
                                 class="rounded border-stone-300 text-stone-900 focus:ring-stone-900">
-                            <label for="profile_image-clear_id" class="text-sm text-stone-600">Remove current profile
-                                image</label>
+                            <label for="profile_image-clear_id" class="text-sm text-stone-600">Remove current profile image</label>
                         </div>
                         {% endif %}
                     </div>
@@ -223,13 +299,21 @@
 
                 <hr class="border-stone-100">
 
-                <!-- Cover Image Sector -->
+                <!-- Cover Image -->
                 <div class="flex flex-col sm:flex-row gap-6 items-start">
                     {% if profile.cover_image %}
                     <div class="flex-shrink-0">
                         <p class="text-xs text-stone-400 mb-1">Current cover image</p>
-                        <img src="{{ profile.cover_image.url }}" alt=""
+                        <img src="{{ profile.cover_image.url }}" alt="" id="coverImgPreview"
                             class="h-24 w-32 rounded-lg object-cover border border-stone-200">
+                        <button type="button"
+                            data-recrop-input="{{ form.cover_image.id_for_label }}"
+                            data-recrop-url="{{ profile.cover_image.url }}"
+                            data-crop-min-width="1200"
+                            data-crop-min-height="400"
+                            class="mt-2 text-xs text-stone-500 hover:text-stone-800 flex items-center gap-1 transition-colors">
+                            ✂ Recrop existing
+                        </button>
                     </div>
                     {% endif %}
 
@@ -238,17 +322,18 @@
                             {{ form.cover_image.label }}
                         </label>
                         {{ form.cover_image.errors }}
-
                         <div class="flex items-center gap-4">
-                            <input type="file" name="{{ form.cover_image.name }}" accept="image/*" class="w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer" id="{{ form.cover_image.id_for_label }}" data-crop data-crop-min-width="1200" data-crop-min-height="400" data-filename="cover_image">
+                            <input type="file" name="{{ form.cover_image.name }}" accept="image/*"
+                                class="w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer"
+                                id="{{ form.cover_image.id_for_label }}"
+                                data-crop data-crop-min-width="1200" data-crop-min-height="400"
+                                data-filename="cover_image" data-preview-target="coverImgPreview">
                         </div>
-
                         {% if profile.cover_image %}
                         <div class="flex items-center gap-2 mt-2">
                             <input type="checkbox" name="cover_image-clear" id="cover_image-clear_id"
                                 class="rounded border-stone-300 text-stone-900 focus:ring-stone-900">
-                            <label for="cover_image-clear_id" class="text-sm text-stone-600">Remove current cover
-                                image</label>
+                            <label for="cover_image-clear_id" class="text-sm text-stone-600">Remove current cover image</label>
                         </div>
                         {% endif %}
                     </div>
@@ -257,7 +342,7 @@
         </section>
 
         <section class="bg-white rounded-xl border border-stone-200 p-6">
-            <h2 class="font-semibold text-stone-900 text-lg mb-4">Links & Contact</h2>
+            <h2 class="font-semibold text-stone-900 text-lg mb-4">Links &amp; Contact</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-stone-700 mb-1">
@@ -291,29 +376,36 @@
         <section class="bg-white rounded-xl border border-stone-200 p-6">
             <h2 class="font-semibold text-stone-900 text-lg mb-4">Availability</h2>
             <div class="grid grid-cols-2 gap-3">
-                <label
-                    class="flex items-center gap-3 border border-stone-200 rounded-xl px-4 py-3 cursor-pointer hover:border-stone-400 transition-colors">
+                <label class="flex items-center gap-3 border border-stone-200 rounded-xl px-4 py-3 cursor-pointer hover:border-stone-400 transition-colors">
                     {{ form.available_for_editorial }}
                     <span class="text-sm text-stone-800">{{ form.available_for_editorial.label }}</span>
                 </label>
 
-                <label
-                    class="flex items-center gap-3 border border-stone-200 rounded-xl px-4 py-3 cursor-pointer hover:border-stone-400 transition-colors">
+                <label class="flex items-center gap-3 border border-stone-200 rounded-xl px-4 py-3 cursor-pointer hover:border-stone-400 transition-colors">
                     {{ form.available_for_runway }}
                     <span class="text-sm text-stone-800">{{ form.available_for_runway.label }}</span>
                 </label>
 
-                <label
-                    class="flex items-center gap-3 border border-stone-200 rounded-xl px-4 py-3 cursor-pointer hover:border-stone-400 transition-colors">
+                <label class="flex items-center gap-3 border border-stone-200 rounded-xl px-4 py-3 cursor-pointer hover:border-stone-400 transition-colors">
                     {{ form.available_for_commercial }}
                     <span class="text-sm text-stone-800">{{ form.available_for_commercial.label }}</span>
                 </label>
 
-                <label
-                    class="flex items-center gap-3 border border-stone-200 rounded-xl px-4 py-3 cursor-pointer hover:border-stone-400 transition-colors">
+                <label class="flex items-center gap-3 border border-stone-200 rounded-xl px-4 py-3 cursor-pointer hover:border-stone-400 transition-colors">
                     {{ form.available_for_fittings }}
                     <span class="text-sm text-stone-800">{{ form.available_for_fittings.label }}</span>
                 </label>
+            </div>
+        </section>
+
+        <!-- Representation -->
+        <section class="bg-white rounded-xl border border-stone-200 p-6">
+            <h2 class="font-semibold text-stone-900 text-lg mb-1">Representation</h2>
+            <p class="text-stone-400 text-sm mb-4">Select an agency if you are currently represented. Leave blank if independent.</p>
+            <div>
+                <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.represented_by_agency.label }}</label>
+                {{ form.represented_by_agency }}
+                {% if form.represented_by_agency.errors %}<p class="text-red-600 text-xs mt-1">{{ form.represented_by_agency.errors|join:", " }}</p>{% endif %}
             </div>
         </section>
 

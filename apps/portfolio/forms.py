@@ -24,6 +24,8 @@ PortfolioAssetFormset = inlineformset_factory(
     PortfolioPost,
     PortfolioAsset,
     fields=["image", "alt_text", "display_order"],
-    extra=3,
+    extra=1,
+    max_num=10,
+    validate_max=True,
     can_delete=True,
 )

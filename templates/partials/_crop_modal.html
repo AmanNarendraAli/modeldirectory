@@ -16,7 +16,7 @@
         <div id="cropMinResNote" class="px-5 py-2 text-xs text-stone-400"></div>
         <div class="flex gap-3 px-5 py-4 border-t border-stone-200">
             <button type="button" id="cropCancel2" class="flex-1 border border-stone-300 text-stone-600 text-sm font-medium py-2.5 rounded-lg hover:bg-stone-50 transition-colors">Cancel</button>
-            <button type="button" id="cropConfirm" class="flex-1 bg-stone-900 text-white text-sm font-medium py-2.5 rounded-lg hover:bg-stone-700 transition-colors">Crop &amp; Use</button>
+            <button type="button" id="cropConfirm" class="flex-1 bg-stone-900 text-white text-sm font-medium py-2.5 rounded-lg hover:bg-stone-700 transition-colors">Use</button>
         </div>
     </div>
 </div>
@@ -33,21 +33,57 @@
     var activeMinWidth = 0;
     var activeMinHeight = 0;
 
-    function openModal(file, input, minW, minH) {
+    function initCropper() {
+        if (cropper) { cropper.destroy(); cropper = null; }
+        cropper = new Cropper(cropPreviewImg, {
+            viewMode: 1,
+            aspectRatio: NaN,
+            autoCropArea: 1,
+            movable: true,
+            zoomable: true,
+            rotatable: false,
+        });
+    }
+
+    function openModalWithDataUrl(dataUrl, input, minW, minH) {
         activeInput = input;
         activeMinWidth = minW;
         activeMinHeight = minH;
-        cropMinResNote.textContent = minW && minH ? 'Minimum size: ' + minW + ' x ' + minH + ' px' : '';
+        cropMinResNote.textContent = (minW && minH) ? 'Minimum size: ' + minW + ' × ' + minH + ' px' : '';
+
+        // Destroy any existing cropper first
+        if (cropper) { cropper.destroy(); cropper = null; }
+
+        // Clear src to guarantee the 'load' event fires even if same URL
+        cropPreviewImg.src = '';
+        cropModal.classList.remove('hidden');
+        cropModal.classList.add('flex');
+
+        // Use img.onload as the reliable init trigger (not reader.onload)
+        cropPreviewImg.onload = function () {
+            cropPreviewImg.onload = null;
+            initCropper();
+        };
+        cropPreviewImg.src = dataUrl;
+    }
+
+    function openModalFromFile(file, input, minW, minH) {
         var reader = new FileReader();
         reader.onload = function (e) {
-            cropPreviewImg.src = e.target.result;
-            cropModal.classList.remove('hidden');
-            cropModal.classList.add('flex');
-            if (cropper) { cropper.destroy(); cropper = null; }
-            cropper = new Cropper(cropPreviewImg, { viewMode: 1, aspectRatio: NaN, autoCropArea: 1, movable: true, zoomable: true, rotatable: false });
+            openModalWithDataUrl(e.target.result, input, minW, minH);
         };
         reader.readAsDataURL(file);
     }
+
+    // For re-cropping existing images by URL (same-origin)
+    window.openCropFromUrl = function (url, input, minW, minH) {
+        fetch(url)
+            .then(function (r) { return r.blob(); })
+            .then(function (blob) {
+                var objectUrl = URL.createObjectURL(blob);
+                openModalWithDataUrl(objectUrl, input, minW, minH);
+            });
+    };
 
     function closeModal() {
         cropModal.classList.add('hidden');
@@ -63,7 +99,7 @@
         var canvas = cropper.getCroppedCanvas({ minWidth: activeMinWidth || 1, minHeight: activeMinHeight || 1 });
         if (!canvas) { closeModal(); return; }
         if (activeMinWidth && activeMinHeight && (canvas.width < activeMinWidth || canvas.height < activeMinHeight)) {
-            alert('The cropped area is too small. Minimum required: ' + activeMinWidth + ' x ' + activeMinHeight + ' px. Please select a larger area or upload a larger image.');
+            alert('The cropped area is too small. Minimum required: ' + activeMinWidth + ' × ' + activeMinHeight + ' px. Please select a larger area or upload a larger image.');
             return;
         }
         canvas.toBlob(function (blob) {
@@ -75,19 +111,36 @@
             var previewId = activeInput.dataset.previewTarget;
             if (previewId) {
                 var previewEl = document.getElementById(previewId);
-                if (previewEl) { previewEl.src = URL.createObjectURL(blob); previewEl.classList.remove('hidden'); }
+                if (previewEl) {
+                    previewEl.src = URL.createObjectURL(blob);
+                    previewEl.classList.remove('hidden');
+                }
             }
             closeModal();
         }, 'image/webp', 0.85);
     });
 
+    // Wire file inputs with data-crop attribute
     document.querySelectorAll('input[type="file"][data-crop]').forEach(function (input) {
         input.addEventListener('change', function (e) {
             var file = e.target.files[0];
             if (!file) return;
             var minW = parseInt(input.dataset.cropMinWidth || '0', 10);
             var minH = parseInt(input.dataset.cropMinHeight || '0', 10);
-            openModal(file, input, minW, minH);
+            openModalFromFile(file, input, minW, minH);
+        });
+    });
+
+    // Wire re-crop buttons:  <button data-recrop-input="inputId" data-recrop-url="..." data-crop-min-width="400" data-crop-min-height="400">
+    document.querySelectorAll('[data-recrop-input]').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            var inputEl = document.getElementById(btn.dataset.recropInput);
+            var url = btn.dataset.recropUrl;
+            var minW = parseInt(btn.dataset.cropMinWidth || '0', 10);
+            var minH = parseInt(btn.dataset.cropMinHeight || '0', 10);
+            if (!inputEl || !url) return;
+            window.openCropFromUrl(url, inputEl, minW, minH);
         });
     });
 })();
