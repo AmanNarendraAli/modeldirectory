@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{% if action == "Edit" %}Edit{% else %}New{% endif %} Portfolio Post — The Modelling Directory{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">{% endblock %}
 
 {% block content %}
 <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -30,11 +31,13 @@
             <div>
                 <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.cover_image.label }}</label>
                 {% if post and post.cover_image %}
-                <p class="text-xs text-stone-400 mb-1">Current: <span class="text-stone-600">{{ post.cover_image.name|truncatechars:40 }}</span></p>
-                <img src="{{ post.cover_image.url }}" alt="" class="h-20 rounded-lg object-cover border border-stone-200 mb-2">
+                <div class="flex items-center gap-3 mb-2">
+                    <img src="{{ post.cover_image.url }}" alt="" id="portfolioCoverPreview" class="h-20 rounded-lg object-cover border border-stone-200">
+                    <button type="button" data-recrop-input="{{ form.cover_image.id_for_label }}" data-recrop-url="{{ post.cover_image.url }}" class="text-xs text-stone-500 hover:text-stone-800 flex items-center gap-1 transition-colors">&#9986; Recrop existing</button>
+                </div>
                 {% endif %}
-                {{ form.cover_image }}
-                {% if form.cover_image.errors %}<p class="text-red-600 text-xs mt-1">{{ form.cover_image.errors|join:", " }}</p>{% endif %}
+                {{ form.cover_image.errors }}
+                <input type="file" name="{{ form.cover_image.html_name }}" accept="image/*" id="{{ form.cover_image.id_for_label }}" data-crop data-filename="portfolio_cover" data-preview-target="portfolioCoverPreview" class="w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer">
             </div>
 
             <div>
@@ -72,14 +75,17 @@
 
                     {% if asset_form.instance.pk and asset_form.instance.image %}
                     <div class="flex items-center gap-3">
-                        <img src="{{ asset_form.instance.image.url }}" alt="" class="h-14 w-14 rounded-lg object-cover border border-stone-200 flex-shrink-0">
-                        <span class="text-xs text-stone-400">Replace by uploading a new file below, or leave blank to keep.</span>
+                        <img src="{{ asset_form.instance.image.url }}" alt="" id="asset-preview-{{ forloop.counter0 }}" class="h-14 w-14 rounded-lg object-cover border border-stone-200 flex-shrink-0">
+                        <div>
+                            <p class="text-xs text-stone-400 mb-1">Upload a new file to replace, or leave blank to keep.</p>
+                            <button type="button" data-recrop-input="{{ asset_form.image.id_for_label }}" data-recrop-url="{{ asset_form.instance.image.url }}" class="text-xs text-stone-500 hover:text-stone-800 flex items-center gap-1 transition-colors">&#9986; Recrop</button>
+                        </div>
                     </div>
                     {% endif %}
 
                     <div>
                         <label class="text-xs text-stone-500 block mb-1">Image file</label>
-                        {{ asset_form.image }}
+                        <input type="file" name="{{ asset_form.image.html_name }}" accept="image/*" id="{{ asset_form.image.id_for_label }}" data-crop data-filename="portfolio_asset" {% if asset_form.instance.pk and asset_form.instance.image %}data-preview-target="asset-preview-{{ forloop.counter0 }}"{% endif %} class="w-full text-sm text-stone-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer">
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div>
@@ -116,8 +122,7 @@
                 </div>
                 <div>
                     <label class="text-xs text-stone-500 block mb-1">Image file</label>
-                    <input type="file" name="assets-__prefix__-image" accept="image/*"
-                        class="w-full text-sm text-stone-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer">
+                    <input type="file" name="assets-__prefix__-image" accept="image/*" data-crop data-filename="portfolio_asset" class="w-full text-sm text-stone-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer">
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
@@ -223,4 +228,12 @@
         </div>
     </form>
 </div>
+<script>
+// Add data-crop to existing formset asset file inputs (new ones in the template already have it)
+document.querySelectorAll('#photoSlots input[type="file"]').forEach(function(input) {
+    input.setAttribute('data-crop', '');
+    if (!input.dataset.filename) { input.dataset.filename = 'portfolio_asset'; }
+});
+</script>
+{% include "partials/_crop_modal.html" %}
 {% endblock %}

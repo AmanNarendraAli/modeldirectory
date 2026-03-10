@@ -1,5 +1,9 @@
+import logging
+
 from django.core.mail import send_mail
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 
 def _get_from_email():
@@ -11,11 +15,11 @@ def send_application_submitted_email(application):
     agency = application.agency
     applicant = application.applicant_profile
 
-    # Try primary contact staff first, then agency contact email
     from apps.agencies.models import AgencyStaff
     primary = AgencyStaff.objects.filter(agency=agency, is_primary_contact=True).select_related("user").first()
     recipient = primary.user.email if primary else agency.contact_email
     if not recipient:
+        logger.warning("send_application_submitted_email: no recipient for agency %s", agency.id)
         return
 
     subject = f"New Application from {applicant.public_display_name} — The Modelling Directory"
@@ -26,7 +30,13 @@ def send_application_submitted_email(application):
         f"Height: {applicant.height_cm or '—'} cm\n\n"
         f"Log in to your dashboard to review the application."
     )
-    send_mail(subject, body, _get_from_email(), [recipient], fail_silently=True)
+
+    logger.info("Sending application submitted email to %s (application %s)", recipient, application.id)
+    try:
+        send_mail(subject, body, _get_from_email(), [recipient], fail_silently=False)
+        logger.info("Email sent successfully to %s", recipient)
+    except Exception as exc:
+        logger.error("Failed to send application submitted email to %s: %s", recipient, exc)
 
 
 def send_status_changed_email(application):
@@ -34,6 +44,7 @@ def send_status_changed_email(application):
     applicant = application.applicant_profile
     recipient = applicant.contact_email or applicant.user.email
     if not recipient:
+        logger.warning("send_status_changed_email: no recipient for application %s", application.id)
         return
 
     subject = f"Application Update from {application.agency.name} — The Modelling Directory"
@@ -45,4 +56,9 @@ def send_status_changed_email(application):
         body += f"\nFeedback from {application.agency.name}:\n{application.feedback}\n"
     body += "\nLog in to your dashboard to view the full details."
 
-    send_mail(subject, body, _get_from_email(), [recipient], fail_silently=True)
+    logger.info("Sending status changed email to %s (application %s)", recipient, application.id)
+    try:
+        send_mail(subject, body, _get_from_email(), [recipient], fail_silently=False)
+        logger.info("Email sent successfully to %s", recipient)
+    except Exception as exc:
+        logger.error("Failed to send status changed email to %s: %s", recipient, exc)

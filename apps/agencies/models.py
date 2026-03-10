@@ -32,6 +32,7 @@ class Agency(models.Model):
     )
     is_active = models.BooleanField(default=True)
     is_accepting_applications = models.BooleanField(default=False)
+    is_roster_public = models.BooleanField(default=False)
     created_by_admin = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -99,6 +100,23 @@ class AgencyHighlight(models.Model):
 
     def __str__(self):
         return f"{self.agency.name} — {self.title}"
+
+
+class AgencyBan(models.Model):
+    """Records when an agency removes a model — prevents the model from self-adding back."""
+    model_profile = models.ForeignKey(
+        "models_app.ModelProfile",
+        on_delete=models.CASCADE,
+        related_name="agency_bans",
+    )
+    agency = models.ForeignKey(Agency, on_delete=models.CASCADE, related_name="banned_models")
+    banned_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [("model_profile", "agency")]
+
+    def __str__(self):
+        return f"{self.model_profile} banned from {self.agency}"
 
 
 class AgencyStaff(models.Model):

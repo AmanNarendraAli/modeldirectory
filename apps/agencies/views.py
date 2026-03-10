@@ -28,8 +28,24 @@ def agency_list(request):
             AgencyStaff.objects.filter(user=request.user).values_list("agency_id", flat=True)
         )
 
+    # Map agency_id → (status_value, status_label) for the current model user's applications
+    user_app_statuses = {}
+    if request.user.is_authenticated and hasattr(request.user, "model_profile"):
+        from apps.applications.models import Application
+        status_labels = dict(Application.Status.choices)
+        for row in Application.objects.filter(
+            applicant_profile=request.user.model_profile
+        ).exclude(status=Application.Status.DRAFT).values("agency_id", "status"):
+            user_app_statuses[row["agency_id"]] = (row["status"], status_labels.get(row["status"], row["status"]))
+
+    agencies_list = list(qs)
+    for ag in agencies_list:
+        pair = user_app_statuses.get(ag.pk)
+        ag.user_app_status_value = pair[0] if pair else None
+        ag.user_app_status_label = pair[1] if pair else None
+
     return render(request, "agencies/agency_list.html", {
-        "agencies": qs,
+        "agencies": agencies_list,
         "cities": cities,
         "search": search,
         "selected_city": city,
@@ -55,10 +71,16 @@ def agency_detail(request, slug):
             applicant_profile=request.user.model_profile, agency=agency
         ).first()
 
+    roster_models = (
+        agency.represented_models.filter(is_public=True).order_by("public_display_name")
+        if agency.is_roster_public else None
+    )
+
     return render(request, "agencies/agency_detail.html", {
         "agency": agency,
         "requirements": requirements,
         "highlights": highlights,
         "is_saved": is_saved,
         "existing_application": existing_application,
+        "roster_models": roster_models,
     })

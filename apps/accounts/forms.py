@@ -90,3 +90,13 @@ class OnboardingForm(forms.ModelForm):
 
     def clean_cover_image(self):
         return self._check_image_dimensions("cover_image", 1200, 400)
+
+    def clean_represented_by_agency(self):
+        agency = self.cleaned_data.get("represented_by_agency")
+        if agency and self.instance and self.instance.pk:
+            from apps.agencies.models import AgencyBan
+            if AgencyBan.objects.filter(model_profile=self.instance, agency=agency).exists():
+                raise forms.ValidationError(
+                    f"You were removed by {agency.name}. Only they can add you back."
+                )
+        return agency

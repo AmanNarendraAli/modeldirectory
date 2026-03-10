@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings as django_settings
+from django.http import JsonResponse
 
 from apps.models_app.models import ModelProfile
 from apps.applications.models import Application
@@ -234,23 +235,22 @@ def link_model(request, agency_id):
     if not agency or agency.id != agency_id:
         return redirect("home")
 
-    public_display_name = request.POST.get("model_name", "").strip()
-    if not public_display_name:
-        messages.error(request, "Please provide a model name.")
+    model_id = request.POST.get("model_id", "").strip()
+    if not model_id:
+        messages.error(request, "No model selected.")
         return redirect("dashboard")
 
     try:
-        model_profile = ModelProfile.objects.get(public_display_name__iexact=public_display_name)
-    except ModelProfile.DoesNotExist:
-        messages.error(request, f"Could not find a model with exact name '{public_display_name}'.")
-        return redirect("dashboard")
-    except ModelProfile.MultipleObjectsReturned:
-        messages.error(request, f"Multiple models found for '{public_display_name}'.")
+        model_profile = ModelProfile.objects.get(pk=model_id)
+    except (ModelProfile.DoesNotExist, ValueError):
+        messages.error(request, "Model not found.")
         return redirect("dashboard")
 
     if model_profile.represented_by_agency == agency:
         messages.info(request, f"{model_profile.public_display_name} is already on the roster.")
     else:
+        from apps.agencies.models import AgencyBan
+        AgencyBan.objects.filter(model_profile=model_profile, agency=agency).delete()
         model_profile.represented_by_agency = agency
         model_profile.save(update_fields=["represented_by_agency"])
         messages.success(request, f"Added {model_profile.public_display_name} to the roster.")
@@ -271,5 +271,38 @@ def unlink_model(request, agency_id, model_id):
     model_profile.represented_by_agency = None
     model_profile.save(update_fields=["represented_by_agency"])
 
+    from apps.agencies.models import AgencyBan
+    AgencyBan.objects.get_or_create(model_profile=model_profile, agency=agency)
+
     messages.success(request, f"Removed {model_profile.public_display_name} from the roster.")
     return redirect("dashboard")
+
+
+@login_required
+def search_models_for_roster(request, agency_id):
+    agency = _get_agency_for_staff(request.user)
+    if not agency or agency.id != agency_id:
+        return JsonResponse({"error": "Forbidden"}, status=403)
+
+    q = request.GET.get("q", "").strip()
+    if len(q) < 2:
+        return JsonResponse({"results": []})
+
+    profiles = (
+        ModelProfile.objects
+        .filter(public_display_name__icontains=q)
+        .exclude(represented_by_agency=agency)
+        .select_related("user")[:10]
+    )
+
+    results = []
+    for p in profiles:
+        results.append({
+            "id": p.id,
+            "name": p.public_display_name,
+            "city": p.city or "",
+            "height_cm": p.height_cm or "",
+            "profile_image_url": p.profile_image.url if p.profile_image else "",
+        })
+
+    return JsonResponse({"results": results})

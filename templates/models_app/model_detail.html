@@ -73,6 +73,9 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 pb-16">
         <!-- Left -->
         <div class="lg:col-span-2">
+            <div class="mb-6 text-sm text-stone-500">
+                {% if profile.represented_by_agency %}<span>Represented by </span><a href="{% url 'agency-detail' profile.represented_by_agency.slug %}" class="font-medium text-stone-800 hover:underline">{{ profile.represented_by_agency.name }}</a>{% else %}<span>Independent</span>{% endif %}
+            </div>
             {% if profile.bio %}
                 <div class="mb-8">
                     <h2 class="font-display text-xl font-bold text-stone-900 mb-3">About</h2>

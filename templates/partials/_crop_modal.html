@@ -16,6 +16,7 @@
         <div id="cropMinResNote" class="px-5 py-2 text-xs text-stone-400"></div>
         <div class="flex gap-3 px-5 py-4 border-t border-stone-200">
             <button type="button" id="cropCancel2" class="flex-1 border border-stone-300 text-stone-600 text-sm font-medium py-2.5 rounded-lg hover:bg-stone-50 transition-colors">Cancel</button>
+            <button type="button" id="cropRotate" class="border border-stone-300 text-stone-600 text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-stone-50 transition-colors">&#8635; Rotate</button>
             <button type="button" id="cropConfirm" class="flex-1 bg-stone-900 text-white text-sm font-medium py-2.5 rounded-lg hover:bg-stone-700 transition-colors">Use</button>
         </div>
     </div>
@@ -41,7 +42,7 @@
             autoCropArea: 1,
             movable: true,
             zoomable: true,
-            rotatable: false,
+            rotatable: true,
         });
     }
 
@@ -49,17 +50,14 @@
         activeInput = input;
         activeMinWidth = minW;
         activeMinHeight = minH;
-        cropMinResNote.textContent = (minW && minH) ? 'Minimum size: ' + minW + ' × ' + minH + ' px' : '';
+        cropMinResNote.textContent = (minW && minH) ? 'Minimum size: ' + minW + ' \u00d7 ' + minH + ' px' : '';
 
-        // Destroy any existing cropper first
         if (cropper) { cropper.destroy(); cropper = null; }
 
-        // Clear src to guarantee the 'load' event fires even if same URL
         cropPreviewImg.src = '';
         cropModal.classList.remove('hidden');
         cropModal.classList.add('flex');
 
-        // Use img.onload as the reliable init trigger (not reader.onload)
         cropPreviewImg.onload = function () {
             cropPreviewImg.onload = null;
             initCropper();
@@ -75,7 +73,6 @@
         reader.readAsDataURL(file);
     }
 
-    // For re-cropping existing images by URL (same-origin)
     window.openCropFromUrl = function (url, input, minW, minH) {
         fetch(url)
             .then(function (r) { return r.blob(); })
@@ -94,12 +91,17 @@
     document.getElementById('cropCancel').addEventListener('click', closeModal);
     document.getElementById('cropCancel2').addEventListener('click', closeModal);
 
+    document.getElementById('cropRotate').addEventListener('click', function () {
+        if (cropper) { cropper.rotate(90); }
+    });
+
     document.getElementById('cropConfirm').addEventListener('click', function () {
         if (!cropper || !activeInput) return;
-        var canvas = cropper.getCroppedCanvas({ minWidth: activeMinWidth || 1, minHeight: activeMinHeight || 1 });
+        // No minWidth/minHeight — canvas is the true pixel size of the cropped area
+        var canvas = cropper.getCroppedCanvas();
         if (!canvas) { closeModal(); return; }
         if (activeMinWidth && activeMinHeight && (canvas.width < activeMinWidth || canvas.height < activeMinHeight)) {
-            alert('The cropped area is too small. Minimum required: ' + activeMinWidth + ' × ' + activeMinHeight + ' px. Please select a larger area or upload a larger image.');
+            alert('The cropped area is too small. Minimum required: ' + activeMinWidth + ' \u00d7 ' + activeMinHeight + ' px. Select a larger area or upload a larger image.');
             return;
         }
         canvas.toBlob(function (blob) {
@@ -120,18 +122,18 @@
         }, 'image/webp', 0.85);
     });
 
-    // Wire file inputs with data-crop attribute
-    document.querySelectorAll('input[type="file"][data-crop]').forEach(function (input) {
-        input.addEventListener('change', function (e) {
-            var file = e.target.files[0];
-            if (!file) return;
-            var minW = parseInt(input.dataset.cropMinWidth || '0', 10);
-            var minH = parseInt(input.dataset.cropMinHeight || '0', 10);
-            openModalFromFile(file, input, minW, minH);
-        });
+    // Event delegation — handles both static and dynamically added file inputs
+    document.addEventListener('change', function (e) {
+        var input = e.target;
+        if (input.tagName !== 'INPUT' || input.type !== 'file' || !input.hasAttribute('data-crop')) return;
+        var file = input.files[0];
+        if (!file) return;
+        var minW = parseInt(input.dataset.cropMinWidth || '0', 10);
+        var minH = parseInt(input.dataset.cropMinHeight || '0', 10);
+        openModalFromFile(file, input, minW, minH);
     });
 
-    // Wire re-crop buttons:  <button data-recrop-input="inputId" data-recrop-url="..." data-crop-min-width="400" data-crop-min-height="400">
+    // Wire re-crop buttons
     document.querySelectorAll('[data-recrop-input]').forEach(function (btn) {
         btn.addEventListener('click', function (e) {
             e.preventDefault();

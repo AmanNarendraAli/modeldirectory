@@ -17,6 +17,7 @@ class AgencyEditForm(forms.ModelForm):
             "logo",
             "cover_image",
             "is_accepting_applications",
+            "is_roster_public",
         ]
         widgets = {
             "description": forms.Textarea(attrs={"rows": 5}),

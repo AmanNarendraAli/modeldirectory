@@ -9,15 +9,20 @@
 <div class="relative bg-stone-900 text-white">
     {% if agency.cover_image %}
         <div class="absolute inset-0 overflow-hidden">
-            <img src="{{ agency.cover_image.url }}" alt="" class="w-full h-full object-cover opacity-30">
+            <img src="{{ agency.cover_image.url }}" alt="{{ agency.name }} cover" class="w-full h-full object-cover opacity-30">
         </div>
+        <button type="button" data-lightbox="{{ agency.cover_image.url }}" data-lightbox-alt="{{ agency.name }} cover"
+            class="absolute top-3 right-4 text-white/50 hover:text-white text-xs flex items-center gap-1 transition-colors z-10">
+            ⤢ View cover
+        </button>
     {% endif %}
 
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 flex items-end gap-6">
         {% if agency.logo %}
             <img src="{{ agency.logo.url }}"
                  alt="{{ agency.name }} logo"
-                 class="w-20 h-20 rounded-xl object-cover border-2 border-white/20 flex-shrink-0">
+                 class="w-20 h-20 rounded-xl object-cover border-2 border-white/20 flex-shrink-0"
+                 data-lightbox="{{ agency.logo.url }}" data-lightbox-alt="{{ agency.name }} logo">
         {% else %}
             <div class="w-20 h-20 rounded-xl bg-stone-700 flex items-center justify-center flex-shrink-0">
                 <span class="font-display text-3xl font-bold text-stone-300">
@@ -171,6 +176,27 @@
             </div>
         {% endif %}
 
+        {% if agency.is_roster_public %}
+            <div>
+                <h2 class="font-display text-xl font-bold text-stone-900 mb-4">Our Models</h2>
+                {% if roster_models %}
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {% for model in roster_models %}
+                        <a href="{% url 'model-detail' model.slug %}" class="flex items-center gap-3 bg-stone-50 rounded-xl p-3 border border-stone-100 hover:border-stone-300 transition-colors">
+                            {% if model.profile_image %}<img src="{{ model.profile_image.url }}" alt="" class="w-10 h-10 rounded-full object-cover flex-shrink-0">{% else %}<div class="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center text-stone-400 font-bold flex-shrink-0">{{ model.public_display_name|slice:":1" }}</div>{% endif %}
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium text-stone-900 truncate">{{ model.public_display_name }}</p>
+                                {% if model.city %}<p class="text-xs text-stone-400 truncate">{{ model.city }}</p>{% endif %}
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-stone-400">No models listed yet.</p>
+                {% endif %}
+            </div>
+        {% endif %}
+
     </div>
 
     <!-- Sidebar -->
@@ -285,4 +311,5 @@
     </div>
 </div>
 
+{% include "partials/_lightbox.html" %}
 {% endblock %}

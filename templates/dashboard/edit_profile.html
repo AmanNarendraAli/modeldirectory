@@ -407,7 +407,29 @@
                 {{ form.represented_by_agency }}
                 {% if form.represented_by_agency.errors %}<p class="text-red-600 text-xs mt-1">{{ form.represented_by_agency.errors|join:", " }}</p>{% endif %}
             </div>
+            <div id="other-agency-field" style="display:none;" class="mt-3">
+                <label class="block text-sm font-medium text-stone-700 mb-1">Agency name</label>
+                <input type="text" id="other_agency_name_input" name="other_agency_name" placeholder="Enter your agency's name" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+                <p class="text-xs text-stone-400 mt-1">For reference only. If your agency joins the platform they can add you to their roster.</p>
+            </div>
         </section>
+        <script>
+        (function () {
+            var sel = document.getElementById('id_represented_by_agency');
+            if (!sel) { return; }
+            var opt = document.createElement('option');
+            opt.value = 'other';
+            opt.textContent = '\u2014 Signed to an agency not on this platform \u2014';
+            sel.appendChild(opt);
+            var otherField = document.getElementById('other-agency-field');
+            function toggle() { otherField.style.display = sel.value === 'other' ? '' : 'none'; }
+            sel.addEventListener('change', toggle);
+            toggle();
+            document.querySelector('form').addEventListener('submit', function () {
+                if (sel.value === 'other') { sel.value = ''; }
+            }, true);
+        })();
+        </script>
 
         <section class="bg-white rounded-xl border border-stone-200 p-6">
             <h2 class="font-semibold text-stone-900 text-lg mb-4">Visibility</h2>

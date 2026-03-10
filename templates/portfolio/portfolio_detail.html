@@ -5,41 +5,89 @@
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
     <div class="mb-6">
-        <a href="{% url 'model-detail' post.owner_profile.slug %}"
-            class="text-sm text-stone-500 hover:text-stone-800 transition-colors">
-            ← {{ post.owner_profile.public_display_name }}
-        </a>
+        <a href="{% url 'model-detail' post.owner_profile.slug %}" class="text-sm text-stone-500 hover:text-stone-800 transition-colors">← {{ post.owner_profile.public_display_name }}</a>
     </div>
 
     <h1 class="font-display text-3xl font-bold text-stone-900 mb-2">{{ post.title }}</h1>
     {% if post.caption %}
-    <p class="text-stone-500 leading-relaxed mb-8">{{ post.caption }}</p>
+    <p class="text-stone-500 leading-relaxed mb-6">{{ post.caption }}</p>
     {% endif %}
 
-    <!-- Image gallery -->
-    {% if assets %}
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-        {% for asset in assets %}
-        <div class="rounded-xl overflow-hidden bg-stone-100">
-            <img src="{{ asset.image.url }}" alt="{{ asset.alt_text|default:post.title }}" class="w-full object-cover" loading="lazy" data-lightbox="{{ asset.image.url }}" data-lightbox-alt="{{ asset.alt_text|default:post.title }}">
+    <!-- Carousel -->
+    {% if post.cover_image or assets %}
+    <div class="relative overflow-hidden rounded-xl bg-stone-950 mb-8 select-none" id="portfolioCarousel">
+        <div class="flex" id="carouselTrack" style="transition: transform 0.3s ease; will-change: transform;">
+            {% if post.cover_image %}<div class="carousel-slide flex-shrink-0 w-full flex items-center justify-center" style="min-height:40vh; max-height:80vh;"><img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="max-w-full max-h-[80vh] object-contain" loading="lazy"></div>{% endif %}
+            {% for asset in assets %}<div class="carousel-slide flex-shrink-0 w-full flex items-center justify-center" style="min-height:40vh; max-height:80vh;"><img src="{{ asset.image.url }}" alt="{{ asset.alt_text|default:post.title }}" class="max-w-full max-h-[80vh] object-contain" loading="lazy"></div>{% endfor %}
         </div>
-        {% endfor %}
-    </div>
-    {% elif post.cover_image %}
-    <div class="rounded-xl overflow-hidden bg-stone-100 mb-8">
-        <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="w-full max-h-[70vh] object-contain mx-auto" loading="lazy" data-lightbox="{{ post.cover_image.url }}" data-lightbox-alt="{{ post.title }}">
+        <button type="button" id="carouselPrev" class="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-10 h-10 items-center justify-center transition-colors hidden" aria-label="Previous">&larr;</button>
+        <button type="button" id="carouselNext" class="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-10 h-10 items-center justify-center transition-colors hidden" aria-label="Next">&rarr;</button>
+        <div id="carouselDots" class="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 hidden"></div>
     </div>
     {% endif %}
 
     {% if user.is_authenticated and user == post.owner_profile.user %}
     <div class="flex gap-3 mt-6">
-        <a href="{% url 'portfolio-edit' post.slug %}"
-            class="border border-stone-300 text-stone-700 text-sm font-medium px-4 py-2 rounded-lg hover:bg-stone-50 transition-colors">Edit
-            post</a>
-        <a href="{% url 'portfolio-delete' post.slug %}"
-            class="border border-red-200 text-red-600 text-sm font-medium px-4 py-2 rounded-lg hover:bg-red-50 transition-colors">Delete</a>
+        <a href="{% url 'portfolio-edit' post.slug %}" class="border border-stone-300 text-stone-700 text-sm font-medium px-4 py-2 rounded-lg hover:bg-stone-50 transition-colors">Edit post</a>
+        <a href="{% url 'portfolio-delete' post.slug %}" class="border border-red-200 text-red-600 text-sm font-medium px-4 py-2 rounded-lg hover:bg-red-50 transition-colors">Delete</a>
     </div>
     {% endif %}
 </div>
-{% include "partials/_lightbox.html" %}
+
+<script>
+(function () {
+    var track = document.getElementById('carouselTrack');
+    if (!track) { return; }
+    var slides = Array.from(track.querySelectorAll('.carousel-slide'));
+    var total = slides.length;
+    if (total === 0) { return; }
+
+    var current = 0;
+    var prev = document.getElementById('carouselPrev');
+    var next = document.getElementById('carouselNext');
+    var dotsContainer = document.getElementById('carouselDots');
+
+    var dots = [];
+    slides.forEach(function (_, i) {
+        var d = document.createElement('button');
+        d.type = 'button';
+        d.className = 'w-2 h-2 rounded-full transition-colors ' + (i === 0 ? 'bg-white' : 'bg-white/40');
+        d.setAttribute('aria-label', 'Go to slide ' + (i + 1));
+        d.addEventListener('click', function () { go(i); });
+        dotsContainer.appendChild(d);
+        dots.push(d);
+    });
+
+    if (total > 1) {
+        prev.classList.remove('hidden');
+        prev.classList.add('flex');
+        next.classList.remove('hidden');
+        next.classList.add('flex');
+        dotsContainer.classList.remove('hidden');
+    }
+
+    function go(idx) {
+        current = (idx + total) % total;
+        track.style.transform = 'translateX(-' + (current * 100) + '%)';
+        dots.forEach(function (d, i) {
+            d.className = 'w-2 h-2 rounded-full transition-colors ' + (i === current ? 'bg-white' : 'bg-white/40');
+        });
+    }
+
+    prev.addEventListener('click', function () { go(current - 1); });
+    next.addEventListener('click', function () { go(current + 1); });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft') { go(current - 1); }
+        if (e.key === 'ArrowRight') { go(current + 1); }
+    });
+
+    var touchStartX = 0;
+    track.addEventListener('touchstart', function (e) { touchStartX = e.touches[0].clientX; }, { passive: true });
+    track.addEventListener('touchend', function (e) {
+        var dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 40) { go(dx < 0 ? current + 1 : current - 1); }
+    }, { passive: true });
+})();
+</script>
 {% endblock %}

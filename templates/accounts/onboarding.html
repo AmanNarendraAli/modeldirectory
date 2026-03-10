@@ -48,12 +48,19 @@
 
         <!-- Measurements -->
         <section class="bg-white rounded-xl border border-stone-200 p-6">
-            <h2 class="font-semibold text-stone-900 text-lg mb-1">Measurements <span
-                    class="text-stone-400 font-normal text-sm">(optional)</span></h2>
-            <p class="text-stone-400 text-sm mb-5">All height/measurement values in cm.</p>
+            <div class="flex items-center justify-between mb-1">
+                <h2 class="font-semibold text-stone-900 text-lg">Measurements <span class="text-stone-400 font-normal text-sm">(optional)</span></h2>
+                <div class="flex items-center gap-1 bg-stone-100 rounded-lg p-1 text-xs font-medium">
+                    <button type="button" id="unit-btn-cm" onclick="setMeasurementUnit('cm')"
+                        class="px-3 py-1.5 rounded-md transition-colors bg-white text-stone-900 shadow-sm">cm</button>
+                    <button type="button" id="unit-btn-in" onclick="setMeasurementUnit('in')"
+                        class="px-3 py-1.5 rounded-md transition-colors text-stone-500 hover:text-stone-700">in</button>
+                </div>
+            </div>
+            <p class="text-stone-400 text-sm mb-5">All height/measurement values in <span id="ob-unit-label">cm</span>.</p>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.height_cm.label }}</label>
+                    <label id="label-height" class="block text-sm font-medium text-stone-700 mb-1">Height (cm)</label>
                     {{ form.height_cm }}
                     {% if form.height_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.height_cm.errors|join:"," }}</p>{% endif %}
                 </div>
@@ -65,19 +72,19 @@
                     </p>{% endif %}
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.waist_cm.label }}</label>
+                    <label id="label-waist" class="block text-sm font-medium text-stone-700 mb-1">Waist (cm)</label>
                     {{ form.waist_cm }}
                     {% if form.waist_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.waist_cm.errors|join:", "
                         }}</p>{% endif %}
                 </div>
                 <div id="field-hips">
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.hips_cm.label }}</label>
+                    <label id="label-hips" class="block text-sm font-medium text-stone-700 mb-1">Hips (cm)</label>
                     {{ form.hips_cm }}
                     {% if form.hips_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.hips_cm.errors|join:", " }}
                     </p>{% endif %}
                 </div>
                 <div id="field-inseam" style="display:none">
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.inseam_cm.label }}</label>
+                    <label id="label-inseam" class="block text-sm font-medium text-stone-700 mb-1">Inseam (cm)</label>
                     {{ form.inseam_cm }}
                     {% if form.inseam_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.inseam_cm.errors|join:"," }}</p>{% endif %}
                 </div>
@@ -103,31 +110,89 @@
         </section>
 
         <script>
-            (function () {
-                const genderSelect = document.getElementById('id_gender');
-                const fieldBust = document.getElementById('field-bust');
-                const labelBust = document.getElementById('label-bust');
-                const fieldHips = document.getElementById('field-hips');
-                const fieldInseam = document.getElementById('field-inseam');
+        (function () {
+            const genderSelect = document.getElementById('id_gender');
+            const labelBust = document.getElementById('label-bust');
+            const fieldHips = document.getElementById('field-hips');
+            const fieldInseam = document.getElementById('field-inseam');
 
-                function updateMeasurementFields() {
-                    const gender = genderSelect ? genderSelect.value : '';
-                    if (gender === 'male') {
-                        labelBust.textContent = 'Chest (cm)';
-                        fieldHips.style.display = '';
-                        fieldInseam.style.display = '';
+            function updateMeasurementFields() {
+                const gender = genderSelect ? genderSelect.value : '';
+                const unit = window._measureUnit || 'cm';
+                const bustLabel = gender === 'male' ? 'Chest' : 'Bust';
+                labelBust.textContent = bustLabel + ' (' + unit + ')';
+                if (gender === 'male') {
+                    fieldHips.style.display = 'none';
+                    fieldInseam.style.display = '';
+                } else {
+                    fieldHips.style.display = '';
+                    fieldInseam.style.display = 'none';
+                }
+            }
+
+            if (genderSelect) {
+                genderSelect.addEventListener('change', updateMeasurementFields);
+                updateMeasurementFields();
+            }
+
+            const CM_FIELDS = ['id_height_cm', 'id_bust_cm', 'id_waist_cm', 'id_hips_cm', 'id_inseam_cm'];
+            const LABELS = {
+                'id_height_cm':  { label: document.getElementById('label-height'), base: 'Height' },
+                'id_bust_cm':    { label: document.getElementById('label-bust'),   base: null },
+                'id_waist_cm':   { label: document.getElementById('label-waist'),  base: 'Waist' },
+                'id_hips_cm':    { label: document.getElementById('label-hips'),   base: 'Hips' },
+                'id_inseam_cm':  { label: document.getElementById('label-inseam'), base: 'Inseam' },
+            };
+
+            window._measureUnit = 'cm';
+            var cmValues = {};
+            CM_FIELDS.forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) cmValues[id] = el.value ? parseFloat(el.value) : null;
+            });
+
+            window.setMeasurementUnit = function(unit) {
+                window._measureUnit = unit;
+                CM_FIELDS.forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (!el) return;
+                    var cmVal = cmValues[id];
+                    if (unit === 'in') {
+                        if (cmVal !== null && cmVal !== '' && !isNaN(cmVal)) {
+                            el.value = Math.round(cmVal / 2.54 * 10) / 10;
+                        }
                     } else {
-                        labelBust.textContent = 'Bust (cm)';
-                        fieldHips.style.display = '';
-                        fieldInseam.style.display = 'none';
+                        if (cmValues[id] !== null && cmValues[id] !== undefined) {
+                            el.value = cmValues[id] !== null ? cmValues[id] : '';
+                        }
                     }
-                }
+                });
 
-                if (genderSelect) {
-                    genderSelect.addEventListener('change', updateMeasurementFields);
-                    updateMeasurementFields();
+                document.getElementById('ob-unit-label').textContent = unit;
+                const gender = genderSelect ? genderSelect.value : '';
+                const bustBase = gender === 'male' ? 'Chest' : 'Bust';
+                LABELS['id_bust_cm'].base = bustBase;
+                Object.keys(LABELS).forEach(function(id) {
+                    var info = LABELS[id];
+                    if (info.label && info.base) info.label.textContent = info.base + ' (' + unit + ')';
+                });
+
+                document.getElementById('unit-btn-cm').className = 'px-3 py-1.5 rounded-md transition-colors ' +
+                    (unit === 'cm' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700');
+                document.getElementById('unit-btn-in').className = 'px-3 py-1.5 rounded-md transition-colors ' +
+                    (unit === 'in' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700');
+            };
+
+            document.querySelector('form').addEventListener('submit', function() {
+                if (window._measureUnit === 'in') {
+                    CM_FIELDS.forEach(function(id) {
+                        var el = document.getElementById(id);
+                        if (!el || !el.value) return;
+                        el.value = Math.round(parseFloat(el.value) * 2.54);
+                    });
                 }
-            })();
+            });
+        })();
         </script>
 
         <!-- Photos -->

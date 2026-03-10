@@ -285,14 +285,66 @@ Run these yourself after each step:
 
 ---
 
-## Future Improvements
-
+## Phase 4
+- Add unit change toggle to onboarding as well
+- Add image zoom ability on agency view pages (e.g. click logo or cover to see larger version in modal) like is there in the model view pages
+- Add ability to filter models by verification status (e.g. verified models get a "verified" badge on their profile and in search results). Should set up page for verification as well, but actual verification process can be manual for now (admin sets `is_verified=True` in admin).
 - Polish and UX refinement (animations, loading states, empty states, error pages)
-- Resources section fleshing out
 - Production deployment prep (whitenoise, S3 storage, `production.py` settings)
 - Security hardening (rate limiting, CSRF review, input sanitization audit)
 - Performance (query optimization, select_related/prefetch_related audit, caching)
+
+## Future improvements
+- Resources section fleshing out
 - Email verification flow (is_verified_email field exists but unused)
 - Model/agency verification workflows
 - In-platform messaging between agencies and models
 - Social features on portfolios (likes, comments)
+
+---
+
+## Phase 3 Addendum — Post-Phase Improvements
+
+### Crop Modal Enhancements
+- **Rotation button** added to the crop interface (90° per click, uses Cropper.js `rotate()`)
+- **Fixed size minimum enforcement bug**: `getCroppedCanvas()` no longer passes `minWidth`/`minHeight` (which silently upscaled tiny images past the check); canvas now reflects true cropped-area pixel dimensions
+- **Event delegation** replaces per-element file input listeners, so dynamically added portfolio asset inputs trigger the modal automatically
+
+### Portfolio Crop Support
+- Crop modal included on `portfolio_form.html`; cover image and all asset inputs have `data-crop`
+- Existing asset photos now show a recrop button alongside their preview thumbnail
+- No minimum dimensions enforced for portfolio images (per design decision)
+
+### Portfolio Detail Carousel
+- `portfolio_detail.html` redesigned as a scrollable carousel (cover image first, then assets in display order)
+- Prev/Next arrow buttons, dot indicators, keyboard arrows, and touch swipe supported
+- No external dependencies
+
+### Agency Roster on Public Page
+- `Agency.is_roster_public` field (migration `0002`); toggle in Edit Agency → Settings
+- Public models grid shown on the agency detail page when enabled
+
+### Agency/Independent on Model Public Page
+- "Represented by [Agency]" or "Independent" shown above the About section on model public profiles
+
+### Ban System (`AgencyBan` model, migration `0002`)
+- Agency removing a model creates an `AgencyBan` record
+- Model cannot self-add back to a banning agency; error names the agency: _"You were removed by [Name]. Only they can add you back."_
+- Agency re-adding a banned model clears the ban; voluntary independence does not create a ban
+
+### Roster Search Dropdown
+- New endpoint `GET /dashboard/agency/<id>/search-models/?q=` returns JSON (name, height, city, avatar)
+- Agency dashboard roster form replaced with live-search dropdown (debounced, GitHub-collaborator style)
+- `link_model` accepts `model_id` (PK) instead of name string
+
+### "Other" Representation Option
+- JS-injected "Signed to an agency not on this platform" option on edit profile
+- Reveals a free-text field (UI-only, not persisted); clears select to null on submit
+
+### Agency List Application Status
+- Logged-in model users see their application status badge instead of "Accepting Applications"
+- Colour-coded by status value; draft applications excluded
+
+### Email Logging & Fix
+- `fail_silently=True` removed; errors caught and logged via `logging`
+- `LOGGING` config in `settings/base.py` routes `apps.core.emails` to console at DEBUG level

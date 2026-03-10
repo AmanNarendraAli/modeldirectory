@@ -77,6 +77,14 @@
                     <div class="flex-shrink-0">
                         <p class="text-xs text-stone-400 mb-1">Current logo</p>
                         <img src="{{ agency.logo.url }}" alt="" class="h-20 w-20 rounded-lg object-contain border border-stone-200 bg-stone-50" loading="lazy">
+                        <button type="button"
+                            data-recrop-input="{{ form.logo.id_for_label }}"
+                            data-recrop-url="{{ agency.logo.url }}"
+                            data-crop-min-width="200"
+                            data-crop-min-height="200"
+                            class="mt-2 text-xs text-stone-500 hover:text-stone-800 flex items-center gap-1 transition-colors">
+                            ✂ Recrop existing
+                        </button>
                     </div>
                     {% endif %}
                     <div class="flex-1 w-full">
@@ -99,6 +107,14 @@
                     <div class="flex-shrink-0">
                         <p class="text-xs text-stone-400 mb-1">Current cover image</p>
                         <img src="{{ agency.cover_image.url }}" alt="" class="h-24 w-32 rounded-lg object-cover border border-stone-200" loading="lazy">
+                        <button type="button"
+                            data-recrop-input="{{ form.cover_image.id_for_label }}"
+                            data-recrop-url="{{ agency.cover_image.url }}"
+                            data-crop-min-width="1200"
+                            data-crop-min-height="400"
+                            class="mt-2 text-xs text-stone-500 hover:text-stone-800 flex items-center gap-1 transition-colors">
+                            ✂ Recrop existing
+                        </button>
                     </div>
                     {% endif %}
                     <div class="flex-1 w-full">
@@ -118,10 +134,16 @@
 
         <section class="bg-white rounded-xl border border-stone-200 p-6">
             <h2 class="font-semibold text-stone-900 text-lg mb-4">Settings</h2>
-            <label class="flex items-center gap-3 cursor-pointer">
-                {{ form.is_accepting_applications }}
-                <span class="text-sm text-stone-800">{{ form.is_accepting_applications.label }}</span>
-            </label>
+            <div class="space-y-3">
+                <label class="flex items-center gap-3 cursor-pointer">
+                    {{ form.is_accepting_applications }}
+                    <span class="text-sm text-stone-800">{{ form.is_accepting_applications.label }}</span>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer">
+                    {{ form.is_roster_public }}
+                    <span class="text-sm text-stone-800">Show our model roster on the public agency page</span>
+                </label>
+            </div>
         </section>
 
         <div class="flex justify-end gap-3">
