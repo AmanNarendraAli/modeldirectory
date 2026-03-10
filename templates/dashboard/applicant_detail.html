@@ -7,16 +7,11 @@
     <a href="{% url 'dashboard' %}" class="text-sm text-stone-500 hover:text-stone-800 mb-6 inline-block">← Inbox</a>
 
     <div class="flex items-center justify-between mb-6">
-        <h1 class="font-display text-2xl font-bold text-stone-900">{{ application.applicant_profile.public_display_name }}</h1>
-        <span class="text-xs font-medium px-3 py-1 rounded-full
-            {% if application.status == 'submitted' %}bg-blue-100 text-blue-700
-            {% elif application.status == 'shortlisted' %}bg-emerald-100 text-emerald-700
-            {% elif application.status == 'rejected' %}bg-red-100 text-red-600
-            {% elif application.status == 'under_review' %}bg-amber-100 text-amber-700
-            {% elif application.status == 'contacted' %}bg-purple-100 text-purple-700
-            {% else %}bg-stone-100 text-stone-500{% endif %}">
-            {{ application.get_status_display }}
-        </span>
+        <div class="flex items-center gap-4">
+            {% if application.applicant_profile.profile_image %}<img src="{{ application.applicant_profile.profile_image.url }}" alt="{{ application.applicant_profile.public_display_name }}" class="w-14 h-14 rounded-full object-cover border border-stone-200 flex-shrink-0" data-lightbox="{{ application.applicant_profile.profile_image.url }}">{% endif %}
+            <h1 class="font-display text-2xl font-bold text-stone-900">{{ application.applicant_profile.public_display_name }}</h1>
+        </div>
+        <span class="text-xs font-medium px-3 py-1 rounded-full {% if application.status == 'submitted' %}bg-blue-100 text-blue-700{% elif application.status == 'shortlisted' %}bg-emerald-100 text-emerald-700{% elif application.status == 'rejected' %}bg-red-100 text-red-600{% elif application.status == 'under_review' %}bg-amber-100 text-amber-700{% elif application.status == 'contacted' %}bg-purple-100 text-purple-700{% else %}bg-stone-100 text-stone-500{% endif %}">{{ application.get_status_display }}</span>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -37,8 +32,7 @@
                         </span>{{ snapshot.bust_cm }} cm</div>{% endif %}
                     {% if snapshot.waist_cm %}<div><span class="text-stone-400 text-xs block">Waist</span>{{ snapshot.waist_cm }} cm</div>{% endif %}
                     {% if snapshot.hips_cm %}<div><span class="text-stone-400 text-xs block">Hips</span>{{ snapshot.hips_cm }} cm</div>{% endif %}
-                    {% if snapshot.inseam_cm %}<div><span class="text-stone-400 text-xs block">Inseam</span>{{
-                        snapshot.inseam_cm }} cm</div>{% endif %}
+                    {% if snapshot.inseam_cm %}<div><span class="text-stone-400 text-xs block">Inseam</span>{{snapshot.inseam_cm }} cm</div>{% endif %}
                     {% else %}
                     <div class="col-span-3 text-stone-400 text-sm">No snapshot available.</div>
                     {% endif %}
@@ -53,23 +47,32 @@
             </div>
             {% endif %}
 
+            <!-- Agency Feedback -->
+            <div class="bg-white rounded-xl border border-stone-200 p-6">
+                <h2 class="font-semibold text-stone-900 mb-3">Feedback for Applicant</h2>
+                <p class="text-xs text-stone-400 mb-3">This feedback is visible to the applicant in their dashboard.</p>
+                <form method="post" action="{% url 'submit-feedback' application.id %}">
+                    {% csrf_token %}
+                    {{ feedback_form.feedback }}
+                    {% if feedback_form.feedback.errors %}<p class="text-red-600 text-xs mt-1">{{ feedback_form.feedback.errors|join:", " }}</p>{% endif %}
+                    <button type="submit" class="mt-3 bg-stone-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-stone-700 transition-colors">Save Feedback</button>
+                </form>
+            </div>
+
             <!-- Portfolio -->
             {% if portfolio_posts %}
             <div class="bg-white rounded-xl border border-stone-200 p-6">
                 <h2 class="font-semibold text-stone-900 mb-4">Portfolio</h2>
                 <div class="grid grid-cols-3 gap-3">
                     {% for post in portfolio_posts %}
-                    <a href="{% url 'portfolio-detail' post.slug %}" target="_blank"
-                        class="aspect-square rounded-lg overflow-hidden bg-stone-100 block group">
+                    <div class="aspect-square rounded-lg overflow-hidden bg-stone-100 block group relative">
                         {% if post.cover_image %}
-                        <img src="{{ post.cover_image.url }}" alt="{{ post.title }}"
-                            class="w-full h-full object-cover group-hover:opacity-90">
+                        <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover group-hover:opacity-90" data-lightbox="{{ post.cover_image.url }}" data-lightbox-alt="{{ post.title }}">
+                        <a href="{% url 'portfolio-detail' post.slug %}" target="_blank" class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">View post</a>
                         {% else %}
-                        <div class="w-full h-full flex items-center justify-center">
-                            <span class="text-xs text-stone-400 text-center px-1">{{ post.title }}</span>
-                        </div>
+                        <a href="{% url 'portfolio-detail' post.slug %}" target="_blank" class="w-full h-full flex items-center justify-center"><span class="text-xs text-stone-400 text-center px-1">{{ post.title }}</span></a>
                         {% endif %}
-                    </a>
+                    </div>
                     {% endfor %}
                 </div>
             </div>
@@ -79,7 +82,7 @@
 
         <!-- Sidebar: actions -->
         <div>
-            <div class="bg-white border border-stone-200 rounded-xl p-5 sticky top-24">
+            <div class="bg-white border border-stone-200 rounded-xl p-5">
                 <h3 class="font-semibold text-stone-900 text-sm mb-4">Update Status</h3>
                 <form method="post" action="{% url 'update-application-status' application.id %}">
                     {% csrf_token %}
@@ -103,14 +106,39 @@
                 </div>
 
                 <div class="mt-4">
-                    <a href="{% url 'model-detail' application.applicant_profile.slug %}" target="_blank"
-                        class="block text-center text-xs text-stone-600 hover:text-stone-900 border border-stone-200 py-2 rounded-lg hover:bg-stone-50 transition-colors">
-                        View Public Profile →
-                    </a>
+                    <a href="{% url 'model-detail' application.applicant_profile.slug %}" target="_blank" class="block text-center text-xs text-stone-600 hover:text-stone-900 border border-stone-200 py-2 rounded-lg hover:bg-stone-50 transition-colors">View Public Profile →</a>
                 </div>
+            </div>
+
+            <div class="bg-white border border-stone-200 rounded-xl p-5 mt-4">
+                <h3 class="font-semibold text-stone-900 text-sm mb-3">Contact Information</h3>
+                <div class="space-y-2 text-xs text-stone-600">
+                    <div><span class="text-stone-400 block">Email</span>{% if application.applicant_profile.contact_email %}{{ application.applicant_profile.contact_email }}{% elif application.applicant_profile.user.email %}{{ application.applicant_profile.user.email }}{% else %}—{% endif %}</div>
+                    <div><span class="text-stone-400 block">Phone</span>{% if application.applicant_profile.phone_number %}{{ application.applicant_profile.phone_number }}{% else %}—{% endif %}</div>
+                    <div><span class="text-stone-400 block">Instagram</span>{% if application.applicant_profile.instagram_url %}<a href="{{ application.applicant_profile.instagram_url }}" target="_blank" class="text-blue-600 hover:underline break-all">{{ application.applicant_profile.instagram_url }}</a>{% else %}—{% endif %}</div>
+                </div>
+            </div>
+
+            <div class="bg-white border border-stone-200 rounded-xl p-5 mt-4">
+                <h3 class="font-semibold text-stone-900 text-sm mb-3">Send Email</h3>
+                <form method="post" action="{% url 'contact-applicant' application.id %}">
+                    {% csrf_token %}
+                    <div class="mb-2">
+                        <label class="text-xs text-stone-500 block mb-1">Subject</label>
+                        {{ contact_form.subject }}
+                        {% if contact_form.subject.errors %}<p class="text-red-600 text-xs mt-1">{{ contact_form.subject.errors|join:", " }}</p>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-xs text-stone-500 block mb-1">Message</label>
+                        {{ contact_form.body }}
+                        {% if contact_form.body.errors %}<p class="text-red-600 text-xs mt-1">{{ contact_form.body.errors|join:", " }}</p>{% endif %}
+                    </div>
+                    <button type="submit" class="w-full bg-stone-900 text-white text-sm font-medium py-2.5 rounded-lg hover:bg-stone-700 transition-colors">Send Email</button>
+                </form>
             </div>
         </div>
 
     </div>
 </div>
+{% include "partials/_lightbox.html" %}
 {% endblock %}

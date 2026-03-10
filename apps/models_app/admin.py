@@ -14,7 +14,7 @@ class ModelProfileAdmin(admin.ModelAdmin):
         ("Identity", {"fields": ("user", "public_display_name", "slug", "gender", "date_of_birth", "city", "country", "bio")}),
         ("Measurements", {"fields": ("height_cm", "bust_cm", "waist_cm", "hips_cm", "inseam_cm", "shoe_size", "hair_color", "eye_color")}),
         ("Photos", {"fields": ("profile_image", "cover_image")}),
-        ("Links", {"fields": ("instagram_url", "website_url", "contact_email")}),
+        ("Links", {"fields": ("instagram_url", "website_url", "contact_email", "phone_number")}),
         ("Availability", {"fields": ("available_for_editorial", "available_for_runway", "available_for_commercial", "available_for_fittings")}),
         ("Status", {"fields": ("is_public", "is_discoverable", "verification_status", "represented_by_agency")}),
         ("Timestamps", {"fields": ("created_at", "updated_at"), "classes": ("collapse",)}),

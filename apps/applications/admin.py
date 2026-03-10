@@ -13,7 +13,7 @@ class ApplicationAdmin(admin.ModelAdmin):
     list_display = ("applicant_profile", "agency", "status", "submitted_at", "reviewed_at")
     list_filter = ("status", "agency")
     search_fields = ("applicant_profile__user__email", "applicant_profile__public_display_name", "agency__name")
-    readonly_fields = ("updated_at",)
+    readonly_fields = ("updated_at", "feedback_updated_at")
     inlines = [ApplicationSnapshotInline]
 
 

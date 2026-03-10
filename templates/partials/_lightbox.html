@@ -1,0 +1,46 @@
+<!-- Lightbox overlay -->
+<div id="lightboxOverlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90 p-4" role="dialog" aria-modal="true">
+    <button id="lightboxClose" type="button" class="absolute top-4 right-4 text-white text-3xl leading-none hover:text-stone-300 transition-colors z-10">&times;</button>
+    <img id="lightboxImg" src="" alt="" class="max-w-full max-h-[90vh] object-contain rounded shadow-2xl select-none">
+</div>
+
+<script>
+(function () {
+    var overlay = document.getElementById('lightboxOverlay');
+    var img = document.getElementById('lightboxImg');
+    var closeBtn = document.getElementById('lightboxClose');
+
+    function openLightbox(src, alt) {
+        img.src = src;
+        img.alt = alt || '';
+        overlay.classList.remove('hidden');
+        overlay.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeLightbox() {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('flex');
+        img.src = '';
+        document.body.style.overflow = '';
+    }
+
+    closeBtn.addEventListener('click', closeLightbox);
+
+    overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) { closeLightbox(); }
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') { closeLightbox(); }
+    });
+
+    document.querySelectorAll('[data-lightbox]').forEach(function (el) {
+        el.style.cursor = 'zoom-in';
+        el.addEventListener('click', function (e) {
+            e.preventDefault();
+            openLightbox(el.dataset.lightbox, el.alt || el.dataset.lightboxAlt || '');
+        });
+    });
+})();
+</script>

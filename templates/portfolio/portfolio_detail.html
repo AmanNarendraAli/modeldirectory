@@ -21,13 +21,13 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
         {% for asset in assets %}
         <div class="rounded-xl overflow-hidden bg-stone-100">
-            <img src="{{ asset.image.url }}" alt="{{ asset.alt_text|default:post.title }}" class="w-full object-cover">
+            <img src="{{ asset.image.url }}" alt="{{ asset.alt_text|default:post.title }}" class="w-full object-cover" loading="lazy" data-lightbox="{{ asset.image.url }}" data-lightbox-alt="{{ asset.alt_text|default:post.title }}">
         </div>
         {% endfor %}
     </div>
     {% elif post.cover_image %}
     <div class="rounded-xl overflow-hidden bg-stone-100 mb-8">
-        <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="w-full max-h-[70vh] object-contain mx-auto">
+        <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="w-full max-h-[70vh] object-contain mx-auto" loading="lazy" data-lightbox="{{ post.cover_image.url }}" data-lightbox-alt="{{ post.title }}">
     </div>
     {% endif %}
 
@@ -41,4 +41,5 @@
     </div>
     {% endif %}
 </div>
+{% include "partials/_lightbox.html" %}
 {% endblock %}

@@ -281,12 +281,13 @@ Optional but recommended: write `tests.py` in each app with view tests (status c
 - Add ability to delete model/agency
 - Add contacting capability to applicant detail view page (email)
 - Add ability for model agency to provide feedback to applicants (free text field in application model, visible to model in dashboard)
-- Polish and UX refinement (animations, loading states, empty states, error pages)
 - Profile completeness indicator logic
 - Email notifications (application submitted, status changed)
 - Image optimization (thumbnails, compression, lazy loading)
+- Add ability for models and agencies to crop photos akin to instagram's free cropping tool, with a minimum required resolution.
 
 ## Future Improvements
+- Polish and UX refinement (animations, loading states, empty states, error pages)
 - Resources section fleshing out
 - Production deployment prep (whitenoise, S3 storage, `production.py` settings)
 - Security hardening (rate limiting, CSRF review, input sanitization audit)

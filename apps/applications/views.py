@@ -66,6 +66,8 @@ def apply(request, agency_slug):
                     "available_for_commercial": profile.available_for_commercial,
                 },
             )
+            from apps.core.emails import send_application_submitted_email
+            send_application_submitted_email(application)
             return redirect("apply-success", agency_slug=agency_slug)
     else:
         form = ApplicationForm()

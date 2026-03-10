@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
+from imagekit.models import ImageSpecField
+from imagekit.processors import ResizeToFill, ResizeToFit
 
 
 class ModelProfile(models.Model):
@@ -21,7 +23,9 @@ class ModelProfile(models.Model):
     public_display_name = models.CharField(max_length=255, blank=True)
     slug = models.SlugField(unique=True, blank=True)
     profile_image = models.ImageField(upload_to="profiles/images/", blank=True, null=True)
+    profile_image_thumbnail = ImageSpecField(source="profile_image", processors=[ResizeToFill(150, 150)], format="WEBP", options={"quality": 80})
     cover_image = models.ImageField(upload_to="profiles/covers/", blank=True, null=True)
+    cover_image_optimized = ImageSpecField(source="cover_image", processors=[ResizeToFit(1200, 600)], format="WEBP", options={"quality": 85})
     bio = models.TextField(blank=True)
     city = models.CharField(max_length=100, blank=True)
     country = models.CharField(max_length=100, default="India")
@@ -42,6 +46,7 @@ class ModelProfile(models.Model):
     instagram_url = models.URLField(blank=True)
     website_url = models.URLField(blank=True)
     contact_email = models.EmailField(blank=True)
+    phone_number = models.CharField(max_length=20, blank=True)
 
     # Availability
     available_for_editorial = models.BooleanField(default=False)
@@ -70,6 +75,28 @@ class ModelProfile(models.Model):
     class Meta:
         ordering = ["-created_at"]
         verbose_name = "Model Profile"
+
+    def get_completeness(self):
+        """Returns (percentage, missing_fields_list) tuple based on 12 checks."""
+        checks = {
+            "Profile image": bool(self.profile_image),
+            "Bio": bool(self.bio),
+            "City": bool(self.city),
+            "Date of birth": bool(self.date_of_birth),
+            "Gender": bool(self.gender),
+            "Height": bool(self.height_cm),
+            "Bust / Chest measurement": bool(self.bust_cm),
+            "Waist measurement": bool(self.waist_cm),
+            "Contact info (email or phone)": bool(self.contact_email or self.phone_number),
+            "Social link (Instagram or website)": bool(self.instagram_url or self.website_url),
+            "At least one portfolio post": self.portfolio_posts.filter(is_public=True).exists(),
+            "Availability (at least one type)": any([self.available_for_editorial, self.available_for_runway, self.available_for_commercial, self.available_for_fittings]),
+        }
+        completed = sum(1 for v in checks.values() if v)
+        total = len(checks)
+        percentage = int(completed / total * 100)
+        missing = [k for k, v in checks.items() if not v]
+        return percentage, missing
 
     def get_bust_chest_label(self):
         """Returns the correct label for bust_cm based on gender."""

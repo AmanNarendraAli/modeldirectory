@@ -2,13 +2,17 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
+from django.core.mail import send_mail
+from django.conf import settings as django_settings
 
 from apps.models_app.models import ModelProfile
 from apps.applications.models import Application
+from apps.applications.forms import FeedbackForm, ContactApplicantForm
 from apps.discovery.models import SavedAgency, Follow
 from apps.portfolio.models import PortfolioPost
 from apps.accounts.forms import OnboardingForm
 from apps.agencies.models import AgencyStaff
+from apps.agencies.forms import AgencyEditForm
 
 
 def _get_agency_for_staff(user):
@@ -38,9 +42,7 @@ def model_dashboard(request):
     saved_agencies = SavedAgency.objects.filter(user=request.user).select_related("agency")
     followed_profiles = Follow.objects.filter(follower=request.user).select_related("followed_profile")
 
-    # Profile completeness
-    fields = [profile.profile_image, profile.bio, profile.city, profile.height_cm, profile.instagram_url or profile.contact_email]
-    completeness = int(sum(1 for f in fields if f) / len(fields) * 100)
+    completeness, missing_fields = profile.get_completeness()
 
     return render(request, "dashboard/model_dashboard.html", {
         "profile": profile,
@@ -49,6 +51,7 @@ def model_dashboard(request):
         "saved_agencies": saved_agencies,
         "followed_profiles": followed_profiles,
         "completeness": completeness,
+        "missing_fields": missing_fields,
     })
 
 
@@ -90,13 +93,34 @@ def agency_dashboard(request):
     if city_filter:
         applications = applications.filter(applicant_profile__city__icontains=city_filter)
 
+    can_edit = AgencyStaff.objects.filter(user=request.user, agency=agency, can_edit_agency=True).exists()
+
     return render(request, "dashboard/agency_dashboard.html", {
         "agency": agency,
         "applications": applications,
         "status_choices": Application.Status.choices,
         "status_filter": status_filter,
         "city_filter": city_filter,
+        "can_edit": can_edit,
     })
+
+
+@login_required
+def edit_agency(request):
+    staff = AgencyStaff.objects.filter(user=request.user, can_edit_agency=True).select_related("agency").first()
+    if not staff:
+        messages.error(request, "You don't have permission to edit this agency.")
+        return redirect("dashboard")
+    agency = staff.agency
+    if request.method == "POST":
+        form = AgencyEditForm(request.POST, request.FILES, instance=agency)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Agency profile updated.")
+            return redirect("dashboard")
+    else:
+        form = AgencyEditForm(instance=agency)
+    return render(request, "dashboard/edit_agency.html", {"form": form, "agency": agency})
 
 
 @login_required
@@ -110,6 +134,8 @@ def applicant_detail(request, application_id):
     portfolio_posts = PortfolioPost.objects.filter(
         owner_profile=application.applicant_profile, is_public=True
     )
+    feedback_form = FeedbackForm(instance=application)
+    contact_form = ContactApplicantForm()
 
     return render(request, "dashboard/applicant_detail.html", {
         "application": application,
@@ -117,6 +143,8 @@ def applicant_detail(request, application_id):
         "portfolio_posts": portfolio_posts,
         "agency": agency,
         "status_choices": Application.Status.choices,
+        "feedback_form": feedback_form,
+        "contact_form": contact_form,
     })
 
 
@@ -139,5 +167,56 @@ def update_application_status(request, application_id):
         application.reviewed_at = timezone.now()
         application.save(update_fields=["status", "reviewed_by", "reviewed_at"])
         messages.success(request, f"Application status updated to {application.get_status_display()}.")
+
+        from apps.core.emails import send_status_changed_email
+        send_status_changed_email(application)
+
+    return redirect("applicant-detail", application_id=application_id)
+
+
+@login_required
+def submit_feedback(request, application_id):
+    if request.method != "POST":
+        return redirect("agency-dashboard")
+
+    agency = _get_agency_for_staff(request.user)
+    if not agency:
+        return redirect("home")
+
+    application = get_object_or_404(Application, id=application_id, agency=agency)
+    form = FeedbackForm(request.POST, instance=application)
+    if form.is_valid():
+        app = form.save(commit=False)
+        app.feedback_updated_at = timezone.now()
+        app.save(update_fields=["feedback", "feedback_updated_at"])
+        messages.success(request, "Feedback saved.")
+
+    return redirect("applicant-detail", application_id=application_id)
+
+
+@login_required
+def contact_applicant(request, application_id):
+    if request.method != "POST":
+        return redirect("agency-dashboard")
+
+    agency = _get_agency_for_staff(request.user)
+    if not agency:
+        return redirect("home")
+
+    application = get_object_or_404(Application, id=application_id, agency=agency)
+    form = ContactApplicantForm(request.POST)
+    if form.is_valid():
+        subject = form.cleaned_data["subject"]
+        body = form.cleaned_data["body"]
+        recipient = application.applicant_profile.contact_email or application.applicant_profile.user.email
+        from_email = request.user.email
+        send_mail(
+            subject=f"[{agency.name}] {subject}",
+            message=body,
+            from_email=from_email,
+            recipient_list=[recipient],
+            fail_silently=True,
+        )
+        messages.success(request, f"Email sent to {recipient}.")
 
     return redirect("applicant-detail", application_id=application_id)

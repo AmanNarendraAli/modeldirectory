@@ -43,6 +43,7 @@ class OnboardingForm(forms.ModelForm):
             "instagram_url",
             "website_url",
             "contact_email",
+            "phone_number",
             "available_for_editorial",
             "available_for_runway",
             "available_for_commercial",

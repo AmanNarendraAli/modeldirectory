@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Edit Agency — The Modelling Directory{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <a href="{% url 'dashboard' %}" class="text-sm text-stone-500 hover:text-stone-800 mb-6 inline-block">← Dashboard</a>
+
+    <h1 class="font-display text-3xl font-bold text-stone-900 mb-8">Edit Agency Profile</h1>
+
+    <form method="post" enctype="multipart/form-data" novalidate class="space-y-8">
+        {% csrf_token %}
+
+        <section class="bg-white rounded-xl border border-stone-200 p-6">
+            <h2 class="font-semibold text-stone-900 text-lg mb-5">Basic Information</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.name.label }}</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}<p class="text-red-600 text-xs mt-1">{{ form.name.errors|join:", " }}</p>{% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.short_tagline.label }}</label>
+                    {{ form.short_tagline }}
+                    {% if form.short_tagline.errors %}<p class="text-red-600 text-xs mt-1">{{ form.short_tagline.errors|join:", " }}</p>{% endif %}
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.description.label }}</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}<p class="text-red-600 text-xs mt-1">{{ form.description.errors|join:", " }}</p>{% endif %}
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.city.label }}</label>
+                        {{ form.city }}
+                        {% if form.city.errors %}<p class="text-red-600 text-xs mt-1">{{ form.city.errors|join:", " }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.headquarters_address.label }}</label>
+                        {{ form.headquarters_address }}
+                        {% if form.headquarters_address.errors %}<p class="text-red-600 text-xs mt-1">{{ form.headquarters_address.errors|join:", " }}</p>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white rounded-xl border border-stone-200 p-6">
+            <h2 class="font-semibold text-stone-900 text-lg mb-4">Online Presence</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.website_url.label }}</label>
+                    {{ form.website_url }}
+                    {% if form.website_url.errors %}<p class="text-red-600 text-xs mt-1">{{ form.website_url.errors|join:", " }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.instagram_url.label }}</label>
+                    {{ form.instagram_url }}
+                    {% if form.instagram_url.errors %}<p class="text-red-600 text-xs mt-1">{{ form.instagram_url.errors|join:", " }}</p>{% endif %}
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.contact_email.label }}</label>
+                    {{ form.contact_email }}
+                    {% if form.contact_email.errors %}<p class="text-red-600 text-xs mt-1">{{ form.contact_email.errors|join:", " }}</p>{% endif %}
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white rounded-xl border border-stone-200 p-6">
+            <h2 class="font-semibold text-stone-900 text-lg mb-4">Images</h2>
+            <div class="space-y-6">
+
+                <div class="flex flex-col sm:flex-row gap-6 items-start">
+                    {% if agency.logo %}
+                    <div class="flex-shrink-0">
+                        <p class="text-xs text-stone-400 mb-1">Current logo</p>
+                        <img src="{{ agency.logo.url }}" alt="" class="h-20 w-20 rounded-lg object-contain border border-stone-200 bg-stone-50" loading="lazy">
+                    </div>
+                    {% endif %}
+                    <div class="flex-1 w-full">
+                        <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.logo.label }}</label>
+                        {{ form.logo.errors }}
+                        <input type="file" name="{{ form.logo.name }}" accept="image/*" class="w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer" id="{{ form.logo.id_for_label }}" data-crop data-crop-min-width="200" data-crop-min-height="200" data-filename="logo">
+                        {% if agency.logo %}
+                        <div class="flex items-center gap-2 mt-2">
+                            <input type="checkbox" name="logo-clear" id="logo-clear_id" class="rounded border-stone-300 text-stone-900 focus:ring-stone-900">
+                            <label for="logo-clear_id" class="text-sm text-stone-600">Remove current logo</label>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <hr class="border-stone-100">
+
+                <div class="flex flex-col sm:flex-row gap-6 items-start">
+                    {% if agency.cover_image %}
+                    <div class="flex-shrink-0">
+                        <p class="text-xs text-stone-400 mb-1">Current cover image</p>
+                        <img src="{{ agency.cover_image.url }}" alt="" class="h-24 w-32 rounded-lg object-cover border border-stone-200" loading="lazy">
+                    </div>
+                    {% endif %}
+                    <div class="flex-1 w-full">
+                        <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.cover_image.label }}</label>
+                        {{ form.cover_image.errors }}
+                        <input type="file" name="{{ form.cover_image.name }}" accept="image/*" class="w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer" id="{{ form.cover_image.id_for_label }}" data-crop data-crop-min-width="1200" data-crop-min-height="400" data-filename="cover_image">
+                        {% if agency.cover_image %}
+                        <div class="flex items-center gap-2 mt-2">
+                            <input type="checkbox" name="cover_image-clear" id="cover_image-clear_id" class="rounded border-stone-300 text-stone-900 focus:ring-stone-900">
+                            <label for="cover_image-clear_id" class="text-sm text-stone-600">Remove current cover image</label>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white rounded-xl border border-stone-200 p-6">
+            <h2 class="font-semibold text-stone-900 text-lg mb-4">Settings</h2>
+            <label class="flex items-center gap-3 cursor-pointer">
+                {{ form.is_accepting_applications }}
+                <span class="text-sm text-stone-800">{{ form.is_accepting_applications.label }}</span>
+            </label>
+        </section>
+
+        <div class="flex justify-end gap-3">
+            <a href="{% url 'dashboard' %}" class="border border-stone-300 text-stone-600 text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-stone-50 transition-colors">Cancel</a>
+            <button type="submit" class="bg-stone-900 text-white font-semibold px-6 py-2.5 rounded-lg hover:bg-stone-700 transition-colors">Save Changes</button>
+        </div>
+
+        <section class="border border-red-200 rounded-xl p-6">
+            <h2 class="font-semibold text-red-700 text-lg mb-2">Danger Zone</h2>
+            <p class="text-sm text-stone-500 mb-4">Permanently delete your account. This cannot be undone.</p>
+            <a href="{% url 'delete-account' %}" class="text-sm font-medium text-red-600 hover:text-red-800 border border-red-300 px-4 py-2 rounded-lg hover:bg-red-50 transition-colors">Delete My Account</a>
+        </section>
+    </form>
+</div>
+{% include "partials/_crop_modal.html" %}
+{% endblock %}

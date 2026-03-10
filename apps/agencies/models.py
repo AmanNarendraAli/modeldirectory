@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
+from imagekit.models import ImageSpecField
+from imagekit.processors import ResizeToFill, ResizeToFit
 
 
 class Agency(models.Model):
@@ -12,7 +14,9 @@ class Agency(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True, blank=True)
     logo = models.ImageField(upload_to="agencies/logos/", blank=True, null=True)
+    logo_thumbnail = ImageSpecField(source="logo", processors=[ResizeToFill(200, 200)], format="WEBP", options={"quality": 80})
     cover_image = models.ImageField(upload_to="agencies/covers/", blank=True, null=True)
+    cover_image_optimized = ImageSpecField(source="cover_image", processors=[ResizeToFit(1200, 600)], format="WEBP", options={"quality": 85})
     short_tagline = models.CharField(max_length=255, blank=True)
     description = models.TextField(blank=True)
     city = models.CharField(max_length=100, blank=True)

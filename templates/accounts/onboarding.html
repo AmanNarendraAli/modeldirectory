@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Complete Your Profile — The Modelling Directory{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">{% endblock %}
 
 {% block content %}
 <div class="max-w-2xl mx-auto px-4 py-12">
@@ -17,23 +18,19 @@
             <h2 class="font-semibold text-stone-900 text-lg mb-5">Basic Information</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div class="sm:col-span-2">
-                    <label class="block text-sm font-medium text-stone-700 mb-1">{{
-                        form.public_display_name.label}}</label>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{form.public_display_name.label}}</label>
                     {{ form.public_display_name }}
-                    {% if form.public_display_name.errors %}<p class="text-red-600 text-xs mt-1">{{
-                        form.public_display_name.errors|join:", " }}</p>{% endif %}
+                    {% if form.public_display_name.errors %}<p class="text-red-600 text-xs mt-1">{{form.public_display_name.errors|join:", " }}</p>{% endif %}
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.city.label }}</label>
                     {{ form.city }}
-                    {% if form.city.errors %}<p class="text-red-600 text-xs mt-1">{{ form.city.errors|join:", " }}</p>{%
-                    endif %}
+                    {% if form.city.errors %}<p class="text-red-600 text-xs mt-1">{{ form.city.errors|join:", " }}</p>{%endif %}
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.date_of_birth.label }}</label>
                     {{ form.date_of_birth }}
-                    {% if form.date_of_birth.errors %}<p class="text-red-600 text-xs mt-1">{{
-                        form.date_of_birth.errors|join:", " }}</p>{% endif %}
+                    {% if form.date_of_birth.errors %}<p class="text-red-600 text-xs mt-1">{{form.date_of_birth.errors|join:", " }}</p>{% endif %}
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.gender.label }}</label>
@@ -44,8 +41,7 @@
                 <div class="sm:col-span-2">
                     <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.bio.label }}</label>
                     {{ form.bio }}
-                    {% if form.bio.errors %}<p class="text-red-600 text-xs mt-1">{{ form.bio.errors|join:", " }}</p>{%
-                    endif %}
+                    {% if form.bio.errors %}<p class="text-red-600 text-xs mt-1">{{ form.bio.errors|join:", " }}</p>{% endif %}
                 </div>
             </div>
         </section>
@@ -59,14 +55,13 @@
                 <div>
                     <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.height_cm.label }}</label>
                     {{ form.height_cm }}
-                    {% if form.height_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.height_cm.errors|join:",
-                        " }}</p>{% endif %}
+                    {% if form.height_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.height_cm.errors|join:"," }}</p>{% endif %}
                 </div>
                 <div id="field-bust">
                     <label id="label-bust" class="block text-sm font-medium text-stone-700 mb-1">{{ form.bust_cm.label
                         }}</label>
                     {{ form.bust_cm }}
-                    {% if form.bust_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.bust_cm.errors|join:", " }}
+                    {% if form.bust_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.bust_cm.errors|join:"," }}
                     </p>{% endif %}
                 </div>
                 <div>
@@ -84,8 +79,7 @@
                 <div id="field-inseam" style="display:none">
                     <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.inseam_cm.label }}</label>
                     {{ form.inseam_cm }}
-                    {% if form.inseam_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.inseam_cm.errors|join:",
-                        " }}</p>{% endif %}
+                    {% if form.inseam_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ form.inseam_cm.errors|join:"," }}</p>{% endif %}
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.shoe_size.label }}</label>
@@ -142,15 +136,13 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.profile_image.label }}</label>
-                    {{ form.profile_image }}
-                    {% if form.profile_image.errors %}<p class="text-red-600 text-xs mt-1">{{
-                        form.profile_image.errors|join:", " }}</p>{% endif %}
+                    <input type="file" name="{{ form.profile_image.html_name }}" accept="image/*" id="{{ form.profile_image.id_for_label }}" class="w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer" data-crop data-crop-min-width="400" data-crop-min-height="400" data-filename="profile_image">
+                    {% if form.profile_image.errors %}<p class="text-red-600 text-xs mt-1">{{ form.profile_image.errors|join:", " }}</p>{% endif %}
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.cover_image.label }}</label>
-                    {{ form.cover_image }}
-                    {% if form.cover_image.errors %}<p class="text-red-600 text-xs mt-1">{{
-                        form.cover_image.errors|join:", " }}</p>{% endif %}
+                    <input type="file" name="{{ form.cover_image.html_name }}" accept="image/*" id="{{ form.cover_image.id_for_label }}" class="w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer" data-crop data-crop-min-width="1200" data-crop-min-height="400" data-filename="cover_image">
+                    {% if form.cover_image.errors %}<p class="text-red-600 text-xs mt-1">{{ form.cover_image.errors|join:", " }}</p>{% endif %}
                 </div>
             </div>
         </section>
@@ -174,8 +166,12 @@
                 <div>
                     <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.contact_email.label }}</label>
                     {{ form.contact_email }}
-                    {% if form.contact_email.errors %}<p class="text-red-600 text-xs mt-1">{{
-                        form.contact_email.errors|join:", " }}</p>{% endif %}
+                    {% if form.contact_email.errors %}<p class="text-red-600 text-xs mt-1">{{ form.contact_email.errors|join:", " }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.phone_number.label }}</label>
+                    {{ form.phone_number }}
+                    {% if form.phone_number.errors %}<p class="text-red-600 text-xs mt-1">{{ form.phone_number.errors|join:", " }}</p>{% endif %}
                 </div>
             </div>
         </section>
@@ -236,4 +232,5 @@
         </div>
     </form>
 </div>
+{% include "partials/_crop_modal.html" %}
 {% endblock %}

@@ -25,6 +25,8 @@ class Application(models.Model):
     )
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
     cover_note = models.TextField(blank=True)
+    feedback = models.TextField(blank=True)
+    feedback_updated_at = models.DateTimeField(null=True, blank=True)
     submitted_at = models.DateTimeField(null=True, blank=True)
     reviewed_at = models.DateTimeField(null=True, blank=True)
     reviewed_by = models.ForeignKey(
