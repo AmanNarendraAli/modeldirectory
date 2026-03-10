@@ -284,8 +284,13 @@ Run these yourself after each step:
 - ✅ Photo cropping with Cropper.js (free crop, minimum resolution)
 
 ---
+## Urgent bugs to fix
+- When onboarding or editing image, if you close rather than pressing use, you can get images that are too small to pass through the validation. make it so you can't click out of the image - you have to close or press use.
+- When onboarding, if you set measurements to inches and save, they won't get converted to cm in the db - the values just get saved. eg. 1 inch will be saved as 1, and the db base unit is cm, so that's wrong lol. When editing measurements, this issue seems to be even worse - it seems to double divide and stuff. Also, not being allowed to save non-whole numbers for measurements.
+- Turns out that for the custom agency name (when an agency is not on the site), we need to reflect that in the backend as well, or it's not consistent across interfaces.
 
 ## Phase 4
+- Call on whether to do email sending or use live messaging on app linkedin style.
 - Add ability to filter models by verification status (e.g. verified models get a "verified" badge on their profile and in search results). Should set up page for verification as well, but actual verification process can be manual for now (admin sets `is_verified=True` in admin).
 - Polish and UX refinement (animations, loading states, empty states, error pages)
 - Production deployment prep (whitenoise, S3 storage, `production.py` settings)
