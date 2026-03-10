@@ -286,8 +286,6 @@ Run these yourself after each step:
 ---
 
 ## Phase 4
-- Add unit change toggle to onboarding as well
-- Add image zoom ability on agency view pages (e.g. click logo or cover to see larger version in modal) like is there in the model view pages
 - Add ability to filter models by verification status (e.g. verified models get a "verified" badge on their profile and in search results). Should set up page for verification as well, but actual verification process can be manual for now (admin sets `is_verified=True` in admin).
 - Polish and UX refinement (animations, loading states, empty states, error pages)
 - Production deployment prep (whitenoise, S3 storage, `production.py` settings)
