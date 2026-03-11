@@ -10,6 +10,7 @@ from .forms import SignupForm, OnboardingForm
 from .models import User
 from apps.models_app.models import ModelProfile
 from apps.agencies.models import AgencyStaff
+from apps.applications.models import Application
 
 
 class SignupView(CreateView):
@@ -94,9 +95,12 @@ def delete_account(request):
         if confirm_text.lower() == "delete my account":
             user = request.user
 
-            # Free up the model profile slug so it can be reused
+            # Delete all applications submitted by this user
             profile = ModelProfile.objects.filter(user=user).first()
             if profile:
+                Application.objects.filter(applicant_profile=profile).delete()
+
+                # Free up the model profile slug so it can be reused
                 profile.slug = f"deleted-{user.id}"
                 profile.public_display_name = "Deleted User"
                 profile.is_public = False

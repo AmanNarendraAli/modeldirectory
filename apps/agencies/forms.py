@@ -65,6 +65,16 @@ class AgencyRequirementForm(forms.ModelForm):
             "max_height_cm",
             "age_min",
             "age_max",
+            "min_bust_cm",
+            "max_bust_cm",
+            "min_waist_cm",
+            "max_waist_cm",
+            "min_hips_cm",
+            "max_hips_cm",
+            "min_inseam_cm",
+            "max_inseam_cm",
+            "preferred_hair_colors",
+            "preferred_eye_colors",
             "accepts_beginners",
             "notes",
             "application_guidance_text",
@@ -73,6 +83,8 @@ class AgencyRequirementForm(forms.ModelForm):
         widgets = {
             "notes": forms.Textarea(attrs={"rows": 2}),
             "application_guidance_text": forms.Textarea(attrs={"rows": 2}),
+            "preferred_hair_colors": forms.TextInput(attrs={"placeholder": "e.g. Brown, Black, Dark"}),
+            "preferred_eye_colors": forms.TextInput(attrs={"placeholder": "e.g. Brown, Green, Hazel"}),
         }
 
     def __init__(self, *args, **kwargs):

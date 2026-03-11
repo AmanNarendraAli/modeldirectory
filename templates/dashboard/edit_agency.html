@@ -133,8 +133,14 @@
         </section>
 
         <!-- Requirements -->
-        <section class="bg-white rounded-xl border border-stone-200 p-6">
-            <h2 class="font-semibold text-stone-900 text-lg mb-1">Requirements</h2>
+        <section class="bg-white rounded-xl border border-stone-200 p-6" id="requirements-section">
+            <div class="flex items-center justify-between mb-1">
+                <h2 class="font-semibold text-stone-900 text-lg">Requirements</h2>
+                <div class="flex items-center gap-1 bg-stone-100 rounded-lg p-1 text-xs font-medium">
+                    <button type="button" id="req-unit-btn-cm" class="px-3 py-1.5 rounded-md transition-colors bg-white text-stone-900 shadow-sm">cm</button>
+                    <button type="button" id="req-unit-btn-in" class="px-3 py-1.5 rounded-md transition-colors text-stone-500 hover:text-stone-700">in</button>
+                </div>
+            </div>
             <p class="text-stone-400 text-sm mb-5">Define what you're looking for in each category (e.g. Menswear, Womenswear). Add multiple sets for different divisions.</p>
 
             {{ req_formset.management_form }}
@@ -151,12 +157,12 @@
                             {% if req_form.category.errors %}<p class="text-red-600 text-xs mt-1">{{ req_form.category.errors|join:", " }}</p>{% endif %}
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-stone-500 mb-1">Min height (cm)</label>
+                            <label class="block text-xs font-medium text-stone-500 mb-1 req-meas-label">Min height <span class="req-unit">(cm)</span></label>
                             {{ req_form.min_height_cm }}
                             {% if req_form.min_height_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ req_form.min_height_cm.errors|join:", " }}</p>{% endif %}
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-stone-500 mb-1">Max height (cm)</label>
+                            <label class="block text-xs font-medium text-stone-500 mb-1 req-meas-label">Max height <span class="req-unit">(cm)</span></label>
                             {{ req_form.max_height_cm }}
                             {% if req_form.max_height_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ req_form.max_height_cm.errors|join:", " }}</p>{% endif %}
                         </div>
@@ -169,6 +175,54 @@
                             <label class="block text-xs font-medium text-stone-500 mb-1">Max age</label>
                             {{ req_form.age_max }}
                             {% if req_form.age_max.errors %}<p class="text-red-600 text-xs mt-1">{{ req_form.age_max.errors|join:", " }}</p>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-3">
+                        <div>
+                            <label class="block text-xs font-medium text-stone-500 mb-1 req-meas-label">Min bust/chest <span class="req-unit">(cm)</span></label>
+                            {{ req_form.min_bust_cm }}
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-stone-500 mb-1 req-meas-label">Max bust/chest <span class="req-unit">(cm)</span></label>
+                            {{ req_form.max_bust_cm }}
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-stone-500 mb-1 req-meas-label">Min waist <span class="req-unit">(cm)</span></label>
+                            {{ req_form.min_waist_cm }}
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-stone-500 mb-1 req-meas-label">Max waist <span class="req-unit">(cm)</span></label>
+                            {{ req_form.max_waist_cm }}
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-stone-500 mb-1 req-meas-label">Min hips <span class="req-unit">(cm)</span></label>
+                            {{ req_form.min_hips_cm }}
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-stone-500 mb-1 req-meas-label">Max hips <span class="req-unit">(cm)</span></label>
+                            {{ req_form.max_hips_cm }}
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-stone-500 mb-1 req-meas-label">Min inseam <span class="req-unit">(cm)</span></label>
+                            {{ req_form.min_inseam_cm }}
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-stone-500 mb-1 req-meas-label">Max inseam <span class="req-unit">(cm)</span></label>
+                            {{ req_form.max_inseam_cm }}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
+                        <div>
+                            <label class="block text-xs font-medium text-stone-500 mb-1">Preferred hair colours</label>
+                            {{ req_form.preferred_hair_colors }}
+                            <p class="text-stone-400 text-xs mt-0.5">Comma-separated, e.g. Brown, Black</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-stone-500 mb-1">Preferred eye colours</label>
+                            {{ req_form.preferred_eye_colors }}
+                            <p class="text-stone-400 text-xs mt-0.5">Comma-separated, e.g. Brown, Green</p>
                         </div>
                     </div>
 
@@ -233,6 +287,67 @@
                     });
                     container.appendChild(newForm);
                     totalForms.value = idx + 1;
+                });
+
+                // cm / in toggle for requirement measurements
+                var CM_SUFFIXES = ['min_height_cm', 'max_height_cm', 'min_bust_cm', 'max_bust_cm', 'min_waist_cm', 'max_waist_cm', 'min_hips_cm', 'max_hips_cm', 'min_inseam_cm', 'max_inseam_cm'];
+                var reqUnit = 'cm';
+
+                function getReqMeasInputs() {
+                    var inputs = [];
+                    var n = parseInt(totalForms.value);
+                    for (var i = 0; i < n; i++) {
+                        CM_SUFFIXES.forEach(function(suffix) {
+                            var el = document.getElementById('id_req-' + i + '-' + suffix);
+                            if (el) inputs.push(el);
+                        });
+                    }
+                    return inputs;
+                }
+
+                function setReqUnit(unit) {
+                    var prevUnit = reqUnit;
+                    reqUnit = unit;
+                    if (prevUnit !== unit) {
+                        getReqMeasInputs().forEach(function(el) {
+                            if (!el.value) return;
+                            var val = parseFloat(el.value);
+                            if (isNaN(val)) return;
+                            if (unit === 'in') {
+                                el.value = Math.round(val / 2.54 * 10) / 10;
+                            } else {
+                                el.value = Math.round(val * 2.54 * 10) / 10;
+                            }
+                        });
+                    }
+                    // Update labels
+                    document.querySelectorAll('.req-unit').forEach(function(el) {
+                        el.textContent = '(' + unit + ')';
+                    });
+                    // Toggle button styles
+                    document.getElementById('req-unit-btn-cm').className = 'px-3 py-1.5 rounded-md transition-colors ' +
+                        (unit === 'cm' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700');
+                    document.getElementById('req-unit-btn-in').className = 'px-3 py-1.5 rounded-md transition-colors ' +
+                        (unit === 'in' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700');
+                }
+
+                document.getElementById('req-unit-btn-cm').addEventListener('click', function() { setReqUnit('cm'); });
+                document.getElementById('req-unit-btn-in').addEventListener('click', function() { setReqUnit('in'); });
+
+                // Allow decimal input on measurement fields
+                getReqMeasInputs().forEach(function(el) { el.setAttribute('step', 'any'); });
+
+                // Convert back to cm before form submission
+                var reqForm = container.closest('form');
+                reqForm.addEventListener('submit', function() {
+                    if (reqUnit === 'in') {
+                        getReqMeasInputs().forEach(function(el) {
+                            if (!el.value) return;
+                            var val = parseFloat(el.value);
+                            if (isNaN(val)) return;
+                            el.value = Math.round(val * 2.54 * 10) / 10;
+                        });
+                    }
                 });
             })();
             </script>

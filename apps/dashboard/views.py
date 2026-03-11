@@ -77,13 +77,30 @@ def edit_profile(request):
 
 @login_required
 def agency_dashboard(request):
+    import datetime
+
     agency = _get_agency_for_staff(request.user)
     if not agency:
         messages.error(request, "You are not linked to any agency. Contact an admin.")
         return redirect("home")
 
     status_filter = request.GET.get("status", "")
-    city_filter = request.GET.get("city", "").strip()
+    selected_cities = request.GET.getlist("city")
+    min_age = request.GET.get("min_age", "").strip()
+    max_age = request.GET.get("max_age", "").strip()
+    min_height = request.GET.get("min_height", "").strip()
+    max_height = request.GET.get("max_height", "").strip()
+    min_bust = request.GET.get("min_bust", "").strip()
+    max_bust = request.GET.get("max_bust", "").strip()
+    min_waist = request.GET.get("min_waist", "").strip()
+    max_waist = request.GET.get("max_waist", "").strip()
+    min_hips = request.GET.get("min_hips", "").strip()
+    max_hips = request.GET.get("max_hips", "").strip()
+    min_inseam = request.GET.get("min_inseam", "").strip()
+    max_inseam = request.GET.get("max_inseam", "").strip()
+    selected_hair_colors = request.GET.getlist("hair_color")
+    selected_eye_colors = request.GET.getlist("eye_color")
+    verified = request.GET.get("verified", "").strip()
 
     applications = Application.objects.filter(agency=agency).select_related(
         "applicant_profile", "applicant_profile__user"
@@ -91,21 +108,153 @@ def agency_dashboard(request):
 
     if status_filter:
         applications = applications.filter(status=status_filter)
-    if city_filter:
-        applications = applications.filter(applicant_profile__city__icontains=city_filter)
+
+    if selected_cities:
+        from django.db.models import Q as DQ
+        city_q = DQ()
+        for c in selected_cities:
+            city_q |= DQ(applicant_profile__city__iexact=c)
+        applications = applications.filter(city_q)
+
+    today = datetime.date.today()
+
+    def _dob_cutoff(years):
+        try:
+            return today.replace(year=today.year - years)
+        except ValueError:
+            return today.replace(year=today.year - years, day=28)
+
+    if min_age:
+        try:
+            applications = applications.filter(applicant_profile__date_of_birth__lte=_dob_cutoff(int(min_age)))
+        except (ValueError, OverflowError):
+            pass
+    if max_age:
+        try:
+            applications = applications.filter(applicant_profile__date_of_birth__gt=_dob_cutoff(int(max_age) + 1))
+        except (ValueError, OverflowError):
+            pass
+    if min_height:
+        try:
+            applications = applications.filter(applicant_profile__height_cm__gte=float(min_height))
+        except ValueError:
+            pass
+    if max_height:
+        try:
+            applications = applications.filter(applicant_profile__height_cm__lte=float(max_height))
+        except ValueError:
+            pass
+    if min_bust:
+        try:
+            applications = applications.filter(applicant_profile__bust_cm__gte=float(min_bust))
+        except ValueError:
+            pass
+    if max_bust:
+        try:
+            applications = applications.filter(applicant_profile__bust_cm__lte=float(max_bust))
+        except ValueError:
+            pass
+    if min_waist:
+        try:
+            applications = applications.filter(applicant_profile__waist_cm__gte=float(min_waist))
+        except ValueError:
+            pass
+    if max_waist:
+        try:
+            applications = applications.filter(applicant_profile__waist_cm__lte=float(max_waist))
+        except ValueError:
+            pass
+    if min_hips:
+        try:
+            applications = applications.filter(applicant_profile__hips_cm__gte=float(min_hips))
+        except ValueError:
+            pass
+    if max_hips:
+        try:
+            applications = applications.filter(applicant_profile__hips_cm__lte=float(max_hips))
+        except ValueError:
+            pass
+    if min_inseam:
+        try:
+            applications = applications.filter(applicant_profile__inseam_cm__gte=float(min_inseam))
+        except ValueError:
+            pass
+    if max_inseam:
+        try:
+            applications = applications.filter(applicant_profile__inseam_cm__lte=float(max_inseam))
+        except ValueError:
+            pass
+    if selected_hair_colors:
+        from django.db.models import Q as DQ
+        hair_q = DQ()
+        for hc in selected_hair_colors:
+            hair_q |= DQ(applicant_profile__hair_color__iexact=hc)
+        applications = applications.filter(hair_q)
+    if selected_eye_colors:
+        from django.db.models import Q as DQ
+        eye_q = DQ()
+        for ec in selected_eye_colors:
+            eye_q |= DQ(applicant_profile__eye_color__iexact=ec)
+        applications = applications.filter(eye_q)
+    if verified == "1":
+        applications = applications.filter(applicant_profile__verification_status="verified")
+
+    # Distinct city/hair/eye values from this agency's applicants (unfiltered)
+    base_apps = Application.objects.filter(agency=agency).select_related("applicant_profile")
+    applicant_cities = list(
+        base_apps.exclude(applicant_profile__city="")
+        .values_list("applicant_profile__city", flat=True)
+        .distinct().order_by("applicant_profile__city")
+    )
+    applicant_hair_colors = list(
+        base_apps.exclude(applicant_profile__hair_color="")
+        .values_list("applicant_profile__hair_color", flat=True)
+        .distinct().order_by("applicant_profile__hair_color")
+    )
+    applicant_eye_colors = list(
+        base_apps.exclude(applicant_profile__eye_color="")
+        .values_list("applicant_profile__eye_color", flat=True)
+        .distinct().order_by("applicant_profile__eye_color")
+    )
 
     can_edit = AgencyStaff.objects.filter(user=request.user, agency=agency, can_edit_agency=True).exists()
-
     roster_models = agency.represented_models.all().order_by('public_display_name')
+    agency_requirements = list(agency.requirements.filter(is_current=True))
+
+    has_filters = any([
+        status_filter, selected_cities, min_age, max_age, min_height, max_height,
+        min_bust, max_bust, min_waist, max_waist, min_hips, max_hips,
+        min_inseam, max_inseam, selected_hair_colors, selected_eye_colors, verified,
+    ])
 
     return render(request, "dashboard/agency_dashboard.html", {
         "agency": agency,
         "applications": applications,
         "status_choices": Application.Status.choices,
         "status_filter": status_filter,
-        "city_filter": city_filter,
+        "selected_cities": selected_cities,
+        "applicant_cities": applicant_cities,
+        "applicant_hair_colors": applicant_hair_colors,
+        "applicant_eye_colors": applicant_eye_colors,
+        "min_age": min_age,
+        "max_age": max_age,
+        "min_height": min_height,
+        "max_height": max_height,
+        "min_bust": min_bust,
+        "max_bust": max_bust,
+        "min_waist": min_waist,
+        "max_waist": max_waist,
+        "min_hips": min_hips,
+        "max_hips": max_hips,
+        "min_inseam": min_inseam,
+        "max_inseam": max_inseam,
+        "selected_hair_colors": selected_hair_colors,
+        "selected_eye_colors": selected_eye_colors,
+        "verified": verified,
         "can_edit": can_edit,
         "roster_models": roster_models,
+        "agency_requirements": agency_requirements,
+        "has_filters": has_filters,
     })
 
 

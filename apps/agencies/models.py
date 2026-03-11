@@ -59,12 +59,13 @@ class Agency(models.Model):
 
 class AgencyRequirement(models.Model):
     class Category(models.TextChoices):
-        MENSWEAR = "menswear", "Menswear"
-        WOMENSWEAR = "womenswear", "Womenswear"
         ALL = "all", "All"
-        EDITORIAL = "editorial", "Editorial"
-        COMMERCIAL = "commercial", "Commercial"
-        RUNWAY = "runway", "Runway"
+        EDITORIAL_MALE = "editorial_male", "Editorial (Male)"
+        EDITORIAL_FEMALE = "editorial_female", "Editorial (Female)"
+        RUNWAY_MALE = "runway_male", "Runway (Male)"
+        RUNWAY_FEMALE = "runway_female", "Runway (Female)"
+        COMMERCIAL_MALE = "commercial_male", "Commercial (Male)"
+        COMMERCIAL_FEMALE = "commercial_female", "Commercial (Female)"
 
     agency = models.ForeignKey(Agency, on_delete=models.CASCADE, related_name="requirements")
     category = models.CharField(max_length=20, choices=Category.choices, default=Category.ALL)
@@ -72,6 +73,22 @@ class AgencyRequirement(models.Model):
     max_height_cm = models.PositiveSmallIntegerField(null=True, blank=True)
     age_min = models.PositiveSmallIntegerField(null=True, blank=True)
     age_max = models.PositiveSmallIntegerField(null=True, blank=True)
+    min_bust_cm = models.PositiveSmallIntegerField(null=True, blank=True)
+    max_bust_cm = models.PositiveSmallIntegerField(null=True, blank=True)
+    min_waist_cm = models.PositiveSmallIntegerField(null=True, blank=True)
+    max_waist_cm = models.PositiveSmallIntegerField(null=True, blank=True)
+    min_hips_cm = models.PositiveSmallIntegerField(null=True, blank=True)
+    max_hips_cm = models.PositiveSmallIntegerField(null=True, blank=True)
+    min_inseam_cm = models.PositiveSmallIntegerField(null=True, blank=True)
+    max_inseam_cm = models.PositiveSmallIntegerField(null=True, blank=True)
+    preferred_hair_colors = models.CharField(
+        max_length=200, blank=True,
+        help_text="Comma-separated preferred hair colours, e.g. Brown, Black, Dark"
+    )
+    preferred_eye_colors = models.CharField(
+        max_length=200, blank=True,
+        help_text="Comma-separated preferred eye colours, e.g. Brown, Green, Hazel"
+    )
     notes = models.TextField(blank=True)
     accepts_beginners = models.BooleanField(default=False)
     application_guidance_text = models.TextField(blank=True)

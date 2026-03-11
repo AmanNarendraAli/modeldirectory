@@ -1,6 +1,26 @@
 {% extends "base.html" %}
 {% block title %}Agency Dashboard — {{ agency.name }}{% endblock %}
 
+{% block extra_head %}
+<style>
+.dual-range-wrap{position:relative;height:14px;}
+.dual-range-wrap input[type=range]{position:absolute;width:100%;margin:0;padding:0;appearance:none;-webkit-appearance:none;background:transparent;pointer-events:none;height:14px;}
+.dual-range-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;border-radius:50%;background:#1c1917;cursor:pointer;pointer-events:all;border:2px solid white;box-shadow:0 1px 2px rgba(0,0,0,.2);}
+.dual-range-wrap input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#1c1917;cursor:pointer;pointer-events:all;border:2px solid white;box-shadow:0 1px 2px rgba(0,0,0,.2);}
+.dual-range-track{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);height:3px;background:#e7e5e4;border-radius:2px;pointer-events:none;}
+.dual-range-fill{position:absolute;height:3px;background:#1c1917;border-radius:2px;pointer-events:none;}
+/* Dropdown multi-select */
+.ms-dropdown{position:relative;display:inline-block;}
+.ms-btn{display:flex;align-items:center;gap:4px;border:1px solid #d6d3d1;border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer;background:#fff;color:#44403c;white-space:nowrap;min-width:90px;}
+.ms-btn:hover{border-color:#a8a29e;}
+.ms-btn .ms-count{background:#1c1917;color:#fff;font-size:10px;border-radius:9999px;padding:0 5px;line-height:16px;}
+.ms-panel{display:none;position:absolute;top:100%;left:0;z-index:30;background:#fff;border:1px solid #d6d3d1;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.1);margin-top:4px;min-width:160px;max-height:220px;overflow-y:auto;padding:4px 0;}
+.ms-panel.open{display:block;}
+.ms-panel label{display:flex;align-items:center;gap:8px;padding:5px 12px;font-size:13px;cursor:pointer;color:#44403c;}
+.ms-panel label:hover{background:#f5f5f4;}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
     <div class="mb-8 flex items-center justify-between">
@@ -12,27 +32,178 @@
     </div>
 
     <!-- Filters -->
-    <form method="get" class="flex flex-wrap gap-3 mb-6 items-end">
-        <div>
-            <label class="block text-xs font-medium text-stone-600 mb-1">Status</label>
-            <select name="status"
-                class="border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
-                <option value="">All Statuses</option>
-                {% for val, label in status_choices %}
-                <option value="{{ val }}" {% if val == status_filter %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-            </select>
+    <form method="get" id="dash-filter-form" class="bg-white border border-stone-200 rounded-xl p-4 mb-8 space-y-3">
+
+        <!-- Row 1: Selects + dropdowns + unit toggle -->
+        <div class="flex flex-wrap gap-2 items-end">
+            <div>
+                <label class="block text-[10px] font-medium text-stone-500 mb-0.5">Status</label>
+                <select name="status" class="border border-stone-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-stone-400">
+                    <option value="">All Statuses</option>
+                    {% for val, label in status_choices %}
+                    <option value="{{ val }}" {% if val == status_filter %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-[10px] font-medium text-stone-500 mb-0.5">Verified</label>
+                <select name="verified" class="border border-stone-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-stone-400">
+                    <option value="">Any</option>
+                    <option value="1" {% if verified == "1" %}selected{% endif %}>Verified only</option>
+                </select>
+            </div>
+
+            <!-- Multi-select dropdowns -->
+            {% if applicant_cities %}
+            <div class="ms-dropdown" data-ms="city">
+                <button type="button" class="ms-btn">City <span class="ms-count" style="display:none">0</span><svg class="w-3 h-3 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+                <div class="ms-panel">
+                    <label class="border-b border-stone-100 font-medium"><input type="checkbox" data-ms-all class="rounded border-stone-300 text-stone-900 focus:ring-stone-400 w-3.5 h-3.5"> Any</label>
+                    {% for c in applicant_cities %}
+                    <label><input type="checkbox" name="city" value="{{ c }}" {% if c in selected_cities %}checked{% endif %} class="rounded border-stone-300 text-stone-900 focus:ring-stone-400 w-3.5 h-3.5"> {{ c }}</label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% if applicant_hair_colors %}
+            <div class="ms-dropdown" data-ms="hair_color">
+                <button type="button" class="ms-btn">Hair <span class="ms-count" style="display:none">0</span><svg class="w-3 h-3 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+                <div class="ms-panel">
+                    <label class="border-b border-stone-100 font-medium"><input type="checkbox" data-ms-all class="rounded border-stone-300 text-stone-900 focus:ring-stone-400 w-3.5 h-3.5"> Any</label>
+                    {% for hc in applicant_hair_colors %}
+                    <label><input type="checkbox" name="hair_color" value="{{ hc }}" {% if hc in selected_hair_colors %}checked{% endif %} class="rounded border-stone-300 text-stone-900 focus:ring-stone-400 w-3.5 h-3.5"> {{ hc }}</label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% if applicant_eye_colors %}
+            <div class="ms-dropdown" data-ms="eye_color">
+                <button type="button" class="ms-btn">Eye <span class="ms-count" style="display:none">0</span><svg class="w-3 h-3 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+                <div class="ms-panel">
+                    <label class="border-b border-stone-100 font-medium"><input type="checkbox" data-ms-all class="rounded border-stone-300 text-stone-900 focus:ring-stone-400 w-3.5 h-3.5"> Any</label>
+                    {% for ec in applicant_eye_colors %}
+                    <label><input type="checkbox" name="eye_color" value="{{ ec }}" {% if ec in selected_eye_colors %}checked{% endif %} class="rounded border-stone-300 text-stone-900 focus:ring-stone-400 w-3.5 h-3.5"> {{ ec }}</label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Unit toggle -->
+            <div class="ml-auto flex items-center gap-1 self-end">
+                <button type="button" id="unit-cm" class="text-[10px] font-semibold px-2 py-1 rounded-l-md border border-stone-300 bg-stone-900 text-white">cm</button>
+                <button type="button" id="unit-in" class="text-[10px] font-semibold px-2 py-1 rounded-r-md border border-stone-300 bg-white text-stone-600 hover:bg-stone-50">in</button>
+            </div>
+
+            {% if agency_requirements %}
+            <div>
+                <label class="block text-[10px] font-medium text-stone-500 mb-0.5">Template</label>
+                <select id="req-template" class="border border-stone-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-stone-400">
+                    <option value="">Fill from requirement…</option>
+                    {% for req in agency_requirements %}
+                    <option value="{{ req.id }}"
+                        data-min-age="{{ req.age_min|default:'' }}"
+                        data-max-age="{{ req.age_max|default:'' }}"
+                        data-min-height="{{ req.min_height_cm|default:'' }}"
+                        data-max-height="{{ req.max_height_cm|default:'' }}"
+                        data-min-bust="{{ req.min_bust_cm|default:'' }}"
+                        data-max-bust="{{ req.max_bust_cm|default:'' }}"
+                        data-min-waist="{{ req.min_waist_cm|default:'' }}"
+                        data-max-waist="{{ req.max_waist_cm|default:'' }}"
+                        data-min-hips="{{ req.min_hips_cm|default:'' }}"
+                        data-max-hips="{{ req.max_hips_cm|default:'' }}"
+                        data-min-inseam="{{ req.min_inseam_cm|default:'' }}"
+                        data-max-inseam="{{ req.max_inseam_cm|default:'' }}"
+                        data-preferred-hair-colors="{{ req.preferred_hair_colors }}"
+                        data-preferred-eye-colors="{{ req.preferred_eye_colors }}">
+                        {{ req.get_category_display }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
         </div>
-        <div>
-            <label class="block text-xs font-medium text-stone-600 mb-1">City</label>
-            <input type="text" name="city" value="{{ city_filter }}" placeholder="Filter by city…"
-                class="border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400 w-40">
+
+        <!-- Row 2: All 6 sliders in one row -->
+        <div class="flex flex-wrap gap-x-5 gap-y-2 items-end">
+            <!-- Age -->
+            <div class="flex-1 min-w-[130px] max-w-[180px]">
+                <div class="flex items-center justify-between mb-1">
+                    <label class="text-[10px] font-medium text-stone-500">Age</label>
+                    <span class="text-[10px] text-stone-400"><span id="dash-age-min-lbl">{{ min_age|default:"Any" }}</span> – <span id="dash-age-max-lbl">{{ max_age|default:"Any" }}</span></span>
+                </div>
+                <div class="dual-range-wrap">
+                    <div class="dual-range-track"></div><div class="dual-range-fill" id="dash-age-fill"></div>
+                    <input type="range" id="d_min_age" name="min_age" min="14" max="65" step="1" value="{{ min_age|default:'14' }}">
+                    <input type="range" id="d_max_age" name="max_age" min="14" max="65" step="1" value="{{ max_age|default:'65' }}">
+                </div>
+            </div>
+            <!-- Height -->
+            <div class="flex-1 min-w-[130px] max-w-[180px]">
+                <div class="flex items-center justify-between mb-1">
+                    <label class="text-[10px] font-medium text-stone-500 slider-meas-label">Height <span class="slider-unit">(cm)</span></label>
+                    <span class="text-[10px] text-stone-400"><span id="dash-ht-min-lbl">{{ min_height|default:"Any" }}</span> – <span id="dash-ht-max-lbl">{{ max_height|default:"Any" }}</span></span>
+                </div>
+                <div class="dual-range-wrap">
+                    <div class="dual-range-track"></div><div class="dual-range-fill" id="dash-ht-fill"></div>
+                    <input type="range" id="d_min_height" name="min_height" min="140" max="205" step="1" value="{{ min_height|default:'140' }}" data-cm-min="140" data-cm-max="205">
+                    <input type="range" id="d_max_height" name="max_height" min="140" max="205" step="1" value="{{ max_height|default:'205' }}" data-cm-min="140" data-cm-max="205">
+                </div>
+            </div>
+            <!-- Bust -->
+            <div class="flex-1 min-w-[130px] max-w-[180px]">
+                <div class="flex items-center justify-between mb-1">
+                    <label class="text-[10px] font-medium text-stone-500 slider-meas-label">Bust <span class="slider-unit">(cm)</span></label>
+                    <span class="text-[10px] text-stone-400"><span id="dash-bust-min-lbl">{{ min_bust|default:"Any" }}</span> – <span id="dash-bust-max-lbl">{{ max_bust|default:"Any" }}</span></span>
+                </div>
+                <div class="dual-range-wrap">
+                    <div class="dual-range-track"></div><div class="dual-range-fill" id="dash-bust-fill"></div>
+                    <input type="range" id="d_min_bust" name="min_bust" min="60" max="140" step="1" value="{{ min_bust|default:'60' }}" data-cm-min="60" data-cm-max="140">
+                    <input type="range" id="d_max_bust" name="max_bust" min="60" max="140" step="1" value="{{ max_bust|default:'140' }}" data-cm-min="60" data-cm-max="140">
+                </div>
+            </div>
+            <!-- Waist -->
+            <div class="flex-1 min-w-[130px] max-w-[180px]">
+                <div class="flex items-center justify-between mb-1">
+                    <label class="text-[10px] font-medium text-stone-500 slider-meas-label">Waist <span class="slider-unit">(cm)</span></label>
+                    <span class="text-[10px] text-stone-400"><span id="dash-waist-min-lbl">{{ min_waist|default:"Any" }}</span> – <span id="dash-waist-max-lbl">{{ max_waist|default:"Any" }}</span></span>
+                </div>
+                <div class="dual-range-wrap">
+                    <div class="dual-range-track"></div><div class="dual-range-fill" id="dash-waist-fill"></div>
+                    <input type="range" id="d_min_waist" name="min_waist" min="50" max="120" step="1" value="{{ min_waist|default:'50' }}" data-cm-min="50" data-cm-max="120">
+                    <input type="range" id="d_max_waist" name="max_waist" min="50" max="120" step="1" value="{{ max_waist|default:'120' }}" data-cm-min="50" data-cm-max="120">
+                </div>
+            </div>
+            <!-- Hips -->
+            <div class="flex-1 min-w-[130px] max-w-[180px]">
+                <div class="flex items-center justify-between mb-1">
+                    <label class="text-[10px] font-medium text-stone-500 slider-meas-label">Hips <span class="slider-unit">(cm)</span></label>
+                    <span class="text-[10px] text-stone-400"><span id="dash-hips-min-lbl">{{ min_hips|default:"Any" }}</span> – <span id="dash-hips-max-lbl">{{ max_hips|default:"Any" }}</span></span>
+                </div>
+                <div class="dual-range-wrap">
+                    <div class="dual-range-track"></div><div class="dual-range-fill" id="dash-hips-fill"></div>
+                    <input type="range" id="d_min_hips" name="min_hips" min="60" max="140" step="1" value="{{ min_hips|default:'60' }}" data-cm-min="60" data-cm-max="140">
+                    <input type="range" id="d_max_hips" name="max_hips" min="60" max="140" step="1" value="{{ max_hips|default:'140' }}" data-cm-min="60" data-cm-max="140">
+                </div>
+            </div>
+            <!-- Inseam -->
+            <div class="flex-1 min-w-[130px] max-w-[180px]">
+                <div class="flex items-center justify-between mb-1">
+                    <label class="text-[10px] font-medium text-stone-500 slider-meas-label">Inseam <span class="slider-unit">(cm)</span></label>
+                    <span class="text-[10px] text-stone-400"><span id="dash-ins-min-lbl">{{ min_inseam|default:"Any" }}</span> – <span id="dash-ins-max-lbl">{{ max_inseam|default:"Any" }}</span></span>
+                </div>
+                <div class="dual-range-wrap">
+                    <div class="dual-range-track"></div><div class="dual-range-fill" id="dash-ins-fill"></div>
+                    <input type="range" id="d_min_inseam" name="min_inseam" min="60" max="100" step="1" value="{{ min_inseam|default:'60' }}" data-cm-min="60" data-cm-max="100">
+                    <input type="range" id="d_max_inseam" name="max_inseam" min="60" max="100" step="1" value="{{ max_inseam|default:'100' }}" data-cm-min="60" data-cm-max="100">
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex items-center gap-2 self-end pb-0.5">
+                <button type="submit" class="bg-stone-900 text-white text-xs font-medium px-3.5 py-1.5 rounded-lg hover:bg-stone-700 transition-colors">Filter</button>
+                {% if has_filters %}<a href="{% url 'dashboard' %}" class="text-xs text-stone-500 hover:text-stone-800">Clear</a>{% endif %}
+            </div>
         </div>
-        <button type="submit"
-            class="bg-stone-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-stone-700 transition-colors">Filter</button>
-        {% if status_filter or city_filter %}
-        <a href="{% url 'dashboard' %}" class="text-sm text-stone-500 hover:text-stone-800 py-2">Clear</a>
-        {% endif %}
     </form>
 
     <!-- Applications table -->
@@ -53,15 +224,18 @@
                 {% for app in applications %}
                 <tr class="hover:bg-stone-50 transition-colors">
                     <td class="py-3 px-4">
-                        <p class="font-medium text-stone-900">{{ app.applicant_profile.public_display_name }}</p>
-                        {% if app.applicant_profile.gender %}<p class="text-xs text-stone-400">{{app.applicant_profile.get_gender_display }}</p>{% endif %}
+                        <div class="flex items-center gap-1">
+                            <p class="font-medium text-stone-900">{{ app.applicant_profile.public_display_name }}</p>
+                            {% if app.applicant_profile.verification_status == "verified" %}<span class="inline-block flex-shrink-0" title="Verified"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5 text-emerald-500"><path fill-rule="evenodd" d="M8.603 3.799A4.49 4.49 0 0 1 12 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 0 1 3.498 1.307 4.491 4.491 0 0 1 1.307 3.497A4.49 4.49 0 0 1 21.75 12a4.49 4.49 0 0 1-1.549 3.397 4.491 4.491 0 0 1-1.307 3.497 4.491 4.491 0 0 1-3.497 1.307A4.49 4.49 0 0 1 12 21.75a4.49 4.49 0 0 1-3.397-1.549 4.49 4.49 0 0 1-3.498-1.307 4.491 4.491 0 0 1-1.307-3.497A4.49 4.49 0 0 1 2.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 0 1 1.307-3.497 4.49 4.49 0 0 1 3.497-1.307Zm7.007 6.387a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" /></svg></span>{% endif %}
+                        </div>
+                        {% if app.applicant_profile.gender %}<p class="text-xs text-stone-400">{{ app.applicant_profile.get_gender_display }}</p>{% endif %}
                     </td>
-                    <td class="py-3 px-4 text-stone-500 hidden md:table-cell">{{ app.applicant_profile.city|default:"—"}}</td>
-                    <td class="py-3 px-4 text-stone-500 hidden md:table-cell">{{app.applicant_profile.height_cm|default:"—" }}{% if app.applicant_profile.height_cm %} cm{% endif %}</td>
+                    <td class="py-3 px-4 text-stone-500 hidden md:table-cell">{{ app.applicant_profile.city|default:"—" }}</td>
+                    <td class="py-3 px-4 text-stone-500 hidden md:table-cell">{{ app.applicant_profile.height_cm|default:"—" }}{% if app.applicant_profile.height_cm %} cm{% endif %}</td>
                     <td class="py-3 px-4">
                         <span class="text-xs font-medium px-2.5 py-1 rounded-full {% if app.status == 'submitted' %}bg-blue-100 text-blue-700{% elif app.status == 'shortlisted' %}bg-emerald-100 text-emerald-700{% elif app.status == 'rejected' %}bg-red-100 text-red-600{% elif app.status == 'under_review' %}bg-amber-100 text-amber-700{% elif app.status == 'contacted' %}bg-purple-100 text-purple-700{% else %}bg-stone-100 text-stone-500{% endif %}">{{ app.get_status_display }}</span>
                     </td>
-                    <td class="py-3 px-4 text-stone-400 text-xs hidden sm:table-cell">{{ app.submitted_at|date:"d M Y"|default:"—" }}</td>  
+                    <td class="py-3 px-4 text-stone-400 text-xs hidden sm:table-cell">{{ app.submitted_at|date:"d M Y"|default:"—" }}</td>
                     <td class="py-3 px-4 text-right">
                         <a href="{% url 'applicant-detail' app.id %}"
                             class="text-xs font-medium text-stone-600 hover:text-stone-900 border border-stone-200 px-3 py-1.5 rounded-lg hover:bg-stone-50 transition-colors">Review</a>
@@ -72,7 +246,7 @@
         </table>
         {% else %}
         <div class="text-center py-16 text-stone-400">
-            <p>No applications yet{% if status_filter or city_filter %} matching your filters{% endif %}.</p>
+            <p>No applications yet{% if has_filters %} matching your filters{% endif %}.</p>
         </div>
         {% endif %}
     </div>
@@ -249,4 +423,179 @@
     </div>
 
 </div>
+
+<script>
+(function () {
+    /* ── Multi-select dropdown buttons ── */
+    document.querySelectorAll('.ms-dropdown').forEach(function (dd) {
+        var btn = dd.querySelector('.ms-btn');
+        var panel = dd.querySelector('.ms-panel');
+        var countEl = dd.querySelector('.ms-count');
+        var allCb = panel.querySelector('[data-ms-all]');
+        var cbs = panel.querySelectorAll('input[type=checkbox]:not([data-ms-all])');
+
+        function updateCount() {
+            var n = 0; cbs.forEach(function (c) { if (c.checked) n++; });
+            if (n > 0) { countEl.textContent = n; countEl.style.display = ''; }
+            else { countEl.style.display = 'none'; }
+            if (allCb) allCb.checked = (n === 0);
+        }
+        updateCount();
+        cbs.forEach(function (c) { c.addEventListener('change', updateCount); });
+        if (allCb) {
+            allCb.addEventListener('change', function () {
+                cbs.forEach(function (c) { c.checked = false; });
+                allCb.checked = true;
+                updateCount();
+            });
+        }
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelectorAll('.ms-panel.open').forEach(function (p) { if (p !== panel) p.classList.remove('open'); });
+            panel.classList.toggle('open');
+        });
+    });
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.ms-dropdown')) {
+            document.querySelectorAll('.ms-panel.open').forEach(function (p) { p.classList.remove('open'); });
+        }
+    });
+
+    /* ── Dual-range slider setup ── */
+    var SLIDER_DEFS = [
+        { min: 'd_min_age', max: 'd_max_age', fill: 'dash-age-fill', minLbl: 'dash-age-min-lbl', maxLbl: 'dash-age-max-lbl', lo: 14, hi: 65, isMeas: false },
+        { min: 'd_min_height', max: 'd_max_height', fill: 'dash-ht-fill', minLbl: 'dash-ht-min-lbl', maxLbl: 'dash-ht-max-lbl', lo: 140, hi: 205, isMeas: true },
+        { min: 'd_min_bust', max: 'd_max_bust', fill: 'dash-bust-fill', minLbl: 'dash-bust-min-lbl', maxLbl: 'dash-bust-max-lbl', lo: 60, hi: 140, isMeas: true },
+        { min: 'd_min_waist', max: 'd_max_waist', fill: 'dash-waist-fill', minLbl: 'dash-waist-min-lbl', maxLbl: 'dash-waist-max-lbl', lo: 50, hi: 120, isMeas: true },
+        { min: 'd_min_hips', max: 'd_max_hips', fill: 'dash-hips-fill', minLbl: 'dash-hips-min-lbl', maxLbl: 'dash-hips-max-lbl', lo: 60, hi: 140, isMeas: true },
+        { min: 'd_min_inseam', max: 'd_max_inseam', fill: 'dash-ins-fill', minLbl: 'dash-ins-min-lbl', maxLbl: 'dash-ins-max-lbl', lo: 60, hi: 100, isMeas: true }
+    ];
+
+    var useInches = false;
+    var sliders = [];
+
+    function cmToIn(v) { return Math.round(v / 2.54 * 10) / 10; }
+
+    function setupSlider(def) {
+        var minEl = document.getElementById(def.min);
+        var maxEl = document.getElementById(def.max);
+        var fillEl = document.getElementById(def.fill);
+        var minLbl = document.getElementById(def.minLbl);
+        var maxLbl = document.getElementById(def.maxLbl);
+        if (!minEl || !maxEl) return null;
+
+        function pct(v) { return (v - def.lo) / (def.hi - def.lo) * 100; }
+
+        function formatVal(v, boundary) {
+            if (v === boundary) return 'Any';
+            if (def.isMeas && useInches) return cmToIn(v) + '"';
+            return v;
+        }
+
+        function update(moved) {
+            var lo = parseInt(minEl.value), hi = parseInt(maxEl.value);
+            if (lo >= hi) {
+                if (moved === 'min') { lo = hi - 1; minEl.value = lo; }
+                else { hi = lo + 1; maxEl.value = hi; }
+            }
+            if (fillEl) { fillEl.style.left = pct(lo) + '%'; fillEl.style.width = (pct(hi) - pct(lo)) + '%'; }
+            if (minLbl) minLbl.textContent = formatVal(lo, def.lo);
+            if (maxLbl) maxLbl.textContent = formatVal(hi, def.hi);
+        }
+
+        minEl.addEventListener('input', function () { update('min'); });
+        maxEl.addEventListener('input', function () { update('max'); });
+        update('max');
+        return { minEl: minEl, maxEl: maxEl, defMin: def.lo, defMax: def.hi, update: update, def: def };
+    }
+
+    SLIDER_DEFS.forEach(function (d) {
+        var s = setupSlider(d);
+        if (s) sliders.push(s);
+    });
+
+    /* ── Disable boundary sliders on submit ── */
+    var form = document.getElementById('dash-filter-form');
+    if (form) {
+        form.addEventListener('submit', function () {
+            sliders.forEach(function (sl) {
+                if (parseInt(sl.minEl.value) === sl.defMin) sl.minEl.disabled = true;
+                if (parseInt(sl.maxEl.value) === sl.defMax) sl.maxEl.disabled = true;
+            });
+        });
+    }
+
+    /* ── Unit toggle (cm / in) ── */
+    var btnCm = document.getElementById('unit-cm');
+    var btnIn = document.getElementById('unit-in');
+
+    function setUnit(inches) {
+        useInches = inches;
+        if (inches) {
+            btnIn.classList.add('bg-stone-900', 'text-white'); btnIn.classList.remove('bg-white', 'text-stone-600');
+            btnCm.classList.remove('bg-stone-900', 'text-white'); btnCm.classList.add('bg-white', 'text-stone-600');
+        } else {
+            btnCm.classList.add('bg-stone-900', 'text-white'); btnCm.classList.remove('bg-white', 'text-stone-600');
+            btnIn.classList.remove('bg-stone-900', 'text-white'); btnIn.classList.add('bg-white', 'text-stone-600');
+        }
+        document.querySelectorAll('.slider-unit').forEach(function (el) { el.textContent = inches ? '(in)' : '(cm)'; });
+        sliders.forEach(function (sl) { sl.update('max'); });
+    }
+
+    if (btnCm && btnIn) {
+        btnCm.addEventListener('click', function () { setUnit(false); });
+        btnIn.addEventListener('click', function () { setUnit(true); });
+    }
+
+    /* ── Template fill ── */
+    var tmplSelect = document.getElementById('req-template');
+    if (tmplSelect) {
+        tmplSelect.addEventListener('change', function () {
+            var opt = this.options[this.selectedIndex];
+            if (!opt.value) return;
+
+            var numFields = {
+                'd_min_age': 'minAge', 'd_max_age': 'maxAge',
+                'd_min_height': 'minHeight', 'd_max_height': 'maxHeight',
+                'd_min_bust': 'minBust', 'd_max_bust': 'maxBust',
+                'd_min_waist': 'minWaist', 'd_max_waist': 'maxWaist',
+                'd_min_hips': 'minHips', 'd_max_hips': 'maxHips',
+                'd_min_inseam': 'minInseam', 'd_max_inseam': 'maxInseam'
+            };
+
+            Object.keys(numFields).forEach(function (name) {
+                var el = document.getElementById(name);
+                if (!el) return;
+                var val = opt.dataset[numFields[name]];
+                if (val) {
+                    el.value = val;
+                } else {
+                    var sl = sliders.find(function (s) { return s.minEl === el || s.maxEl === el; });
+                    if (sl) el.value = (sl.minEl === el) ? sl.defMin : sl.defMax;
+                }
+                el.dispatchEvent(new Event('input'));
+            });
+
+            // Hair colour checkboxes
+            var hairStr = opt.dataset.preferredHairColors || '';
+            var hairArr = hairStr ? hairStr.split(',').map(function (s) { return s.trim().toLowerCase(); }) : [];
+            document.querySelectorAll('[name="hair_color"]').forEach(function (cb) {
+                cb.checked = hairArr.length > 0 && hairArr.indexOf(cb.value.toLowerCase()) !== -1;
+                cb.dispatchEvent(new Event('change'));
+            });
+
+            // Eye colour checkboxes
+            var eyeStr = opt.dataset.preferredEyeColors || '';
+            var eyeArr = eyeStr ? eyeStr.split(',').map(function (s) { return s.trim().toLowerCase(); }) : [];
+            document.querySelectorAll('[name="eye_color"]').forEach(function (cb) {
+                cb.checked = eyeArr.length > 0 && eyeArr.indexOf(cb.value.toLowerCase()) !== -1;
+                cb.dispatchEvent(new Event('change'));
+            });
+
+            // Auto-submit
+            form.requestSubmit();
+        });
+    }
+})();
+</script>
 {% endblock %}
