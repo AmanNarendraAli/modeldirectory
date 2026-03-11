@@ -31,8 +31,9 @@
     <!-- Filter panel -->
     <form method="get" id="filter-form" class="bg-white border border-stone-200 rounded-xl p-4 mb-8 space-y-3">
         <input type="hidden" name="unit" id="unit-hidden" value="{{ selected_unit|default:'cm' }}">
+        <input type="hidden" name="more" id="more-hidden" value="">
 
-        <!-- Row 1: Selects + dropdowns + unit toggle -->
+        <!-- Row 1: Always-visible filters -->
         <div class="flex flex-wrap gap-2 items-end">
             <div>
                 <label class="block text-[10px] font-medium text-stone-500 mb-0.5">Search</label>
@@ -64,10 +65,11 @@
                 </select>
             </div>
 
-            <!-- Multi-select dropdowns -->
+            <!-- City multi-select -->
             {% if all_cities %}
             <div class="ms-dropdown" data-ms="city">
-                <button type="button" class="ms-btn">City <span class="ms-count" style="display:none">0</span><svg class="w-3 h-3 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+                <label class="block text-[10px] font-medium text-stone-500 mb-0.5">City</label>
+                <button type="button" class="ms-btn"><span class="ms-label">Any</span> <span class="ms-count" style="display:none">0</span><svg class="w-3 h-3 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
                 <div class="ms-panel">
                     <label class="border-b border-stone-100 font-medium"><input type="checkbox" data-ms-all class="rounded border-stone-300 text-stone-900 focus:ring-stone-400 w-3.5 h-3.5"> Any</label>
                     {% for c in all_cities %}
@@ -76,143 +78,154 @@
                 </div>
             </div>
             {% endif %}
-            {% if all_hair_colors %}
-            <div class="ms-dropdown" data-ms="hair_color">
-                <button type="button" class="ms-btn">Hair <span class="ms-count" style="display:none">0</span><svg class="w-3 h-3 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
-                <div class="ms-panel">
-                    <label class="border-b border-stone-100 font-medium"><input type="checkbox" data-ms-all class="rounded border-stone-300 text-stone-900 focus:ring-stone-400 w-3.5 h-3.5"> Any</label>
-                    {% for hc in all_hair_colors %}
-                    <label><input type="checkbox" name="hair_color" value="{{ hc }}" {% if hc in selected_hair_colors %}checked{% endif %} class="rounded border-stone-300 text-stone-900 focus:ring-stone-400 w-3.5 h-3.5"> {{ hc }}</label>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-            {% if all_eye_colors %}
-            <div class="ms-dropdown" data-ms="eye_color">
-                <button type="button" class="ms-btn">Eye <span class="ms-count" style="display:none">0</span><svg class="w-3 h-3 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
-                <div class="ms-panel">
-                    <label class="border-b border-stone-100 font-medium"><input type="checkbox" data-ms-all class="rounded border-stone-300 text-stone-900 focus:ring-stone-400 w-3.5 h-3.5"> Any</label>
-                    {% for ec in all_eye_colors %}
-                    <label><input type="checkbox" name="eye_color" value="{{ ec }}" {% if ec in selected_eye_colors %}checked{% endif %} class="rounded border-stone-300 text-stone-900 focus:ring-stone-400 w-3.5 h-3.5"> {{ ec }}</label>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
 
-            <!-- Unit toggle -->
-            <div class="ml-auto flex items-center gap-1 self-end">
-                <button type="button" id="unit-cm" class="text-[10px] font-semibold px-2 py-1 rounded-l-md border border-stone-300 bg-stone-900 text-white">cm</button>
-                <button type="button" id="unit-in" class="text-[10px] font-semibold px-2 py-1 rounded-r-md border border-stone-300 bg-white text-stone-600 hover:bg-stone-50">in</button>
-            </div>
-
-            {% if agency_requirements %}
-            <div>
-                <label class="block text-[10px] font-medium text-stone-500 mb-0.5">Template</label>
-                <select id="req-template" class="border border-stone-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-stone-400">
-                    <option value="">Fill from requirement…</option>
-                    {% for req in agency_requirements %}
-                    <option value="{{ req.id }}"
-                        data-min-age="{{ req.age_min|default:'' }}"
-                        data-max-age="{{ req.age_max|default:'' }}"
-                        data-min-height="{{ req.min_height_cm|default:'' }}"
-                        data-max-height="{{ req.max_height_cm|default:'' }}"
-                        data-min-bust="{{ req.min_bust_cm|default:'' }}"
-                        data-max-bust="{{ req.max_bust_cm|default:'' }}"
-                        data-min-waist="{{ req.min_waist_cm|default:'' }}"
-                        data-max-waist="{{ req.max_waist_cm|default:'' }}"
-                        data-min-hips="{{ req.min_hips_cm|default:'' }}"
-                        data-max-hips="{{ req.max_hips_cm|default:'' }}"
-                        data-min-inseam="{{ req.min_inseam_cm|default:'' }}"
-                        data-max-inseam="{{ req.max_inseam_cm|default:'' }}"
-                        data-preferred-hair-colors="{{ req.preferred_hair_colors }}"
-                        data-preferred-eye-colors="{{ req.preferred_eye_colors }}">
-                        {{ req.get_category_display }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- Row 2: All 6 sliders in one row -->
-        <div class="flex flex-wrap gap-x-5 gap-y-2 items-end">
-            <!-- Age -->
-            <div class="flex-1 min-w-[130px] max-w-[180px]">
-                <div class="flex items-center justify-between mb-1">
-                    <label class="text-[10px] font-medium text-stone-500">Age</label>
-                    <span class="text-[10px] text-stone-400"><span id="age-min-lbl">{{ min_age|default:"Any" }}</span> – <span id="age-max-lbl">{{ max_age|default:"Any" }}</span></span>
-                </div>
-                <div class="dual-range-wrap">
-                    <div class="dual-range-track"></div><div class="dual-range-fill" id="age-fill"></div>
-                    <input type="range" id="min_age" name="min_age" min="14" max="65" step="1" value="{{ min_age|default:'14' }}">
-                    <input type="range" id="max_age" name="max_age" min="14" max="65" step="1" value="{{ max_age|default:'65' }}">
-                </div>
-            </div>
-            <!-- Height -->
-            <div class="flex-1 min-w-[130px] max-w-[180px]">
-                <div class="flex items-center justify-between mb-1">
-                    <label class="text-[10px] font-medium text-stone-500 slider-meas-label">Height <span class="slider-unit">(cm)</span></label>
-                    <span class="text-[10px] text-stone-400"><span id="ht-min-lbl">{{ min_height|default:"Any" }}</span> – <span id="ht-max-lbl">{{ max_height|default:"Any" }}</span></span>
-                </div>
-                <div class="dual-range-wrap">
-                    <div class="dual-range-track"></div><div class="dual-range-fill" id="ht-fill"></div>
-                    <input type="range" id="min_height" name="min_height" min="140" max="205" step="1" value="{{ min_height|default:'140' }}" data-cm-min="140" data-cm-max="205">
-                    <input type="range" id="max_height" name="max_height" min="140" max="205" step="1" value="{{ max_height|default:'205' }}" data-cm-min="140" data-cm-max="205">
-                </div>
-            </div>
-            <!-- Bust -->
-            <div class="flex-1 min-w-[130px] max-w-[180px]">
-                <div class="flex items-center justify-between mb-1">
-                    <label class="text-[10px] font-medium text-stone-500 slider-meas-label">Bust <span class="slider-unit">(cm)</span></label>
-                    <span class="text-[10px] text-stone-400"><span id="bust-min-lbl">{{ min_bust|default:"Any" }}</span> – <span id="bust-max-lbl">{{ max_bust|default:"Any" }}</span></span>
-                </div>
-                <div class="dual-range-wrap">
-                    <div class="dual-range-track"></div><div class="dual-range-fill" id="bust-fill"></div>
-                    <input type="range" id="min_bust" name="min_bust" min="60" max="140" step="1" value="{{ min_bust|default:'60' }}" data-cm-min="60" data-cm-max="140">
-                    <input type="range" id="max_bust" name="max_bust" min="60" max="140" step="1" value="{{ max_bust|default:'140' }}" data-cm-min="60" data-cm-max="140">
-                </div>
-            </div>
-            <!-- Waist -->
-            <div class="flex-1 min-w-[130px] max-w-[180px]">
-                <div class="flex items-center justify-between mb-1">
-                    <label class="text-[10px] font-medium text-stone-500 slider-meas-label">Waist <span class="slider-unit">(cm)</span></label>
-                    <span class="text-[10px] text-stone-400"><span id="waist-min-lbl">{{ min_waist|default:"Any" }}</span> – <span id="waist-max-lbl">{{ max_waist|default:"Any" }}</span></span>
-                </div>
-                <div class="dual-range-wrap">
-                    <div class="dual-range-track"></div><div class="dual-range-fill" id="waist-fill"></div>
-                    <input type="range" id="min_waist" name="min_waist" min="50" max="120" step="1" value="{{ min_waist|default:'50' }}" data-cm-min="50" data-cm-max="120">
-                    <input type="range" id="max_waist" name="max_waist" min="50" max="120" step="1" value="{{ max_waist|default:'120' }}" data-cm-min="50" data-cm-max="120">
-                </div>
-            </div>
-            <!-- Hips -->
-            <div class="flex-1 min-w-[130px] max-w-[180px]">
-                <div class="flex items-center justify-between mb-1">
-                    <label class="text-[10px] font-medium text-stone-500 slider-meas-label">Hips <span class="slider-unit">(cm)</span></label>
-                    <span class="text-[10px] text-stone-400"><span id="hips-min-lbl">{{ min_hips|default:"Any" }}</span> – <span id="hips-max-lbl">{{ max_hips|default:"Any" }}</span></span>
-                </div>
-                <div class="dual-range-wrap">
-                    <div class="dual-range-track"></div><div class="dual-range-fill" id="hips-fill"></div>
-                    <input type="range" id="min_hips" name="min_hips" min="60" max="140" step="1" value="{{ min_hips|default:'60' }}" data-cm-min="60" data-cm-max="140">
-                    <input type="range" id="max_hips" name="max_hips" min="60" max="140" step="1" value="{{ max_hips|default:'140' }}" data-cm-min="60" data-cm-max="140">
-                </div>
-            </div>
-            <!-- Inseam -->
-            <div class="flex-1 min-w-[130px] max-w-[180px]">
-                <div class="flex items-center justify-between mb-1">
-                    <label class="text-[10px] font-medium text-stone-500 slider-meas-label">Inseam <span class="slider-unit">(cm)</span></label>
-                    <span class="text-[10px] text-stone-400"><span id="ins-min-lbl">{{ min_inseam|default:"Any" }}</span> – <span id="ins-max-lbl">{{ max_inseam|default:"Any" }}</span></span>
-                </div>
-                <div class="dual-range-wrap">
-                    <div class="dual-range-track"></div><div class="dual-range-fill" id="ins-fill"></div>
-                    <input type="range" id="min_inseam" name="min_inseam" min="60" max="100" step="1" value="{{ min_inseam|default:'60' }}" data-cm-min="60" data-cm-max="100">
-                    <input type="range" id="max_inseam" name="max_inseam" min="60" max="100" step="1" value="{{ max_inseam|default:'100' }}" data-cm-min="60" data-cm-max="100">
-                </div>
-            </div>
+            <!-- More Filters toggle -->
+            <button type="button" id="more-filters-btn" class="text-xs font-medium px-3 py-1.5 rounded-lg border border-stone-300 text-stone-600 hover:bg-stone-50 transition-colors">More Filters</button>
 
             <!-- Buttons -->
-            <div class="flex items-center gap-2 self-end pb-0.5">
+            <div class="flex items-center gap-2 self-end">
                 <button type="submit" class="bg-stone-900 text-white text-xs font-medium px-3.5 py-1.5 rounded-lg hover:bg-stone-700 transition-colors">Filter</button>
                 {% if has_filters %}<a href="{% url 'model-list' %}" class="text-xs text-stone-500 hover:text-stone-800">Clear</a>{% endif %}
+            </div>
+        </div>
+
+        <!-- More filters (togglable) -->
+        <div id="more-filters" style="display:none" class="space-y-3">
+            <div class="flex flex-wrap gap-2 items-end">
+                {% if all_hair_colors %}
+                <div class="ms-dropdown" data-ms="hair_color">
+                    <label class="block text-[10px] font-medium text-stone-500 mb-0.5">Hair</label>
+                    <button type="button" class="ms-btn"><span class="ms-label">Any</span> <span class="ms-count" style="display:none">0</span><svg class="w-3 h-3 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+                    <div class="ms-panel">
+                        <label class="border-b border-stone-100 font-medium"><input type="checkbox" data-ms-all class="rounded border-stone-300 text-stone-900 focus:ring-stone-400 w-3.5 h-3.5"> Any</label>
+                        {% for hc in all_hair_colors %}
+                        <label><input type="checkbox" name="hair_color" value="{{ hc }}" {% if hc in selected_hair_colors %}checked{% endif %} class="rounded border-stone-300 text-stone-900 focus:ring-stone-400 w-3.5 h-3.5"> {{ hc }}</label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                {% if all_eye_colors %}
+                <div class="ms-dropdown" data-ms="eye_color">
+                    <label class="block text-[10px] font-medium text-stone-500 mb-0.5">Eye</label>
+                    <button type="button" class="ms-btn"><span class="ms-label">Any</span> <span class="ms-count" style="display:none">0</span><svg class="w-3 h-3 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></button>
+                    <div class="ms-panel">
+                        <label class="border-b border-stone-100 font-medium"><input type="checkbox" data-ms-all class="rounded border-stone-300 text-stone-900 focus:ring-stone-400 w-3.5 h-3.5"> Any</label>
+                        {% for ec in all_eye_colors %}
+                        <label><input type="checkbox" name="eye_color" value="{{ ec }}" {% if ec in selected_eye_colors %}checked{% endif %} class="rounded border-stone-300 text-stone-900 focus:ring-stone-400 w-3.5 h-3.5"> {{ ec }}</label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Unit toggle -->
+                <div class="ml-auto flex items-center gap-1 self-end">
+                    <button type="button" id="unit-cm" class="text-[10px] font-semibold px-2 py-1 rounded-l-md border border-stone-300 bg-stone-900 text-white">cm</button>
+                    <button type="button" id="unit-in" class="text-[10px] font-semibold px-2 py-1 rounded-r-md border border-stone-300 bg-white text-stone-600 hover:bg-stone-50">in</button>
+                </div>
+
+                {% if agency_requirements %}
+                <div>
+                    <label class="block text-[10px] font-medium text-stone-500 mb-0.5">Template</label>
+                    <select id="req-template" class="border border-stone-300 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-stone-400">
+                        <option value="">Fill from requirement…</option>
+                        {% for req in agency_requirements %}
+                        <option value="{{ req.id }}"
+                            data-min-age="{{ req.age_min|default:'' }}"
+                            data-max-age="{{ req.age_max|default:'' }}"
+                            data-min-height="{{ req.min_height_cm|default:'' }}"
+                            data-max-height="{{ req.max_height_cm|default:'' }}"
+                            data-min-bust="{{ req.min_bust_cm|default:'' }}"
+                            data-max-bust="{{ req.max_bust_cm|default:'' }}"
+                            data-min-waist="{{ req.min_waist_cm|default:'' }}"
+                            data-max-waist="{{ req.max_waist_cm|default:'' }}"
+                            data-min-hips="{{ req.min_hips_cm|default:'' }}"
+                            data-max-hips="{{ req.max_hips_cm|default:'' }}"
+                            data-min-inseam="{{ req.min_inseam_cm|default:'' }}"
+                            data-max-inseam="{{ req.max_inseam_cm|default:'' }}"
+                            data-preferred-hair-colors="{{ req.preferred_hair_colors }}"
+                            data-preferred-eye-colors="{{ req.preferred_eye_colors }}">
+                            {{ req.get_category_display }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Sliders row -->
+            <div class="flex flex-wrap gap-x-5 gap-y-2 items-end">
+                <!-- Age -->
+                <div class="flex-1 min-w-[130px] max-w-[180px]">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-[10px] font-medium text-stone-500">Age</label>
+                        <span class="text-[10px] text-stone-400"><span id="age-min-lbl">{{ min_age|default:"Any" }}</span> – <span id="age-max-lbl">{{ max_age|default:"Any" }}</span></span>
+                    </div>
+                    <div class="dual-range-wrap">
+                        <div class="dual-range-track"></div><div class="dual-range-fill" id="age-fill"></div>
+                        <input type="range" id="min_age" name="min_age" min="14" max="65" step="1" value="{{ min_age|default:'14' }}">
+                        <input type="range" id="max_age" name="max_age" min="14" max="65" step="1" value="{{ max_age|default:'65' }}">
+                    </div>
+                </div>
+                <!-- Height -->
+                <div class="flex-1 min-w-[130px] max-w-[180px]">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-[10px] font-medium text-stone-500 slider-meas-label">Height <span class="slider-unit">(cm)</span></label>
+                        <span class="text-[10px] text-stone-400"><span id="ht-min-lbl">{{ min_height|default:"Any" }}</span> – <span id="ht-max-lbl">{{ max_height|default:"Any" }}</span></span>
+                    </div>
+                    <div class="dual-range-wrap">
+                        <div class="dual-range-track"></div><div class="dual-range-fill" id="ht-fill"></div>
+                        <input type="range" id="min_height" name="min_height" min="140" max="205" step="1" value="{{ min_height|default:'140' }}" data-cm-min="140" data-cm-max="205">
+                        <input type="range" id="max_height" name="max_height" min="140" max="205" step="1" value="{{ max_height|default:'205' }}" data-cm-min="140" data-cm-max="205">
+                    </div>
+                </div>
+                <!-- Bust -->
+                <div class="flex-1 min-w-[130px] max-w-[180px]">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-[10px] font-medium text-stone-500 slider-meas-label">Bust <span class="slider-unit">(cm)</span></label>
+                        <span class="text-[10px] text-stone-400"><span id="bust-min-lbl">{{ min_bust|default:"Any" }}</span> – <span id="bust-max-lbl">{{ max_bust|default:"Any" }}</span></span>
+                    </div>
+                    <div class="dual-range-wrap">
+                        <div class="dual-range-track"></div><div class="dual-range-fill" id="bust-fill"></div>
+                        <input type="range" id="min_bust" name="min_bust" min="60" max="140" step="1" value="{{ min_bust|default:'60' }}" data-cm-min="60" data-cm-max="140">
+                        <input type="range" id="max_bust" name="max_bust" min="60" max="140" step="1" value="{{ max_bust|default:'140' }}" data-cm-min="60" data-cm-max="140">
+                    </div>
+                </div>
+                <!-- Waist -->
+                <div class="flex-1 min-w-[130px] max-w-[180px]">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-[10px] font-medium text-stone-500 slider-meas-label">Waist <span class="slider-unit">(cm)</span></label>
+                        <span class="text-[10px] text-stone-400"><span id="waist-min-lbl">{{ min_waist|default:"Any" }}</span> – <span id="waist-max-lbl">{{ max_waist|default:"Any" }}</span></span>
+                    </div>
+                    <div class="dual-range-wrap">
+                        <div class="dual-range-track"></div><div class="dual-range-fill" id="waist-fill"></div>
+                        <input type="range" id="min_waist" name="min_waist" min="50" max="120" step="1" value="{{ min_waist|default:'50' }}" data-cm-min="50" data-cm-max="120">
+                        <input type="range" id="max_waist" name="max_waist" min="50" max="120" step="1" value="{{ max_waist|default:'120' }}" data-cm-min="50" data-cm-max="120">
+                    </div>
+                </div>
+                <!-- Hips -->
+                <div class="flex-1 min-w-[130px] max-w-[180px]">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-[10px] font-medium text-stone-500 slider-meas-label">Hips <span class="slider-unit">(cm)</span></label>
+                        <span class="text-[10px] text-stone-400"><span id="hips-min-lbl">{{ min_hips|default:"Any" }}</span> – <span id="hips-max-lbl">{{ max_hips|default:"Any" }}</span></span>
+                    </div>
+                    <div class="dual-range-wrap">
+                        <div class="dual-range-track"></div><div class="dual-range-fill" id="hips-fill"></div>
+                        <input type="range" id="min_hips" name="min_hips" min="60" max="140" step="1" value="{{ min_hips|default:'60' }}" data-cm-min="60" data-cm-max="140">
+                        <input type="range" id="max_hips" name="max_hips" min="60" max="140" step="1" value="{{ max_hips|default:'140' }}" data-cm-min="60" data-cm-max="140">
+                    </div>
+                </div>
+                <!-- Inseam -->
+                <div class="flex-1 min-w-[130px] max-w-[180px]">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-[10px] font-medium text-stone-500 slider-meas-label">Inseam <span class="slider-unit">(cm)</span></label>
+                        <span class="text-[10px] text-stone-400"><span id="ins-min-lbl">{{ min_inseam|default:"Any" }}</span> – <span id="ins-max-lbl">{{ max_inseam|default:"Any" }}</span></span>
+                    </div>
+                    <div class="dual-range-wrap">
+                        <div class="dual-range-track"></div><div class="dual-range-fill" id="ins-fill"></div>
+                        <input type="range" id="min_inseam" name="min_inseam" min="60" max="100" step="1" value="{{ min_inseam|default:'60' }}" data-cm-min="60" data-cm-max="100">
+                        <input type="range" id="max_inseam" name="max_inseam" min="60" max="100" step="1" value="{{ max_inseam|default:'100' }}" data-cm-min="60" data-cm-max="100">
+                    </div>
+                </div>
             </div>
         </div>
     </form>
@@ -271,14 +284,21 @@
         var btn = dd.querySelector('.ms-btn');
         var panel = dd.querySelector('.ms-panel');
         var countEl = dd.querySelector('.ms-count');
+        var labelEl = dd.querySelector('.ms-label');
         var allCb = panel.querySelector('[data-ms-all]');
-        var cbs = panel.querySelectorAll('input[type=checkbox]:not([data-ms-all])');
+        var cbs = Array.from(panel.querySelectorAll('input[type=checkbox]:not([data-ms-all])'));
 
         function updateCount() {
-            var n = 0; cbs.forEach(function (c) { if (c.checked) n++; });
+            var selected = cbs.filter(function (c) { return c.checked; });
+            var n = selected.length;
             if (n > 0) { countEl.textContent = n; countEl.style.display = ''; }
             else { countEl.style.display = 'none'; }
             if (allCb) allCb.checked = (n === 0);
+            if (labelEl) {
+                if (n === 0) labelEl.textContent = 'Any';
+                else if (n === 1) labelEl.textContent = selected[0].value;
+                else labelEl.textContent = n + ' selected';
+            }
         }
         updateCount();
         cbs.forEach(function (c) { c.addEventListener('change', updateCount); });
@@ -291,7 +311,6 @@
         }
         btn.addEventListener('click', function (e) {
             e.preventDefault();
-            // close other dropdowns
             document.querySelectorAll('.ms-panel.open').forEach(function (p) { if (p !== panel) p.classList.remove('open'); });
             panel.classList.toggle('open');
         });
@@ -301,6 +320,24 @@
             document.querySelectorAll('.ms-panel.open').forEach(function (p) { p.classList.remove('open'); });
         }
     });
+
+    /* ── More Filters toggle ── */
+    var moreBtn = document.getElementById('more-filters-btn');
+    var morePanel = document.getElementById('more-filters');
+    var moreHidden = document.getElementById('more-hidden');
+
+    function toggleMore(show) {
+        morePanel.style.display = show ? '' : 'none';
+        moreHidden.value = show ? '1' : '';
+        moreBtn.textContent = show ? 'Fewer Filters' : 'More Filters';
+        if (show) moreBtn.classList.add('bg-stone-100');
+        else moreBtn.classList.remove('bg-stone-100');
+    }
+    if (moreBtn) {
+        moreBtn.addEventListener('click', function () { toggleMore(morePanel.style.display === 'none'); });
+        var urlMore = new URLSearchParams(window.location.search).get('more');
+        if (urlMore === '1') toggleMore(true);
+    }
 
     /* ── Dual-range slider setup ── */
     var SLIDER_DEFS = [
@@ -402,6 +439,9 @@
         tmplSelect.addEventListener('change', function () {
             var opt = this.options[this.selectedIndex];
             if (!opt.value) return;
+
+            // Auto-open more filters if closed
+            if (morePanel && morePanel.style.display === 'none') toggleMore(true);
 
             var numFields = {
                 'min_age': 'minAge', 'max_age': 'maxAge',
