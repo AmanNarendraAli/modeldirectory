@@ -2,7 +2,7 @@
 
 ## Goal
 
-Ship a polished, production-ready platform. Phase 4 removes the send-email form, adds model verification badges, polishes every user-facing surface (toast auto-dismiss, empty states, form errors, custom error pages), hardens security (rate limiting, CSRF audit, input sanitization), optimises database queries, and prepares the deployment stack (WhiteNoise, S3 media storage, production settings).
+Ship a polished, production-ready platform. Phase 4 adds an agency portfolio/past work showcase, removes the send-email form, polishes every user-facing surface (toast auto-dismiss, empty states, custom error pages), hardens security (rate limiting, CSRF audit, input sanitization), optimises database queries, and prepares the deployment stack (WhiteNoise, S3 media storage, production settings).
 
 ---
 
@@ -22,7 +22,92 @@ Ship a polished, production-ready platform. Phase 4 removes the send-email form,
 
 ## Phase 4 Steps
 
-### 1. Remove Send Email Form
+### 1. Agency Portfolio / Past Work Section
+
+Add a portfolio/past work showcase to the agency detail page, displayed above the "Our Models" roster section. This gives agencies a visual way to show off campaigns, editorials, and other work they've done.
+
+#### 1a. Model
+
+**Do:**
+- In `apps/agencies/models.py`, add a new `AgencyPortfolioItem` model:
+  ```python
+  class AgencyPortfolioItem(models.Model):
+      agency = models.ForeignKey(Agency, on_delete=models.CASCADE, related_name="portfolio_items")
+      title = models.CharField(max_length=255)
+      image = models.ImageField(upload_to="agencies/portfolio/")
+      image_thumbnail = ImageSpecField(source="image", processors=[ResizeToFill(400, 400)], format="WEBP", options={"quality": 80})
+      image_display = ImageSpecField(source="image", processors=[ResizeToFit(1200, 1200)], format="WEBP", options={"quality": 85})
+      caption = models.TextField(blank=True)
+      credit = models.CharField(max_length=255, blank=True, help_text="e.g. Photographer, brand, or campaign name")
+      display_order = models.PositiveSmallIntegerField(default=0)
+      created_at = models.DateTimeField(auto_now_add=True)
+
+      class Meta:
+          ordering = ["display_order", "-created_at"]
+
+      def __str__(self):
+          return f"{self.agency.name} — {self.title}"
+  ```
+- Run `python manage.py makemigrations agencies` and `python manage.py migrate`
+- Register the model in `apps/agencies/admin.py` as an inline on `AgencyAdmin` (or standalone)
+
+#### 1b. View
+
+**Do:**
+- In `apps/agencies/views.py` `agency_detail()`, fetch portfolio items and pass them to context:
+  ```python
+  portfolio_items = agency.portfolio_items.all()
+  ```
+  Add `"portfolio_items": portfolio_items,` to the context dict.
+
+#### 1c. Template — Agency Detail
+
+**Do:**
+- In `templates/agencies/agency_detail.html`, add a "Portfolio" section in the main content column (`lg:col-span-2`), between the Highlights section and the "Our Models" roster section (i.e. before `{% if agency.is_roster_public %}`):
+  ```html
+  {% if portfolio_items %}
+      <div>
+          <h2 class="font-display text-xl font-bold text-stone-900 mb-4">Portfolio</h2>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {% for item in portfolio_items %}
+                  <div class="group aspect-square bg-stone-100 rounded-lg overflow-hidden relative">
+                      <img src="{{ item.image.url }}" alt="{{ item.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" data-lightbox="{{ item.image.url }}" data-lightbox-alt="{{ item.title }}">
+                      <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <p class="text-white text-sm font-medium truncate">{{ item.title }}</p>
+                          {% if item.credit %}<p class="text-white/70 text-xs truncate">{{ item.credit }}</p>{% endif %}
+                      </div>
+                  </div>
+              {% endfor %}
+          </div>
+      </div>
+  {% endif %}
+  ```
+
+#### 1d. Dashboard Management
+
+**Do:**
+- In `apps/agencies/forms.py`, add an `AgencyPortfolioItemForm`:
+  ```python
+  class AgencyPortfolioItemForm(forms.ModelForm):
+      class Meta:
+          model = AgencyPortfolioItem
+          fields = ["title", "image", "caption", "credit", "display_order"]
+  ```
+- In `apps/dashboard/views.py`, add views for adding and deleting portfolio items (follow the same pattern used for highlights management — agency staff with `can_edit_agency` permission):
+  - `add_portfolio_item(request, agency_slug)` — handles form submission, saves with `item.agency = agency`
+  - `delete_portfolio_item(request, item_id)` — deletes the item (POST only, verify ownership)
+- In `apps/dashboard/urls.py`, add URL patterns:
+  ```python
+  path("agency/portfolio/add/", views.add_portfolio_item, name="agency-portfolio-add"),
+  path("agency/portfolio/<int:item_id>/delete/", views.delete_portfolio_item, name="agency-portfolio-delete"),
+  ```
+- In `templates/dashboard/edit_agency.html`, add a "Portfolio" management section (similar to highlights management) where staff can see existing items, add new ones, and delete them. Include image preview thumbnails for existing items.
+
+**Test:** As agency staff, add a portfolio item with an image, title, and credit. Visit the agency detail page — portfolio grid appears above "Our Models". Delete the item — it disappears. Agency with no portfolio items — section is hidden.
+
+---
+
+### 2. Remove Send Email Form
 
 The "Send Email" card on the applicant detail page and its supporting backend code should be removed entirely.
 
@@ -138,7 +223,7 @@ Audit every page for empty/zero-data scenarios and ensure they look clean and gu
 - In `templates/models_app/model_detail.html`:
   - If the model has no portfolio posts and no bio, the left column can be completely empty — add a fallback: `{% if not portfolio_posts and not profile.bio %}<p class="text-stone-400 text-sm">This model hasn't added any content yet.</p>{% endif %}`
 - In `templates/agencies/agency_detail.html`:
-  - If no description, no requirements, no highlights, and no roster — the main column is empty. Add: `{% if not agency.description and not requirements and not highlights and not roster_models %}<p class="text-stone-400 text-sm">This agency hasn't added any details yet.</p>{% endif %}`
+  - If no description, no requirements, no highlights, no portfolio items, and no roster — the main column is empty. Add: `{% if not agency.description and not requirements and not highlights and not portfolio_items and not roster_models %}<p class="text-stone-400 text-sm">This agency hasn't added any details yet.</p>{% endif %}`
 
 **Test:** Create a model with no portfolio/bio — detail page shows fallback message. Create an agency with no description — detail shows fallback. Empty dashboard sections show guide text.
 
@@ -270,7 +355,7 @@ Audit all views for N+1 queries and add `select_related` / `prefetch_related` wh
 
 **Do:**
 - In `apps/models_app/views.py`:
-  - `model_list()`: add `.select_related("represented_by_agency")` to the queryset (line 6). This fixes N+1 for the agency name displayed on each card
+  - `model_list()`: ✅ already has `.select_related("represented_by_agency")` — no change needed
   - `model_detail()`: add `.select_related("represented_by_agency")` to the `get_object_or_404` queryset. Replace `get_object_or_404(ModelProfile, slug=slug, is_public=True)` with:
     ```python
     profile = get_object_or_404(ModelProfile.objects.select_related("represented_by_agency"), slug=slug, is_public=True)
@@ -278,9 +363,9 @@ Audit all views for N+1 queries and add `select_related` / `prefetch_related` wh
   - `model_detail()`: add `.prefetch_related("assets")` to the portfolio_posts query if the detail page renders asset thumbnails (currently it doesn't, so skip this)
 - In `apps/agencies/views.py`:
   - `agency_list()`: the queryset on line 10 is fine (no FK fields rendered per card)
-  - `agency_detail()`: add `.prefetch_related("requirements", "highlights")` to avoid separate queries:
+  - `agency_detail()`: add `.prefetch_related("requirements", "highlights", "portfolio_items")` to avoid separate queries:
     ```python
-    agency = get_object_or_404(Agency.objects.prefetch_related("requirements", "highlights"), slug=slug, is_active=True)
+    agency = get_object_or_404(Agency.objects.prefetch_related("requirements", "highlights", "portfolio_items"), slug=slug, is_active=True)
     ```
     Then change `requirements = agency.requirements.filter(is_current=True)` to filter in Python instead to use the prefetched cache:
     ```python
@@ -439,8 +524,8 @@ Run these yourself after each step:
 
 | Step | Command / Action | Expected |
 |------|-----------------|----------|
-| 1 | Load applicant detail, hit old `/contact/` URL | No "Send Email" card; old URL returns 404 |
-| 2 | Set model verified in admin → browse list + detail | Emerald badge on card and profile header |
+| 1 | As agency staff, add portfolio item → view agency detail | Portfolio grid appears above "Our Models"; delete removes it |
+| 2 | Load applicant detail, hit old `/contact/` URL | No "Send Email" card; old URL returns 404 |
 | 3 | Trigger a message → wait 5 seconds | Toast fades out automatically; X closes early |
 | 4 | Set `DEBUG=False`, visit `/nonexistent/` | Custom 404 page with "Go Home" button |
 | 5 | Model with no portfolio → view detail page | "This model hasn't added any content yet." |
@@ -456,6 +541,7 @@ Run these yourself after each step:
 
 ## What's Done After Phase 4
 
+- ✅ Agency portfolio / past work showcase on detail page with dashboard management
 - ✅ Send-email form removed from applicant detail
 - ✅ Model verification badges across list, detail, applicant review, and agency inbox
 - ✅ Agency verification badges across list and landing page (parity with detail page)
