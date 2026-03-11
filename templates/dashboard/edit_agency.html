@@ -132,6 +132,112 @@
             </div>
         </section>
 
+        <!-- Requirements -->
+        <section class="bg-white rounded-xl border border-stone-200 p-6">
+            <h2 class="font-semibold text-stone-900 text-lg mb-1">Requirements</h2>
+            <p class="text-stone-400 text-sm mb-5">Define what you're looking for in each category (e.g. Menswear, Womenswear). Add multiple sets for different divisions.</p>
+
+            {{ req_formset.management_form }}
+
+            <div id="requirement-forms" class="space-y-6">
+                {% for req_form in req_formset %}
+                <div class="requirement-form border border-stone-200 rounded-lg p-4 {% if req_form.instance.pk and req_form.DELETE.value %}hidden{% endif %}">
+                    {% if req_form.instance.pk %}{{ req_form.id }}{% endif %}
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-3">
+                        <div class="col-span-2 sm:col-span-1">
+                            <label class="block text-xs font-medium text-stone-500 mb-1">Category</label>
+                            {{ req_form.category }}
+                            {% if req_form.category.errors %}<p class="text-red-600 text-xs mt-1">{{ req_form.category.errors|join:", " }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-stone-500 mb-1">Min height (cm)</label>
+                            {{ req_form.min_height_cm }}
+                            {% if req_form.min_height_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ req_form.min_height_cm.errors|join:", " }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-stone-500 mb-1">Max height (cm)</label>
+                            {{ req_form.max_height_cm }}
+                            {% if req_form.max_height_cm.errors %}<p class="text-red-600 text-xs mt-1">{{ req_form.max_height_cm.errors|join:", " }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-stone-500 mb-1">Min age</label>
+                            {{ req_form.age_min }}
+                            {% if req_form.age_min.errors %}<p class="text-red-600 text-xs mt-1">{{ req_form.age_min.errors|join:", " }}</p>{% endif %}
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-stone-500 mb-1">Max age</label>
+                            {{ req_form.age_max }}
+                            {% if req_form.age_max.errors %}<p class="text-red-600 text-xs mt-1">{{ req_form.age_max.errors|join:", " }}</p>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 mb-3">
+                        <div>
+                            <label class="block text-xs font-medium text-stone-500 mb-1">Application guidance</label>
+                            {{ req_form.application_guidance_text }}
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-stone-500 mb-1">Notes</label>
+                            {{ req_form.notes }}
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-6 text-sm">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            {{ req_form.accepts_beginners }}
+                            <span class="text-stone-700">Accepts beginners</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            {{ req_form.is_current }}
+                            <span class="text-stone-700">Currently active</span>
+                        </label>
+                        {% if req_form.instance.pk %}
+                        <label class="flex items-center gap-2 cursor-pointer text-red-600 ml-auto">
+                            {{ req_form.DELETE }}
+                            <span>Delete</span>
+                        </label>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <button type="button" id="add-requirement"
+                class="mt-4 text-sm font-medium text-stone-600 hover:text-stone-900 border border-dashed border-stone-300 rounded-lg px-4 py-2 hover:border-stone-400 transition-colors">
+                + Add requirement set
+            </button>
+
+            <script>
+            (function() {
+                var totalForms = document.getElementById('id_req-TOTAL_FORMS');
+                var container = document.getElementById('requirement-forms');
+                var addBtn = document.getElementById('add-requirement');
+                // Grab the last (empty) form as a template
+                var formTemplate = container.querySelector('.requirement-form:last-child');
+                var templateHtml = formTemplate ? formTemplate.outerHTML : '';
+
+                addBtn.addEventListener('click', function() {
+                    var idx = parseInt(totalForms.value);
+                    var maxForms = parseInt(document.getElementById('id_req-MAX_NUM_FORMS').value);
+                    if (idx >= maxForms) return;
+                    var html = templateHtml.replace(new RegExp('req-(\\d+|__prefix__)-', 'g'), 'req-' + idx + '-');
+                    var div = document.createElement('div');
+                    div.innerHTML = html;
+                    var newForm = div.firstElementChild;
+                    // Clear values
+                    newForm.querySelectorAll('input:not([type=checkbox]):not([type=hidden]), textarea').forEach(function(el) { el.value = ''; });
+                    newForm.querySelectorAll('select').forEach(function(el) { el.selectedIndex = 0; });
+                    newForm.querySelectorAll('input[type=checkbox]').forEach(function(el) {
+                        el.checked = el.name.indexOf('is_current') !== -1;
+                    });
+                    container.appendChild(newForm);
+                    totalForms.value = idx + 1;
+                });
+            })();
+            </script>
+        </section>
+
         <section class="bg-white rounded-xl border border-stone-200 p-6">
             <h2 class="font-semibold text-stone-900 text-lg mb-4">Settings</h2>
             <div class="space-y-3">
@@ -142,6 +248,10 @@
                 <label class="flex items-center gap-3 cursor-pointer">
                     {{ form.is_roster_public }}
                     <span class="text-sm text-stone-800">Show our model roster on the public agency page</span>
+                </label>
+                <label class="flex items-center gap-3 cursor-pointer">
+                    {{ form.is_requirements_public }}
+                    <span class="text-sm text-stone-800">Show requirements on the public agency page</span>
                 </label>
             </div>
         </section>

@@ -49,6 +49,7 @@ class OnboardingForm(forms.ModelForm):
             "available_for_commercial",
             "available_for_fittings",
             "represented_by_agency",
+            "custom_agency_name",
             "is_public",
             "is_discoverable",
         ]

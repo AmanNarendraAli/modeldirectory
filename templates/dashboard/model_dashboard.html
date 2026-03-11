@@ -109,6 +109,11 @@
                 <div>
                     <p class="font-semibold text-stone-900 text-sm">{{ profile.public_display_name }}</p>
                     <p class="text-xs text-stone-400">{{ profile.city }}</p>
+                    {% if profile.represented_by_agency %}
+                    <p class="text-xs text-stone-500 mt-0.5"><a href="{% url 'agency-detail' profile.represented_by_agency.slug %}" class="hover:underline">{{ profile.represented_by_agency.name }}</a></p>
+                    {% elif profile.custom_agency_name %}
+                    <p class="text-xs text-stone-500 mt-0.5">{{ profile.custom_agency_name }}</p>
+                    {% endif %}
                 </div>
             </div>
             <div class="flex gap-2">

@@ -144,29 +144,34 @@
                 'id_inseam_cm':  { label: document.getElementById('label-inseam'), base: 'Inseam' },
             };
 
-            window._measureUnit = 'cm';
-            var cmValues = {};
+            // Allow decimal input on measurement fields
             CM_FIELDS.forEach(function(id) {
                 var el = document.getElementById(id);
-                if (el) cmValues[id] = el.value ? parseFloat(el.value) : null;
+                if (el) el.setAttribute('step', 'any');
             });
 
+            window._measureUnit = 'cm';
+
+            // Convert displayed values when switching units.
+            // We read the CURRENT input value (which is in the OLD unit) and convert.
             window.setMeasurementUnit = function(unit) {
+                var prevUnit = window._measureUnit;
                 window._measureUnit = unit;
-                CM_FIELDS.forEach(function(id) {
-                    var el = document.getElementById(id);
-                    if (!el) return;
-                    var cmVal = cmValues[id];
-                    if (unit === 'in') {
-                        if (cmVal !== null && cmVal !== '' && !isNaN(cmVal)) {
-                            el.value = Math.round(cmVal / 2.54 * 10) / 10;
+                if (prevUnit !== unit) {
+                    CM_FIELDS.forEach(function(id) {
+                        var el = document.getElementById(id);
+                        if (!el || !el.value) return;
+                        var val = parseFloat(el.value);
+                        if (isNaN(val)) return;
+                        if (unit === 'in') {
+                            // cm → inches
+                            el.value = Math.round(val / 2.54 * 10) / 10;
+                        } else {
+                            // inches → cm
+                            el.value = Math.round(val * 2.54 * 10) / 10;
                         }
-                    } else {
-                        if (cmValues[id] !== null && cmValues[id] !== undefined) {
-                            el.value = cmValues[id] !== null ? cmValues[id] : '';
-                        }
-                    }
-                });
+                    });
+                }
 
                 document.getElementById('ob-unit-label').textContent = unit;
                 const gender = genderSelect ? genderSelect.value : '';
@@ -183,12 +188,14 @@
                     (unit === 'in' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700');
             };
 
-            document.querySelector('form').addEventListener('submit', function() {
+            // Convert to cm before submit — target THIS form specifically
+            var profileForm = document.getElementById('id_gender').closest('form');
+            profileForm.addEventListener('submit', function() {
                 if (window._measureUnit === 'in') {
                     CM_FIELDS.forEach(function(id) {
                         var el = document.getElementById(id);
                         if (!el || !el.value) return;
-                        el.value = Math.round(parseFloat(el.value) * 2.54);
+                        el.value = Math.round(parseFloat(el.value) * 2.54 * 10) / 10;
                     });
                 }
             });

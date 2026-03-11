@@ -1,3 +1,5 @@
+import datetime
+
 from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
@@ -32,12 +34,12 @@ class ModelProfile(models.Model):
     date_of_birth = models.DateField(null=True, blank=True)
     gender = models.CharField(max_length=20, choices=Gender.choices, blank=True)
 
-    # Measurements (in cm / numeric)
-    height_cm = models.PositiveSmallIntegerField(null=True, blank=True)
-    bust_cm = models.PositiveSmallIntegerField(null=True, blank=True)  # labelled "Chest" for male models
-    waist_cm = models.PositiveSmallIntegerField(null=True, blank=True)
-    hips_cm = models.PositiveSmallIntegerField(null=True, blank=True)
-    inseam_cm = models.PositiveSmallIntegerField(null=True, blank=True)  # primarily for male models
+    # Measurements (stored in cm, decimals allowed)
+    height_cm = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
+    bust_cm = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)  # labelled "Chest" for male models
+    waist_cm = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
+    hips_cm = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
+    inseam_cm = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)  # primarily for male models
     shoe_size = models.CharField(max_length=10, blank=True)
     hair_color = models.CharField(max_length=50, blank=True)
     eye_color = models.CharField(max_length=50, blank=True)
@@ -61,6 +63,10 @@ class ModelProfile(models.Model):
         null=True,
         blank=True,
         related_name="represented_models",
+    )
+    custom_agency_name = models.CharField(
+        max_length=255, blank=True,
+        help_text="Agency name when the agency is not on the platform.",
     )
 
     is_public = models.BooleanField(default=False)
@@ -98,6 +104,14 @@ class ModelProfile(models.Model):
         missing = [k for k, v in checks.items() if not v]
         return percentage, missing
 
+    @property
+    def age(self):
+        if not self.date_of_birth:
+            return None
+        today = datetime.date.today()
+        dob = self.date_of_birth
+        return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+
     def get_bust_chest_label(self):
         """Returns the correct label for bust_cm based on gender."""
         if self.gender == self.Gender.MALE:
@@ -110,7 +124,14 @@ class ModelProfile(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             base = self.public_display_name or self.user.full_name
-            self.slug = slugify(base)
+            candidate = slugify(base)
+            # Ensure uniqueness — append a suffix if the slug is already taken
+            if ModelProfile.objects.filter(slug=candidate).exclude(pk=self.pk).exists():
+                counter = 2
+                while ModelProfile.objects.filter(slug=f"{candidate}-{counter}").exclude(pk=self.pk).exists():
+                    counter += 1
+                candidate = f"{candidate}-{counter}"
+            self.slug = candidate
         if not self.public_display_name:
             self.public_display_name = self.user.full_name
         super().save(*args, **kwargs)

@@ -13,7 +13,7 @@ from apps.discovery.models import SavedAgency, Follow
 from apps.portfolio.models import PortfolioPost
 from apps.accounts.forms import OnboardingForm
 from apps.agencies.models import AgencyStaff
-from apps.agencies.forms import AgencyEditForm
+from apps.agencies.forms import AgencyEditForm, AgencyRequirementFormSet
 
 
 def _get_agency_for_staff(user):
@@ -118,13 +118,20 @@ def edit_agency(request):
     agency = staff.agency
     if request.method == "POST":
         form = AgencyEditForm(request.POST, request.FILES, instance=agency)
-        if form.is_valid():
+        req_formset = AgencyRequirementFormSet(request.POST, instance=agency, prefix="req")
+        if form.is_valid() and req_formset.is_valid():
             form.save()
+            req_formset.save()
             messages.success(request, "Agency profile updated.")
             return redirect("dashboard")
     else:
         form = AgencyEditForm(instance=agency)
-    return render(request, "dashboard/edit_agency.html", {"form": form, "agency": agency})
+        req_formset = AgencyRequirementFormSet(instance=agency, prefix="req")
+    return render(request, "dashboard/edit_agency.html", {
+        "form": form,
+        "agency": agency,
+        "req_formset": req_formset,
+    })
 
 
 @login_required

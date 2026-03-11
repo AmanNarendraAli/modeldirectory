@@ -35,14 +35,15 @@
                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
                     {% if snapshot %}
                     <div><span class="text-stone-400 text-xs block">Name</span>{{ snapshot.applicant_name }}</div>
+                    {% if application.applicant_profile.age %}<div><span class="text-stone-400 text-xs block">Age</span>{{ application.applicant_profile.age }}</div>{% endif %}
                     <div><span class="text-stone-400 text-xs block">City</span>{{ snapshot.city|default:"—" }}</div>
-                    {% if snapshot.height_cm %}<div><span class="text-stone-400 text-xs block" id="ap-label-height">Height (cm)</span><span data-ap-cm="{{ snapshot.height_cm }}">{{ snapshot.height_cm }} cm</span></div>{% endif %}
+                    {% if snapshot.height_cm %}<div><span class="text-stone-400 text-xs block" id="ap-label-height">Height (cm)</span><span data-ap-cm="{{ snapshot.height_cm }}">{{ snapshot.height_cm|floatformat:"-1" }} cm</span></div>{% endif %}
                     {% if snapshot.bust_cm %}<div><span class="text-stone-400 text-xs block" id="ap-label-bust">
                             {% if snapshot.gender == 'male' %}Chest{% else %}Bust{% endif %} (cm)
-                        </span><span data-ap-cm="{{ snapshot.bust_cm }}">{{ snapshot.bust_cm }} cm</span></div>{% endif %}
-                    {% if snapshot.waist_cm %}<div><span class="text-stone-400 text-xs block" id="ap-label-waist">Waist (cm)</span><span data-ap-cm="{{ snapshot.waist_cm }}">{{ snapshot.waist_cm }} cm</span></div>{% endif %}
-                    {% if snapshot.hips_cm %}<div><span class="text-stone-400 text-xs block" id="ap-label-hips">Hips (cm)</span><span data-ap-cm="{{ snapshot.hips_cm }}">{{ snapshot.hips_cm }} cm</span></div>{% endif %}
-                    {% if snapshot.inseam_cm %}<div><span class="text-stone-400 text-xs block" id="ap-label-inseam">Inseam (cm)</span><span data-ap-cm="{{ snapshot.inseam_cm }}">{{ snapshot.inseam_cm }} cm</span></div>{% endif %}
+                        </span><span data-ap-cm="{{ snapshot.bust_cm }}">{{ snapshot.bust_cm|floatformat:"-1" }} cm</span></div>{% endif %}
+                    {% if snapshot.waist_cm %}<div><span class="text-stone-400 text-xs block" id="ap-label-waist">Waist (cm)</span><span data-ap-cm="{{ snapshot.waist_cm }}">{{ snapshot.waist_cm|floatformat:"-1" }} cm</span></div>{% endif %}
+                    {% if snapshot.hips_cm %}<div><span class="text-stone-400 text-xs block" id="ap-label-hips">Hips (cm)</span><span data-ap-cm="{{ snapshot.hips_cm }}">{{ snapshot.hips_cm|floatformat:"-1" }} cm</span></div>{% endif %}
+                    {% if snapshot.inseam_cm %}<div><span class="text-stone-400 text-xs block" id="ap-label-inseam">Inseam (cm)</span><span data-ap-cm="{{ snapshot.inseam_cm }}">{{ snapshot.inseam_cm|floatformat:"-1" }} cm</span></div>{% endif %}
                     {% else %}
                     <div class="col-span-3 text-stone-400 text-sm">No snapshot available.</div>
                     {% endif %}

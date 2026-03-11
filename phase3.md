@@ -284,20 +284,21 @@ Run these yourself after each step:
 - ✅ Photo cropping with Cropper.js (free crop, minimum resolution)
 
 ---
-## Urgent bugs to fix
-- When onboarding or editing image, if you close rather than pressing use, you can get images that are too small to pass through the validation. make it so you can't click out of the image - you have to close or press use.
-- When onboarding, if you set measurements to inches and save, they won't get converted to cm in the db - the values just get saved. eg. 1 inch will be saved as 1, and the db base unit is cm, so that's wrong lol. When editing measurements, this issue seems to be even worse - it seems to double divide and stuff. Also, not being allowed to save non-whole numbers for measurements.
-- Turns out that for the custom agency name (when an agency is not on the site), we need to reflect that in the backend as well, or it's not consistent across interfaces.
+## Urgent bugs to fix (all resolved)
+- ~~When onboarding or editing image, if you close rather than pressing use, you can get images that are too small to pass through the validation.~~ Fixed: backdrop clicks blocked, cancel clears file input.
+- ~~When onboarding, if you set measurements to inches and save, they won't get converted to cm in the db. When editing, double divide. Non-whole numbers rejected.~~ Fixed: correct form targeted, conversion rewritten, DecimalField.
+- ~~Custom agency name not persisted in backend.~~ Fixed: `custom_agency_name` field added and wired through.
 
 ## Phase 4
-- Call on whether to do email sending or use live messaging on app linkedin style.
-- Add ability to filter models by verification status (e.g. verified models get a "verified" badge on their profile and in search results). Should set up page for verification as well, but actual verification process can be manual for now (admin sets `is_verified=True` in admin).
-- Polish and UX refinement (animations, loading states, empty states, error pages)
+- Remove 'send email' form 
+- Add ability to filter models by verification status (e.g. verified models get a "verified" badge on their profile and in search results). Actual verification process can be manual for now (admin sets `is_verified=True` in admin) - will get to it in the future.
+- Polish and UX refinement (animations, loading states (if needed), empty states, error messages being visually clean rather than alerts, error pages)
 - Production deployment prep (whitenoise, S3 storage, `production.py` settings)
-- Security hardening (rate limiting, CSRF review, input sanitization audit)
+- Security hardening (rate limiting, CSRF review, input sanitization audit, overall review)
 - Performance (query optimization, select_related/prefetch_related audit, caching)
 
 ## Future improvements
+- Live messaging on app linkedin style. Only agency staff can initiate contact, but then they can message back and forth with applicants in real time. Would require a messaging model, inbox UI, and notification system.
 - Resources section fleshing out
 - Email verification flow (is_verified_email field exists but unused)
 - Model/agency verification workflows
@@ -342,7 +343,8 @@ Run these yourself after each step:
 
 ### "Other" Representation Option
 - JS-injected "Signed to an agency not on this platform" option on edit profile
-- Reveals a free-text field (UI-only, not persisted); clears select to null on submit
+- Reveals a free-text field backed by `ModelProfile.custom_agency_name`; clears select to null on submit
+- Displayed on model detail and list pages when no FK agency is set
 
 ### Agency List Application Status
 - Logged-in model users see their application status badge instead of "Accepting Applications"
@@ -351,3 +353,33 @@ Run these yourself after each step:
 ### Email Logging & Fix
 - `fail_silently=True` removed; errors caught and logged via `logging`
 - `LOGGING` config in `settings/base.py` routes `apps.core.emails` to console at DEBUG level
+
+### Crop Modal — Backdrop & Cancel Fix
+- Clicking the dark backdrop no longer dismisses the crop modal; users must press Cancel or Use
+- Pressing Cancel now clears the file input, preventing uncropped/undersized images from being submitted
+
+### Measurement Conversion Fix
+- Submit-time inch→cm conversion was attaching to the navbar logout `<form>` (first form in the DOM) instead of the profile form; now targets the correct form via `closest('form')`
+- Rewrote unit toggle to convert the current input values directly between units instead of caching stale page-load values — fixes "double divide" on edit and lost edits when toggling
+- Measurement fields changed from `PositiveSmallIntegerField` to `DecimalField(max_digits=5, decimal_places=1)` to allow non-whole numbers (migration `models_app.0004`, `applications.0004`)
+- Inputs get `step="any"` so browsers don't block decimal entry
+- Display templates use `floatformat:"-1"` to strip unnecessary trailing zeros
+
+### Custom Agency Name Persistence
+- Added `custom_agency_name` CharField to `ModelProfile` (migration `models_app.0004`)
+- Edit profile "Other agency" text field now reads/writes the model field instead of being UI-only
+- Pre-selects "Other" option when loading edit form if a custom name exists
+- Model detail, model list, and applicant detail templates show the custom agency name when no FK agency is set
+
+### Account Deletion — Slug Collision Fix
+- `delete_account` now resets the profile slug to `deleted-{user_id}` and hides the profile, freeing the slug for reuse
+- `ModelProfile.save()` slug generation now handles uniqueness collisions by appending `-2`, `-3`, etc.
+
+### Agency Requirements Editing
+- `AgencyRequirementForm` and inline formset added to `agencies/forms.py`; staff with `can_edit_agency` can create, edit, and delete requirement sets (category, height range, age range, notes, guidance)
+- Edit Agency template includes a dynamic "Requirements" section with "Add requirement set" button
+- `is_requirements_public` flag added to `Agency` (migration `agencies.0003`, defaults to `True`); toggle in Settings controls whether requirements appear on the public agency page
+
+### Age Derived from DOB
+- `age` property on `ModelProfile` computes current age from `date_of_birth` — always up to date, no stored field
+- Shown on model detail (header + measurements sidebar), model list cards, and applicant detail view

@@ -1,9 +1,9 @@
 <!-- Cropper.js CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
 
-<!-- Crop Modal Overlay -->
+<!-- Crop Modal Overlay — clicks on backdrop are blocked -->
 <div id="cropModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/70 p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-xl overflow-hidden">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-xl overflow-hidden" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between px-5 py-4 border-b border-stone-200">
             <h3 class="font-semibold text-stone-900">Crop Image</h3>
             <button type="button" id="cropCancel" class="text-stone-400 hover:text-stone-700 text-xl leading-none">&times;</button>
@@ -88,8 +88,21 @@
         if (cropper) { cropper.destroy(); cropper = null; }
     }
 
-    document.getElementById('cropCancel').addEventListener('click', closeModal);
-    document.getElementById('cropCancel2').addEventListener('click', closeModal);
+    function cancelCrop() {
+        // Clear the file input so the uncropped raw file is never submitted
+        if (activeInput) {
+            activeInput.value = '';
+        }
+        closeModal();
+    }
+
+    document.getElementById('cropCancel').addEventListener('click', cancelCrop);
+    document.getElementById('cropCancel2').addEventListener('click', cancelCrop);
+
+    // Block backdrop clicks — modal can only be closed via Cancel or Use
+    cropModal.addEventListener('click', function (e) {
+        if (e.target === cropModal) { e.stopPropagation(); }
+    });
 
     document.getElementById('cropRotate').addEventListener('click', function () {
         if (cropper) { cropper.rotate(90); }

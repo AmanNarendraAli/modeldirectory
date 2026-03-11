@@ -93,6 +93,18 @@ def delete_account(request):
         confirm_text = request.POST.get("confirm", "")
         if confirm_text.lower() == "delete my account":
             user = request.user
+
+            # Free up the model profile slug so it can be reused
+            profile = ModelProfile.objects.filter(user=user).first()
+            if profile:
+                profile.slug = f"deleted-{user.id}"
+                profile.public_display_name = "Deleted User"
+                profile.is_public = False
+                profile.is_discoverable = False
+                profile.save(update_fields=[
+                    "slug", "public_display_name", "is_public", "is_discoverable",
+                ])
+
             user.is_active = False
             user.email = f"deleted_{user.id}@deleted.modellingdirectory.com"
             user.full_name = "Deleted User"

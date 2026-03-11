@@ -64,7 +64,7 @@
             </div>
         {% endif %}
 
-        {% if requirements %}
+        {% if requirements and agency.is_requirements_public %}
             <div>
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="font-display text-xl font-bold text-stone-900">What They're Looking For</h2>

@@ -33,6 +33,7 @@ class Agency(models.Model):
     is_active = models.BooleanField(default=True)
     is_accepting_applications = models.BooleanField(default=False)
     is_roster_public = models.BooleanField(default=False)
+    is_requirements_public = models.BooleanField(default=True)
     created_by_admin = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

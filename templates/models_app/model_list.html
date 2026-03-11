@@ -76,9 +76,11 @@
             </div>
             <div class="p-3">
                 <h2 class="font-semibold text-stone-900 text-sm truncate">{{ profile.public_display_name }}</h2>
-                <p class="text-xs text-stone-400">{{ profile.city }}{% if profile.height_cm %} · {{ profile.height_cm }} cm{% endif %}</p>
+                <p class="text-xs text-stone-400">{{ profile.city }}{% if profile.age %} · {{ profile.age }}{% endif %}{% if profile.height_cm %} · {{ profile.height_cm|floatformat:"-1" }} cm{% endif %}</p>
                 {% if profile.represented_by_agency %}
                 <p class="text-xs text-stone-500 mt-1 truncate">{{ profile.represented_by_agency.name }}</p>
+                {% elif profile.custom_agency_name %}
+                <p class="text-xs text-stone-500 mt-1 truncate">{{ profile.custom_agency_name }}</p>
                 {% else %}
                 <p class="text-xs text-stone-400 mt-1">Independent</p>
                 {% endif %}

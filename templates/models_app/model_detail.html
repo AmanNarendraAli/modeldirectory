@@ -35,8 +35,11 @@
                 {% if profile.city %}
                     <span>{{ profile.city }}</span>
                 {% endif %}
+                {% if profile.age %}
+                    <span>· {{ profile.age }}</span>
+                {% endif %}
                 {% if profile.height_cm %}
-                    <span>· {{ profile.height_cm }} cm</span>
+                    <span>· {{ profile.height_cm|floatformat:"-1" }} cm</span>
                 {% endif %}
                 {% if profile.gender %}
                     <span>· {{ profile.get_gender_display }}</span>
@@ -48,6 +51,10 @@
                    class="inline-block mt-2 text-xs font-medium text-stone-600 bg-stone-100 px-3 py-1 rounded-full hover:bg-stone-200 transition-colors">
                     {{ profile.represented_by_agency.name }}
                 </a>
+            {% elif profile.custom_agency_name %}
+                <span class="inline-block mt-2 text-xs font-medium text-stone-600 bg-stone-100 px-3 py-1 rounded-full">
+                    {{ profile.custom_agency_name }}
+                </span>
             {% else %}
                 <span class="inline-block mt-2 text-xs font-medium text-stone-500 bg-stone-100 px-3 py-1 rounded-full">
                     Independent
@@ -74,7 +81,7 @@
         <!-- Left -->
         <div class="lg:col-span-2">
             <div class="mb-6 text-sm text-stone-500">
-                {% if profile.represented_by_agency %}<span>Represented by </span><a href="{% url 'agency-detail' profile.represented_by_agency.slug %}" class="font-medium text-stone-800 hover:underline">{{ profile.represented_by_agency.name }}</a>{% else %}<span>Independent</span>{% endif %}
+                {% if profile.represented_by_agency %}<span>Represented by </span><a href="{% url 'agency-detail' profile.represented_by_agency.slug %}" class="font-medium text-stone-800 hover:underline">{{ profile.represented_by_agency.name }}</a>{% elif profile.custom_agency_name %}<span>Represented by </span><span class="font-medium text-stone-800">{{ profile.custom_agency_name }}</span>{% else %}<span>Independent</span>{% endif %}
             </div>
             {% if profile.bio %}
                 <div class="mb-8">
@@ -118,7 +125,7 @@
                 </div>
             </div>
 
-            {% if profile.height_cm or profile.bust_cm or profile.waist_cm or profile.hips_cm or profile.inseam_cm or profile.shoe_size or profile.hair_color or profile.eye_color %}
+            {% if profile.age or profile.height_cm or profile.bust_cm or profile.waist_cm or profile.hips_cm or profile.inseam_cm or profile.shoe_size or profile.hair_color or profile.eye_color %}
                 <div class="bg-stone-50 rounded-xl border border-stone-100 p-5">
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="font-semibold text-stone-900 text-sm">Measurements</h3>
@@ -130,38 +137,45 @@
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-2 text-sm">
+                        {% if profile.age %}
+                            <div>
+                                <span class="text-stone-400 text-xs block">Age</span>
+                                {{ profile.age }}
+                            </div>
+                        {% endif %}
+
                         {% if profile.height_cm %}
                             <div>
                                 <span class="text-stone-400 text-xs block" id="det-label-height">Height (cm)</span>
-                                <span data-cm="{{ profile.height_cm }}" id="det-val-height">{{ profile.height_cm }} cm</span>
+                                <span data-cm="{{ profile.height_cm }}" id="det-val-height">{{ profile.height_cm|floatformat:"-1" }} cm</span>
                             </div>
                         {% endif %}
 
                         {% if profile.bust_cm %}
                             <div>
                                 <span class="text-stone-400 text-xs block" id="det-label-bust">{{ profile.get_bust_chest_label }} (cm)</span>
-                                <span data-cm="{{ profile.bust_cm }}" id="det-val-bust">{{ profile.bust_cm }} cm</span>
+                                <span data-cm="{{ profile.bust_cm }}" id="det-val-bust">{{ profile.bust_cm|floatformat:"-1" }} cm</span>
                             </div>
                         {% endif %}
 
                         {% if profile.waist_cm %}
                             <div>
                                 <span class="text-stone-400 text-xs block" id="det-label-waist">Waist (cm)</span>
-                                <span data-cm="{{ profile.waist_cm }}">{{ profile.waist_cm }} cm</span>
+                                <span data-cm="{{ profile.waist_cm }}">{{ profile.waist_cm|floatformat:"-1" }} cm</span>
                             </div>
                         {% endif %}
 
                         {% if profile.hips_cm %}
                             <div>
                                 <span class="text-stone-400 text-xs block" id="det-label-hips">Hips (cm)</span>
-                                <span data-cm="{{ profile.hips_cm }}">{{ profile.hips_cm }} cm</span>
+                                <span data-cm="{{ profile.hips_cm }}">{{ profile.hips_cm|floatformat:"-1" }} cm</span>
                             </div>
                         {% endif %}
 
                         {% if profile.inseam_cm %}
                             <div>
                                 <span class="text-stone-400 text-xs block" id="det-label-inseam">Inseam (cm)</span>
-                                <span data-cm="{{ profile.inseam_cm }}">{{ profile.inseam_cm }} cm</span>
+                                <span data-cm="{{ profile.inseam_cm }}">{{ profile.inseam_cm|floatformat:"-1" }} cm</span>
                             </div>
                         {% endif %}
 

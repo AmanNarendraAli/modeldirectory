@@ -190,32 +190,34 @@
                 'id_inseam_cm':  { label: document.getElementById('label-inseam'), base: 'Inseam' },
             };
 
-            window._measureUnit = 'cm';
-            // Store original cm values
-            var cmValues = {};
+            // Allow decimal input on measurement fields
             CM_FIELDS.forEach(function(id) {
                 var el = document.getElementById(id);
-                if (el) cmValues[id] = el.value ? parseFloat(el.value) : null;
+                if (el) el.setAttribute('step', 'any');
             });
 
+            window._measureUnit = 'cm';
+
+            // Convert displayed values when switching units.
+            // We read the CURRENT input value (in the OLD unit) and convert.
             window.setMeasurementUnit = function(unit) {
+                var prevUnit = window._measureUnit;
                 window._measureUnit = unit;
-                CM_FIELDS.forEach(function(id) {
-                    var el = document.getElementById(id);
-                    if (!el) return;
-                    var cmVal = cmValues[id];
-                    if (unit === 'in') {
-                        el.dataset.cmValue = el.value || '';
-                        if (cmVal !== null && cmVal !== '' && !isNaN(cmVal)) {
-                            el.value = Math.round(cmVal / 2.54 * 10) / 10;
+                if (prevUnit !== unit) {
+                    CM_FIELDS.forEach(function(id) {
+                        var el = document.getElementById(id);
+                        if (!el || !el.value) return;
+                        var val = parseFloat(el.value);
+                        if (isNaN(val)) return;
+                        if (unit === 'in') {
+                            // cm → inches
+                            el.value = Math.round(val / 2.54 * 10) / 10;
+                        } else {
+                            // inches → cm
+                            el.value = Math.round(val * 2.54 * 10) / 10;
                         }
-                    } else {
-                        // Restore exact cm values
-                        if (cmValues[id] !== null && cmValues[id] !== undefined) {
-                            el.value = cmValues[id] !== null ? cmValues[id] : '';
-                        }
-                    }
-                });
+                    });
+                }
 
                 // Update labels
                 const unitLabel = document.getElementById('measurements-unit-label');
@@ -235,20 +237,16 @@
                     (unit === 'in' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700');
             };
 
-            // Before form submission, convert back to cm if in inch mode
-            document.querySelector('form').addEventListener('submit', function() {
+            // Before form submission, convert to cm if in inch mode — target THIS form
+            var profileForm = document.getElementById('id_gender').closest('form');
+            profileForm.addEventListener('submit', function() {
                 if (window._measureUnit === 'in') {
                     CM_FIELDS.forEach(function(id) {
                         var el = document.getElementById(id);
                         if (!el || !el.value) return;
-                        el.value = Math.round(parseFloat(el.value) * 2.54);
+                        el.value = Math.round(parseFloat(el.value) * 2.54 * 10) / 10;
                     });
                 }
-                // Update stored cm values after submit
-                CM_FIELDS.forEach(function(id) {
-                    var el = document.getElementById(id);
-                    if (el) cmValues[id] = el.value ? parseFloat(el.value) : null;
-                });
             });
         })();
         </script>
@@ -409,7 +407,7 @@
             </div>
             <div id="other-agency-field" style="display:none;" class="mt-3">
                 <label class="block text-sm font-medium text-stone-700 mb-1">Agency name</label>
-                <input type="text" id="other_agency_name_input" name="other_agency_name" placeholder="Enter your agency's name" class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
+                {{ form.custom_agency_name }}
                 <p class="text-xs text-stone-400 mt-1">For reference only. If your agency joins the platform they can add you to their roster.</p>
             </div>
         </section>
@@ -422,10 +420,25 @@
             opt.textContent = '\u2014 Signed to an agency not on this platform \u2014';
             sel.appendChild(opt);
             var otherField = document.getElementById('other-agency-field');
+            var customInput = document.getElementById('id_custom_agency_name');
+
+            // If model already has a custom agency name but no FK agency, select "other"
+            if (!sel.value && customInput && customInput.value) {
+                sel.value = 'other';
+            }
+
             function toggle() { otherField.style.display = sel.value === 'other' ? '' : 'none'; }
-            sel.addEventListener('change', toggle);
+            sel.addEventListener('change', function () {
+                toggle();
+                // Clear custom name when switching away from "other"
+                if (sel.value !== 'other' && customInput) {
+                    customInput.value = '';
+                }
+            });
             toggle();
-            document.querySelector('form').addEventListener('submit', function () {
+
+            var profileForm = sel.closest('form');
+            profileForm.addEventListener('submit', function () {
                 if (sel.value === 'other') { sel.value = ''; }
             }, true);
         })();
