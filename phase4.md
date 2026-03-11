@@ -567,3 +567,21 @@ Run these yourself after each step:
 - Model/agency verification workflows
 - In-platform messaging between agencies and models
 - Social features on portfolios (likes, comments)
+
+---
+
+## Addendum — Completed in feature/pre-phase4-improvements
+
+### Phase 4 features I just added - 3PM PST 11th March 2026 (from product list, same branch)
+- **Agency access to private model profiles:** When a model's profile is private but they are signed to an agency, staff of that agency can view the profile. `model_detail` allows access when `AgencyStaff` links the viewer to `profile.represented_by_agency`; blue banner explains "viewing as roster staff".
+- **Model experience level:** `ModelProfile.experience_level` (amateur/experienced) added; migration `models_app.0005`; OnboardingForm and edit profile; displayed in model detail sidebar in its own section below Measurements, on model list cards and filter, and in applicant detail stats.
+- **Agency public profile link:** "View Public Page" button added to agency dashboard header (next to Edit Agency), linking to `agency-detail` for the staff's agency.
+
+### Phase 4 Step 2 — Remove Send Email form
+- "Send Email" card removed from `templates/dashboard/applicant_detail.html`.
+- `ContactApplicantForm` removed from `apps/applications/forms.py`; `contact_applicant` view and `applications/<id>/contact/` URL removed from dashboard app.
+- Contact Information card (email, phone, Instagram) retained on applicant detail for reference.
+
+### Other
+- Minimal `requirements.txt` added (Django, django-environ, psycopg2-binary, Pillow, django-imagekit) for `pip install -r requirements.txt`.
+
