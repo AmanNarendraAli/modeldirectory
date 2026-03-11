@@ -2,13 +2,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
-from django.core.mail import send_mail
-from django.conf import settings as django_settings
 from django.http import JsonResponse
 
 from apps.models_app.models import ModelProfile
 from apps.applications.models import Application
-from apps.applications.forms import FeedbackForm, ContactApplicantForm
+from apps.applications.forms import FeedbackForm
 from apps.discovery.models import SavedAgency, Follow
 from apps.portfolio.models import PortfolioPost
 from apps.accounts.forms import OnboardingForm
@@ -302,7 +300,6 @@ def applicant_detail(request, application_id):
         owner_profile=application.applicant_profile, is_public=True
     )
     feedback_form = FeedbackForm(instance=application)
-    contact_form = ContactApplicantForm()
 
     return render(request, "dashboard/applicant_detail.html", {
         "application": application,
@@ -311,7 +308,6 @@ def applicant_detail(request, application_id):
         "agency": agency,
         "status_choices": Application.Status.choices,
         "feedback_form": feedback_form,
-        "contact_form": contact_form,
     })
 
 
@@ -357,34 +353,6 @@ def submit_feedback(request, application_id):
         app.feedback_updated_at = timezone.now()
         app.save(update_fields=["feedback", "feedback_updated_at"])
         messages.success(request, "Feedback saved.")
-
-    return redirect("applicant-detail", application_id=application_id)
-
-
-@login_required
-def contact_applicant(request, application_id):
-    if request.method != "POST":
-        return redirect("agency-dashboard")
-
-    agency = _get_agency_for_staff(request.user)
-    if not agency:
-        return redirect("home")
-
-    application = get_object_or_404(Application, id=application_id, agency=agency)
-    form = ContactApplicantForm(request.POST)
-    if form.is_valid():
-        subject = form.cleaned_data["subject"]
-        body = form.cleaned_data["body"]
-        recipient = application.applicant_profile.contact_email or application.applicant_profile.user.email
-        from_email = request.user.email
-        send_mail(
-            subject=f"[{agency.name}] {subject}",
-            message=body,
-            from_email=from_email,
-            recipient_list=[recipient],
-            fail_silently=True,
-        )
-        messages.success(request, f"Email sent to {recipient}.")
 
     return redirect("applicant-detail", application_id=application_id)
 
