@@ -28,7 +28,10 @@
             <h1 class="font-display text-3xl font-bold text-stone-900">{{ agency.name }}</h1>
             <p class="text-stone-500 text-sm mt-1">Applications Inbox</p>
         </div>
-        {% if can_edit %}<a href="{% url 'edit-agency' %}" class="bg-stone-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-stone-700 transition-colors">Edit Agency</a>{% endif %}
+        <div class="flex items-center gap-2">
+            <a href="{% url 'agency-detail' agency.slug %}" class="border border-stone-300 text-stone-700 text-sm font-medium px-4 py-2 rounded-lg hover:bg-stone-50 transition-colors">View Public Page</a>
+            {% if can_edit %}<a href="{% url 'edit-agency' %}" class="bg-stone-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-stone-700 transition-colors">Edit Agency</a>{% endif %}
+        </div>
     </div>
 
     <!-- Filters -->

@@ -19,6 +19,10 @@ class ModelProfile(models.Model):
         NON_BINARY = "non_binary", "Non-binary"
         PREFER_NOT = "prefer_not_to_say", "Prefer not to say"
 
+    class ExperienceLevel(models.TextChoices):
+        AMATEUR = "amateur", "Amateur"
+        EXPERIENCED = "experienced", "Experienced"
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="model_profile"
     )
@@ -33,6 +37,9 @@ class ModelProfile(models.Model):
     country = models.CharField(max_length=100, default="India")
     date_of_birth = models.DateField(null=True, blank=True)
     gender = models.CharField(max_length=20, choices=Gender.choices, blank=True)
+    experience_level = models.CharField(
+        max_length=20, choices=ExperienceLevel.choices, blank=True
+    )
 
     # Measurements (stored in cm, decimals allowed)
     height_cm = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)

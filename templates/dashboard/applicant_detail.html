@@ -39,6 +39,7 @@
                     {% if snapshot %}
                     <div><span class="text-stone-400 text-xs block">Name</span>{{ snapshot.applicant_name }}</div>
                     {% if application.applicant_profile.age %}<div><span class="text-stone-400 text-xs block">Age</span>{{ application.applicant_profile.age }}</div>{% endif %}
+                    {% if application.applicant_profile.experience_level %}<div><span class="text-stone-400 text-xs block">Experience</span>{{ application.applicant_profile.get_experience_level_display }}</div>{% endif %}
                     <div><span class="text-stone-400 text-xs block">City</span>{{ snapshot.city|default:"—" }}</div>
                     {% if snapshot.height_cm %}<div><span class="text-stone-400 text-xs block" id="ap-label-height">Height (cm)</span><span data-ap-cm="{{ snapshot.height_cm }}">{{ snapshot.height_cm|floatformat:"-1" }} cm</span></div>{% endif %}
                     {% if snapshot.bust_cm %}<div><span class="text-stone-400 text-xs block" id="ap-label-bust">

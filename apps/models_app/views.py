@@ -21,6 +21,7 @@ def model_list(request):
     search = request.GET.get("q", "").strip()
     selected_cities = request.GET.getlist("city")
     gender = request.GET.get("gender", "").strip()
+    experience_level = request.GET.get("experience_level", "").strip()
     represented = request.GET.get("represented", "").strip()
     verified = request.GET.get("verified", "").strip()
     min_age = request.GET.get("min_age", "").strip()
@@ -49,6 +50,9 @@ def model_list(request):
 
     if gender:
         qs = qs.filter(gender=gender)
+
+    if experience_level:
+        qs = qs.filter(experience_level=experience_level)
 
     if represented == "yes":
         qs = qs.filter(represented_by_agency__isnull=False)
@@ -178,9 +182,11 @@ def model_list(request):
         "all_hair_colors": all_hair_colors,
         "all_eye_colors": all_eye_colors,
         "gender_choices": ModelProfile.Gender.choices,
+        "experience_choices": ModelProfile.ExperienceLevel.choices,
         "search": search,
         "selected_cities": selected_cities,
         "selected_gender": gender,
+        "selected_experience_level": experience_level,
         "selected_represented": represented,
         "selected_verified": verified,
         "min_age": min_age,
@@ -206,9 +212,22 @@ def model_list(request):
 def model_detail(request, slug):
     profile = get_object_or_404(ModelProfile, slug=slug)
 
-    # If profile is private, only the owner can view it
+    # If profile is private, only the owner or their agency can view it
     is_own_profile = request.user.is_authenticated and request.user == profile.user
-    if not profile.is_public and not is_own_profile:
+    is_agency_viewer = False
+    if (
+        request.user.is_authenticated
+        and hasattr(request.user, "is_agency_staff")
+        and request.user.is_agency_staff
+        and profile.represented_by_agency
+    ):
+        from apps.agencies.models import AgencyStaff
+
+        is_agency_viewer = AgencyStaff.objects.filter(
+            user=request.user, agency=profile.represented_by_agency
+        ).exists()
+
+    if not profile.is_public and not is_own_profile and not is_agency_viewer:
         from django.http import Http404
         raise Http404
 
@@ -227,4 +246,5 @@ def model_detail(request, slug):
         "is_following": is_following,
         "follower_count": follower_count,
         "is_own_private_profile": is_own_profile and not profile.is_public,
+        "is_agency_viewer": is_agency_viewer,
     })
