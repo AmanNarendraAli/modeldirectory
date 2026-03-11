@@ -472,3 +472,12 @@ Run these yourself after each step:
 - ✅ Caching for city dropdowns
 - ✅ Mobile hamburger menu
 - ✅ Role switch accessible from navbar
+
+## Future improvements
+- Mobile interface testing
+- Live messaging on app linkedin style. Only agency staff can initiate contact, but then they can message back and forth with applicants in real time. Would require a messaging model, inbox UI, and notification system.
+- Resources section fleshing out
+- Email verification flow (is_verified_email field exists but unused)
+- Model/agency verification workflows
+- In-platform messaging between agencies and models
+- Social features on portfolios (likes, comments)
