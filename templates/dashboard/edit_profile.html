@@ -72,11 +72,11 @@
         <section class="bg-white rounded-xl border border-stone-200 p-6" id="measurements-section">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="font-semibold text-stone-900 text-lg" id="measurements-heading">Measurements <span class="text-stone-400 font-normal text-sm" id="measurements-unit-label">(cm)</span></h2>
-                <div class="flex items-center gap-1 bg-stone-100 rounded-lg p-1 text-xs font-medium">
+                <div class="flex items-center gap-1">
                     <button type="button" id="unit-btn-cm" onclick="setMeasurementUnit('cm')"
-                        class="px-3 py-1.5 rounded-md transition-colors bg-white text-stone-900 shadow-sm">cm</button>
+                        class="text-[10px] font-semibold px-2 py-1 rounded-l-md border border-stone-300 bg-stone-900 text-white">cm</button>
                     <button type="button" id="unit-btn-in" onclick="setMeasurementUnit('in')"
-                        class="px-3 py-1.5 rounded-md transition-colors text-stone-500 hover:text-stone-700">in</button>
+                        class="text-[10px] font-semibold px-2 py-1 rounded-r-md border border-stone-300 bg-white text-stone-600 hover:bg-stone-50">in</button>
                 </div>
             </div>
 
@@ -231,10 +231,10 @@
                 });
 
                 // Toggle button styles
-                document.getElementById('unit-btn-cm').className = 'px-3 py-1.5 rounded-md transition-colors ' +
-                    (unit === 'cm' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700');
-                document.getElementById('unit-btn-in').className = 'px-3 py-1.5 rounded-md transition-colors ' +
-                    (unit === 'in' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700');
+                document.getElementById('unit-btn-cm').className = 'text-[10px] font-semibold px-2 py-1 rounded-l-md border border-stone-300 ' +
+                    (unit === 'cm' ? 'bg-stone-900 text-white' : 'bg-white text-stone-600 hover:bg-stone-50');
+                document.getElementById('unit-btn-in').className = 'text-[10px] font-semibold px-2 py-1 rounded-r-md border border-stone-300 ' +
+                    (unit === 'in' ? 'bg-stone-900 text-white' : 'bg-white text-stone-600 hover:bg-stone-50');
             };
 
             // Before form submission, convert to cm if in inch mode — target THIS form

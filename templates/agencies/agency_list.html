@@ -11,22 +11,45 @@
     </div>
 
     <!-- Filters -->
+    <style>
+    .ms-dropdown{position:relative}
+    .ms-btn{display:flex;align-items:center;gap:4px;border:1px solid #d6d3d1;border-radius:.5rem;padding:6px 10px;font-size:.75rem;background:#fff;cursor:pointer;white-space:nowrap}
+    .ms-btn:hover{border-color:#a8a29e}
+    .ms-count{background:#1c1917;color:#fff;font-size:9px;border-radius:9999px;min-width:16px;text-align:center;padding:0 4px;line-height:16px}
+    .ms-panel{display:none;position:absolute;top:100%;left:0;min-width:180px;max-height:220px;overflow-y:auto;background:#fff;border:1px solid #d6d3d1;border-radius:.5rem;box-shadow:0 4px 12px rgb(0 0 0/.08);z-index:50;padding:4px 0;margin-top:4px}
+    .ms-panel label{display:flex;align-items:center;gap:6px;padding:5px 10px;font-size:.75rem;cursor:pointer;white-space:nowrap}
+    .ms-panel label:hover{background:#f5f5f4}
+    .ms-dropdown.open .ms-panel{display:block}
+    .agency-city-btn{
+        padding: .5rem .75rem;
+        font-size: .875rem;
+        line-height: 1.25rem;
+    }
+    </style>
+
     <form method="get" class="flex flex-wrap gap-3 mb-8 items-end">
         <div>
             <label class="block text-xs font-medium text-stone-600 mb-1">Search</label>
             <input type="text" name="q" value="{{ search }}" placeholder="Agency name…"
                 class="border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400 w-52">
         </div>
-        <div>
+
+        {% if cities %}
+        <div class="ms-dropdown" data-ms="city">
             <label class="block text-xs font-medium text-stone-600 mb-1">City</label>
-            <select name="city"
-                class="border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
-                <option value="">All Cities</option>
+            <button type="button" class="ms-btn agency-city-btn border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">                <span class="ms-label">Any</span>
+                <span class="ms-count" style="display:none">0</span>
+                <svg class="w-3 h-3 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="ms-panel">
+                <label class="border-b border-stone-100 font-medium"><input type="checkbox" data-ms-all class="rounded border-stone-300 text-stone-900 focus:ring-stone-400 w-3.5 h-3.5"> Any</label>
                 {% for c in cities %}
-                <option value="{{ c }}" {% if c == selected_city %}selected{% endif %}>{{ c }}</option>
+                <label><input type="checkbox" name="city" value="{{ c }}" {% if c in selected_cities %}checked{% endif %} class="rounded border-stone-300 text-stone-900 focus:ring-stone-400 w-3.5 h-3.5"> {{ c }}</label>
                 {% endfor %}
-            </select>
+            </div>
         </div>
+        {% endif %}
+
         <div>
             <label class="block text-xs font-medium text-stone-600 mb-1">Applications</label>
             <select name="accepting"
@@ -35,14 +58,76 @@
                 <option value="1" {% if accepting == "1" %}selected{% endif %}>Open Only</option>
             </select>
         </div>
+
         <button type="submit"
             class="bg-stone-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-stone-700 transition-colors">
             Filter
         </button>
-        {% if search or selected_city or accepting %}
+
+        {% if search or selected_cities or accepting %}
         <a href="{% url 'agency-list' %}" class="text-sm text-stone-500 hover:text-stone-800 py-2">Clear</a>
         {% endif %}
     </form>
+
+    <script>
+    (function(){
+        document.querySelectorAll('.ms-dropdown').forEach(function(dd){
+            var btn = dd.querySelector('.ms-btn');
+            var panel = dd.querySelector('.ms-panel');
+            var countEl = dd.querySelector('.ms-count');
+            var labelEl = dd.querySelector('.ms-label');
+            var allCb = panel.querySelector('[data-ms-all]');
+            var boxes = Array.from(panel.querySelectorAll('input[type=checkbox]:not([data-ms-all])'));
+
+            btn.addEventListener('click', function(e){
+                e.stopPropagation();
+                dd.classList.toggle('open');
+            });
+
+            function updateCount(){
+                var selected = boxes.filter(function(c){ return c.checked; });
+                var n = selected.length;
+
+                countEl.textContent = n;
+                countEl.style.display = n ? '' : 'none';
+
+                if(allCb) allCb.checked = n === 0;
+
+                if(labelEl){
+                    if(n === 0){
+                        labelEl.textContent = 'Any';
+                    } else if(n === 1){
+                        labelEl.textContent = selected[0].value;
+                    } else {
+                        labelEl.textContent = n + ' selected';
+                    }
+                }
+            }
+
+            boxes.forEach(function(cb){
+                cb.addEventListener('change', function(){
+                    if(allCb && cb.checked) allCb.checked = false;
+                    updateCount();
+                });
+            });
+
+            if(allCb){
+                allCb.addEventListener('change', function(){
+                    if(allCb.checked) boxes.forEach(function(c){ c.checked = false; });
+                    updateCount();
+                });
+            }
+
+            updateCount();
+        });
+
+        document.addEventListener('click', function(){
+            document.querySelectorAll('.ms-dropdown.open').forEach(function(d){
+                d.classList.remove('open');
+            });
+        });
+    })();
+    </script>
 
     <!-- Grid -->
     {% if agencies %}
@@ -95,7 +180,7 @@
     {% else %}
     <div class="text-center py-20 text-stone-400">
         <p class="text-lg">No agencies found.</p>
-        {% if search or selected_city or accepting %}
+        {% if search or selected_cities or accepting %}
         <a href="{% url 'agency-list' %}" class="mt-3 inline-block text-sm text-stone-600 hover:text-stone-900">Clear filters</a>
         {% endif %}
     </div>

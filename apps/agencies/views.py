@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
@@ -10,13 +11,16 @@ def agency_list(request):
     qs = Agency.objects.filter(is_active=True)
 
     search = request.GET.get("q", "").strip()
-    city = request.GET.get("city", "").strip()
+    selected_cities = request.GET.getlist("city")
     accepting = request.GET.get("accepting", "")
 
     if search:
         qs = qs.filter(name__icontains=search)
-    if city:
-        qs = qs.filter(city__icontains=city)
+    if selected_cities:
+        city_q = Q()
+        for c in selected_cities:
+            city_q |= Q(city__icontains=c)
+        qs = qs.filter(city_q)
     if accepting == "1":
         qs = qs.filter(is_accepting_applications=True)
 
@@ -48,7 +52,7 @@ def agency_list(request):
         "agencies": agencies_list,
         "cities": cities,
         "search": search,
-        "selected_city": city,
+        "selected_cities": selected_cities,
         "accepting": accepting,
         "user_agency_ids": user_agency_ids,
     })

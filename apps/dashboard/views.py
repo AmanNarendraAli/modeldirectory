@@ -255,6 +255,7 @@ def agency_dashboard(request):
         "roster_models": roster_models,
         "agency_requirements": agency_requirements,
         "has_filters": has_filters,
+        "selected_unit": request.GET.get("unit", "cm"),
     })
 
 

@@ -136,9 +136,9 @@
         <section class="bg-white rounded-xl border border-stone-200 p-6" id="requirements-section">
             <div class="flex items-center justify-between mb-1">
                 <h2 class="font-semibold text-stone-900 text-lg">Requirements</h2>
-                <div class="flex items-center gap-1 bg-stone-100 rounded-lg p-1 text-xs font-medium">
-                    <button type="button" id="req-unit-btn-cm" class="px-3 py-1.5 rounded-md transition-colors bg-white text-stone-900 shadow-sm">cm</button>
-                    <button type="button" id="req-unit-btn-in" class="px-3 py-1.5 rounded-md transition-colors text-stone-500 hover:text-stone-700">in</button>
+                <div class="flex items-center gap-1">
+                    <button type="button" id="req-unit-btn-cm" class="text-[10px] font-semibold px-2 py-1 rounded-l-md border border-stone-300 bg-stone-900 text-white">cm</button>
+                    <button type="button" id="req-unit-btn-in" class="text-[10px] font-semibold px-2 py-1 rounded-r-md border border-stone-300 bg-white text-stone-600 hover:bg-stone-50">in</button>
                 </div>
             </div>
             <p class="text-stone-400 text-sm mb-5">Define what you're looking for in each category (e.g. Menswear, Womenswear). Add multiple sets for different divisions.</p>
@@ -325,10 +325,10 @@
                         el.textContent = '(' + unit + ')';
                     });
                     // Toggle button styles
-                    document.getElementById('req-unit-btn-cm').className = 'px-3 py-1.5 rounded-md transition-colors ' +
-                        (unit === 'cm' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700');
-                    document.getElementById('req-unit-btn-in').className = 'px-3 py-1.5 rounded-md transition-colors ' +
-                        (unit === 'in' ? 'bg-white text-stone-900 shadow-sm' : 'text-stone-500 hover:text-stone-700');
+                    document.getElementById('req-unit-btn-cm').className = 'text-[10px] font-semibold px-2 py-1 rounded-l-md border border-stone-300 ' +
+                        (unit === 'cm' ? 'bg-stone-900 text-white' : 'bg-white text-stone-600 hover:bg-stone-50');
+                    document.getElementById('req-unit-btn-in').className = 'text-[10px] font-semibold px-2 py-1 rounded-r-md border border-stone-300 ' +
+                        (unit === 'in' ? 'bg-stone-900 text-white' : 'bg-white text-stone-600 hover:bg-stone-50');
                 }
 
                 document.getElementById('req-unit-btn-cm').addEventListener('click', function() { setReqUnit('cm'); });

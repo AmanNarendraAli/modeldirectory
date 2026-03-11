@@ -33,6 +33,7 @@
 
     <!-- Filters -->
     <form method="get" id="dash-filter-form" class="bg-white border border-stone-200 rounded-xl p-4 mb-8 space-y-3">
+        <input type="hidden" name="unit" id="unit-hidden" value="{{ selected_unit|default:'cm' }}">
 
         <!-- Row 1: Selects + dropdowns + unit toggle -->
         <div class="flex flex-wrap gap-2 items-end">
@@ -529,8 +530,11 @@
     var btnCm = document.getElementById('unit-cm');
     var btnIn = document.getElementById('unit-in');
 
+    var unitHidden = document.getElementById('unit-hidden');
+
     function setUnit(inches) {
         useInches = inches;
+        if (unitHidden) unitHidden.value = inches ? 'in' : 'cm';
         if (inches) {
             btnIn.classList.add('bg-stone-900', 'text-white'); btnIn.classList.remove('bg-white', 'text-stone-600');
             btnCm.classList.remove('bg-stone-900', 'text-white'); btnCm.classList.add('bg-white', 'text-stone-600');
@@ -545,6 +549,11 @@
     if (btnCm && btnIn) {
         btnCm.addEventListener('click', function () { setUnit(false); });
         btnIn.addEventListener('click', function () { setUnit(true); });
+    }
+
+    // Restore unit from URL param
+    if (unitHidden && unitHidden.value === 'in') {
+        setUnit(true);
     }
 
     /* ── Template fill ── */

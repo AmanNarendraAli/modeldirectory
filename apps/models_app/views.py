@@ -199,11 +199,19 @@ def model_list(request):
         "selected_eye_colors": selected_eye_colors,
         "agency_requirements": agency_requirements,
         "has_filters": has_filters,
+        "selected_unit": request.GET.get("unit", "cm"),
     })
 
 
 def model_detail(request, slug):
-    profile = get_object_or_404(ModelProfile, slug=slug, is_public=True)
+    profile = get_object_or_404(ModelProfile, slug=slug)
+
+    # If profile is private, only the owner can view it
+    is_own_profile = request.user.is_authenticated and request.user == profile.user
+    if not profile.is_public and not is_own_profile:
+        from django.http import Http404
+        raise Http404
+
     portfolio_posts = profile.portfolio_posts.filter(is_public=True)
 
     is_following = False
@@ -218,4 +226,5 @@ def model_detail(request, slug):
         "portfolio_posts": portfolio_posts,
         "is_following": is_following,
         "follower_count": follower_count,
+        "is_own_private_profile": is_own_profile and not profile.is_public,
     })

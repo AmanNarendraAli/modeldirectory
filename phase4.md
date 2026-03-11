@@ -42,35 +42,6 @@ The "Send Email" card on the applicant detail page and its supporting backend co
 
 ---
 
-### 2. Model Verification Badges
-
-`ModelProfile.verification_status` already exists with choices `UNVERIFIED`, `PENDING`, `VERIFIED`. Verification is set by admins in the Django admin. This step surfaces that status visually.
-
-**Do:**
-- In `templates/models_app/model_list.html`, inside the model card `<div class="p-3">` block (after the `<h2>` with the model name, line 78), add a verified badge inline with the name:
-  ```
-  <div class="flex items-center gap-1">
-      <h2 class="font-semibold text-stone-900 text-sm truncate">{{ profile.public_display_name }}</h2>
-      {% if profile.verification_status == "verified" %}<span class="inline-block w-4 h-4 flex-shrink-0" title="Verified"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-emerald-500"><path fill-rule="evenodd" d="M8.603 3.799A4.49 4.49 0 0 1 12 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 0 1 3.498 1.307 4.491 4.491 0 0 1 1.307 3.497A4.49 4.49 0 0 1 21.75 12a4.49 4.49 0 0 1-1.549 3.397 4.491 4.491 0 0 1-1.307 3.497 4.491 4.491 0 0 1-3.497 1.307A4.49 4.49 0 0 1 12 21.75a4.49 4.49 0 0 1-3.397-1.549 4.49 4.49 0 0 1-3.498-1.307 4.491 4.491 0 0 1-1.307-3.497A4.49 4.49 0 0 1 2.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 0 1 1.307-3.497 4.49 4.49 0 0 1 3.497-1.307Zm7.007 6.387a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" /></svg></span>{% endif %}
-  </div>
-  ```
-  Keep the entire `{% if %}...{% endif %}` on a single line to avoid breaking the template parser.
-- In `templates/models_app/model_detail.html`, after the `<h1>` tag with the display name (line 31), add a verified badge on the same line as the name:
-  ```
-  <div class="flex items-center gap-2">
-      <h1 class="font-display text-3xl font-bold text-stone-900">{{ profile.public_display_name }}</h1>
-      {% if profile.verification_status == "verified" %}<span class="inline-block" title="Verified"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-emerald-500"><path fill-rule="evenodd" d="M8.603 3.799A4.49 4.49 0 0 1 12 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 0 1 3.498 1.307 4.491 4.491 0 0 1 1.307 3.497A4.49 4.49 0 0 1 21.75 12a4.49 4.49 0 0 1-1.549 3.397 4.491 4.491 0 0 1-1.307 3.497 4.491 4.491 0 0 1-3.497 1.307A4.49 4.49 0 0 1 12 21.75a4.49 4.49 0 0 1-3.397-1.549 4.49 4.49 0 0 1-3.498-1.307 4.491 4.491 0 0 1-1.307-3.497A4.49 4.49 0 0 1 2.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 0 1 1.307-3.497 4.49 4.49 0 0 1 3.497-1.307Zm7.007 6.387a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" /></svg></span>{% endif %}
-  </div>
-  ```
-- In `templates/dashboard/applicant_detail.html`, add a verified badge next to the applicant name in the header `<h1>` (line 12), same SVG pattern at `w-5 h-5` size, checking `application.applicant_profile.verification_status == "verified"`
-- In `templates/dashboard/agency_dashboard.html`, in the applicant table row (inside the `<td>` that shows the applicant name, line 56), add a small `w-3.5 h-3.5` verified SVG inline after the name, checking `app.applicant_profile.verification_status == "verified"`
-- In `apps/models_app/views.py` `model_list()`, add `select_related("represented_by_agency")` to the queryset so the verification badge and agency name don't cause N+1 queries (this is also a performance fix — see step 8)
-- Add a "Verified" filter option to the model list: in `model_list.html`, add a new `<select>` filter for verification status with options "Any" and "Verified only". In `model_list()` view, read `verified = request.GET.get("verified", "").strip()` and filter `qs = qs.filter(verification_status="verified")` when `verified == "1"`. Pass `selected_verified` to template context. Add the filter value to the "Clear" link condition.
-
-**Test:** Set a model's `verification_status` to `verified` in admin. Browse model list — badge appears on card. Click model detail — badge next to name. Agency staff sees badge in inbox table and applicant detail. Filter by "Verified only" — only verified models shown.
-
----
-
 ### 3. Toast Auto-Dismiss + Polished Messages
 
 Currently, flash messages in `base.html` stay on screen indefinitely with no close button.
