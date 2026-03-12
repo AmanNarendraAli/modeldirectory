@@ -18,6 +18,19 @@ Ship a polished, production-ready platform. Phase 4 adds an agency portfolio/pas
 - ✅ Ban system, roster search, custom agency name
 - ✅ Verification status fields on ModelProfile and Agency (admin-only)
 
+## Pre-Phase 4 improvements (completed 11th–12th March 2026)
+
+- ✅ Agency access to private model profiles — agency staff can view private profiles of their roster models via `model_detail`; blue banner explains "viewing as roster staff"
+- ✅ Model experience level — `ModelProfile.experience_level` (amateur/experienced); migration `models_app.0005`; onboarding, edit profile, model detail sidebar, model list cards/filter, applicant detail stats
+- ✅ Agency public profile link — "View Public Page" button on agency dashboard header
+- ✅ Onboarding form parity with edit profile — `experience_level` and Representation section (agency dropdown + custom agency name with "other" toggle JS) added to `onboarding.html`
+- ✅ "Signed" application status — `Application.Status.SIGNED` added (migration `applications.0005`); setting status to "signed" automatically adds the model to the agency roster (sets `represented_by_agency`, clears any `AgencyBan`)
+- ✅ Experience level filter on agency dashboard — dropdown between Gender and Verified, filtering by `applicant_profile__experience_level`
+- ✅ "Our Models" roster visibility for own-agency viewers — agency staff see all roster models (public + private); signed models see themselves even if private; everyone else gated by `is_roster_public` as before. Template condition is now `{% if roster_models is not None %}` with the logic in the view
+- ✅ "You" badge on agency roster cards — same pattern as model list
+- ✅ Agency detail cm/in toggle polish — button styling matches model detail; `agSetUnit('cm')` called on page load so values show " cm" suffix immediately
+- ✅ Minimal `requirements.txt` added
+
 ---
 
 ## Phase 4 Steps
@@ -63,7 +76,7 @@ Add a portfolio/past work showcase to the agency detail page, displayed above th
 #### 1c. Template — Agency Detail
 
 **Do:**
-- In `templates/agencies/agency_detail.html`, add a "Portfolio" section in the main content column (`lg:col-span-2`), between the Highlights section and the "Our Models" roster section (i.e. before `{% if agency.is_roster_public %}`):
+- In `templates/agencies/agency_detail.html`, add a "Portfolio" section in the main content column (`lg:col-span-2`), between the Highlights section and the "Our Models" roster section:
   ```html
   {% if portfolio_items %}
       <div>
@@ -107,23 +120,11 @@ Add a portfolio/past work showcase to the agency detail page, displayed above th
 
 ---
 
-### 2. Remove Send Email Form
+### 2. Remove Send Email Form ✅
 
-The "Send Email" card on the applicant detail page and its supporting backend code should be removed entirely.
+~~The "Send Email" card on the applicant detail page and its supporting backend code should be removed entirely.~~
 
-**Do:**
-- In `templates/dashboard/applicant_detail.html`, delete the entire "Send Email" `<div>` block (lines 149–165 — the card containing `contact_form.subject`, `contact_form.body`, and the "Send Email" button)
-- In `apps/dashboard/views.py`:
-  - Remove the `ContactApplicantForm` import from line 11
-  - Remove `contact_form = ContactApplicantForm()` from `applicant_detail()` (line 149)
-  - Remove `"contact_form": contact_form,` from the context dict (line 158)
-  - Delete the entire `contact_applicant()` view (lines 208–233)
-  - Remove the `from django.core.mail import send_mail` import (line 5) and `from django.conf import settings as django_settings` import (line 6) — neither is used elsewhere in this file
-- In `apps/dashboard/urls.py`, delete the `contact-applicant` URL pattern (line 11)
-- In `apps/applications/forms.py`, delete the `ContactApplicantForm` class (lines 37–51)
-- In `apps/core/emails.py`, delete the `send_contact_email` function if it exists (it was planned in Phase 3 step 5 but the actual implementation used `send_mail` directly — verify whether a standalone function exists before deleting)
-
-**Test:** Load applicant detail as agency staff — no "Send Email" card visible. Hit the old URL `/dashboard/applications/1/contact/` — returns 404. Server starts without import errors.
+**Done.** "Send Email" card removed from `applicant_detail.html`. `ContactApplicantForm` removed from `apps/applications/forms.py`; `contact_applicant` view and `applications/<id>/contact/` URL removed from dashboard app. Contact Information card (email, phone, Instagram) retained on applicant detail for reference.
 
 ---
 
@@ -223,7 +224,7 @@ Audit every page for empty/zero-data scenarios and ensure they look clean and gu
 - In `templates/models_app/model_detail.html`:
   - If the model has no portfolio posts and no bio, the left column can be completely empty — add a fallback: `{% if not portfolio_posts and not profile.bio %}<p class="text-stone-400 text-sm">This model hasn't added any content yet.</p>{% endif %}`
 - In `templates/agencies/agency_detail.html`:
-  - If no description, no requirements, no highlights, no portfolio items, and no roster — the main column is empty. Add: `{% if not agency.description and not requirements and not highlights and not portfolio_items and not roster_models %}<p class="text-stone-400 text-sm">This agency hasn't added any details yet.</p>{% endif %}`
+  - If no description, no requirements, no highlights, no portfolio items, and no roster — the main column is empty. Add: `{% if not agency.description and not requirements and not highlights and not portfolio_items and roster_models is none %}<p class="text-stone-400 text-sm">This agency hasn't added any details yet.</p>{% endif %}` (note: `roster_models` is `None` when not visible, so use `is none` rather than `not roster_models`)
 
 **Test:** Create a model with no portfolio/bio — detail page shows fallback message. Create an agency with no description — detail shows fallback. Empty dashboard sections show guide text.
 
@@ -371,6 +372,7 @@ Audit all views for N+1 queries and add `select_related` / `prefetch_related` wh
     ```python
     requirements = [r for r in agency.requirements.all() if r.is_current]
     ```
+  - Note: `agency_detail()` now also queries `AgencyStaff` and checks `viewer_profile.represented_by_agency_id` for roster visibility logic (added in pre-phase4 work). These are single-row lookups and don't need optimization, but keep them in mind when auditing query counts.
 - In `apps/dashboard/views.py`:
   - `model_dashboard()`: the existing `select_related` calls are good. Add `.select_related("represented_by_agency")` to the profile fetch if not already present. Currently `get_object_or_404(ModelProfile, user=request.user)` — change to:
     ```python
@@ -558,30 +560,20 @@ Run these yourself after each step:
 - ✅ Caching for city dropdowns
 - ✅ Mobile hamburger menu
 - ✅ Role switch accessible from navbar
+- ✅ Onboarding form parity with edit profile (experience level, representation section)
+- ✅ "Signed" application status with automatic roster addition
+- ✅ Experience level filter on agency dashboard
+- ✅ "Our Models" roster visible to own-agency staff (all models) and signed models (themselves)
+- ✅ "You" badge on agency roster cards
+- ✅ Consistent cm/in toggle styling and initial unit display across all pages
 
 ## Future improvements
 - Mobile interface testing
-- Live messaging on app linkedin style. Only agency staff can initiate contact, but then they can message back and forth with applicants in real time. Would require a messaging model, inbox UI, and notification system.
+- Live messaging on app linkedin style. Only agency staff can initiate contact, but then they can message back and forth with applicants in real time. Would require a messaging model, inbox UI, and notification system. Models should be able to message request each other. 
 - Resources section fleshing out
 - Email verification flow (is_verified_email field exists but unused)
 - Model/agency verification workflows
-- In-platform messaging between agencies and models
 - Social features on portfolios (likes, comments)
 
----
 
-## Addendum — Completed in feature/pre-phase4-improvements
-
-### Phase 4 features I just added - 3PM PST 11th March 2026 (from product list, same branch)
-- **Agency access to private model profiles:** When a model's profile is private but they are signed to an agency, staff of that agency can view the profile. `model_detail` allows access when `AgencyStaff` links the viewer to `profile.represented_by_agency`; blue banner explains "viewing as roster staff".
-- **Model experience level:** `ModelProfile.experience_level` (amateur/experienced) added; migration `models_app.0005`; OnboardingForm and edit profile; displayed in model detail sidebar in its own section below Measurements, on model list cards and filter, and in applicant detail stats.
-- **Agency public profile link:** "View Public Page" button added to agency dashboard header (next to Edit Agency), linking to `agency-detail` for the staff's agency.
-
-### Phase 4 Step 2 — Remove Send Email form
-- "Send Email" card removed from `templates/dashboard/applicant_detail.html`.
-- `ContactApplicantForm` removed from `apps/applications/forms.py`; `contact_applicant` view and `applications/<id>/contact/` URL removed from dashboard app.
-- Contact Information card (email, phone, Instagram) retained on applicant detail for reference.
-
-### Other
-- Minimal `requirements.txt` added (Django, django-environ, psycopg2-binary, Pillow, django-imagekit) for `pip install -r requirements.txt`.
 
