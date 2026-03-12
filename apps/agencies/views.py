@@ -75,10 +75,24 @@ def agency_detail(request, slug):
             applicant_profile=request.user.model_profile, agency=agency
         ).first()
 
-    roster_models = (
-        agency.represented_models.filter(is_public=True).order_by("public_display_name")
-        if agency.is_roster_public else None
+    is_agency_staff = (
+        request.user.is_authenticated and
+        AgencyStaff.objects.filter(user=request.user, agency=agency).exists()
     )
+    viewer_profile = getattr(request.user, "model_profile", None) if request.user.is_authenticated else None
+
+    if is_agency_staff:
+        roster_models = agency.represented_models.all().order_by("public_display_name")
+    elif agency.is_roster_public:
+        public_qs = agency.represented_models.filter(is_public=True)
+        if viewer_profile and viewer_profile.represented_by_agency_id == agency.pk and not viewer_profile.is_public:
+            roster_models = (public_qs | agency.represented_models.filter(pk=viewer_profile.pk)).order_by("public_display_name")
+        else:
+            roster_models = public_qs.order_by("public_display_name")
+    elif viewer_profile and viewer_profile.represented_by_agency_id == agency.pk:
+        roster_models = agency.represented_models.filter(pk=viewer_profile.pk)
+    else:
+        roster_models = None
 
     return render(request, "agencies/agency_detail.html", {
         "agency": agency,

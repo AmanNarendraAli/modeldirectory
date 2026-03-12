@@ -9,6 +9,7 @@ class Application(models.Model):
         UNDER_REVIEW = "under_review", "Under Review"
         SHORTLISTED = "shortlisted", "Shortlisted"
         CONTACTED = "contacted", "Contacted"
+        SIGNED = "signed", "Signed"
         REJECTED = "rejected", "Rejected"
         WITHDRAWN = "withdrawn", "Withdrawn"
 

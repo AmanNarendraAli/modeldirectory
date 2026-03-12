@@ -38,6 +38,11 @@
                     {% if form.gender.errors %}<p class="text-red-600 text-xs mt-1">{{ form.gender.errors|join:", " }}
                     </p>{% endif %}
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.experience_level.label }}</label>
+                    {{ form.experience_level }}
+                    {% if form.experience_level.errors %}<p class="text-red-600 text-xs mt-1">{{ form.experience_level.errors|join:", " }}</p>{% endif %}
+                </div>
                 <div class="sm:col-span-2">
                     <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.bio.label }}</label>
                     {{ form.bio }}
@@ -274,6 +279,52 @@
                 </label>
             </div>
         </section>
+
+        <!-- Representation -->
+        <section class="bg-white rounded-xl border border-stone-200 p-6">
+            <h2 class="font-semibold text-stone-900 text-lg mb-1">Representation</h2>
+            <p class="text-stone-400 text-sm mb-4">Select an agency if you are currently represented. Leave blank if independent.</p>
+            <div>
+                <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.represented_by_agency.label }}</label>
+                {{ form.represented_by_agency }}
+                {% if form.represented_by_agency.errors %}<p class="text-red-600 text-xs mt-1">{{ form.represented_by_agency.errors|join:", " }}</p>{% endif %}
+            </div>
+            <div id="other-agency-field" style="display:none;" class="mt-3">
+                <label class="block text-sm font-medium text-stone-700 mb-1">Agency name</label>
+                {{ form.custom_agency_name }}
+                <p class="text-xs text-stone-400 mt-1">For reference only. If your agency joins the platform they can add you to their roster.</p>
+            </div>
+        </section>
+        <script>
+        (function () {
+            var sel = document.getElementById('id_represented_by_agency');
+            if (!sel) { return; }
+            var opt = document.createElement('option');
+            opt.value = 'other';
+            opt.textContent = '\u2014 Signed to an agency not on this platform \u2014';
+            sel.appendChild(opt);
+            var otherField = document.getElementById('other-agency-field');
+            var customInput = document.getElementById('id_custom_agency_name');
+
+            if (!sel.value && customInput && customInput.value) {
+                sel.value = 'other';
+            }
+
+            function toggle() { otherField.style.display = sel.value === 'other' ? '' : 'none'; }
+            sel.addEventListener('change', function () {
+                toggle();
+                if (sel.value !== 'other' && customInput) {
+                    customInput.value = '';
+                }
+            });
+            toggle();
+
+            var profileForm = sel.closest('form');
+            profileForm.addEventListener('submit', function () {
+                if (sel.value === 'other') { sel.value = ''; }
+            }, true);
+        })();
+        </script>
 
         <!-- Visibility -->
         <section class="bg-white rounded-xl border border-stone-200 p-6">

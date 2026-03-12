@@ -84,6 +84,7 @@ def agency_dashboard(request):
 
     status_filter = request.GET.get("status", "")
     gender = request.GET.get("gender", "")
+    experience_level = request.GET.get("experience_level", "").strip()
     selected_cities = request.GET.getlist("city")
     min_age = request.GET.get("min_age", "").strip()
     max_age = request.GET.get("max_age", "").strip()
@@ -110,6 +111,9 @@ def agency_dashboard(request):
 
     if gender:
         applications = applications.filter(applicant_profile__gender=gender)
+
+    if experience_level:
+        applications = applications.filter(applicant_profile__experience_level=experience_level)
 
     if selected_cities:
         from django.db.models import Q as DQ
@@ -224,7 +228,7 @@ def agency_dashboard(request):
     agency_requirements = list(agency.requirements.filter(is_current=True))
 
     has_filters = any([
-        status_filter, gender, selected_cities, min_age, max_age, min_height, max_height,
+        status_filter, gender, experience_level, selected_cities, min_age, max_age, min_height, max_height,
         min_bust, max_bust, min_waist, max_waist, min_hips, max_hips,
         min_inseam, max_inseam, selected_hair_colors, selected_eye_colors, verified,
     ])
@@ -234,8 +238,10 @@ def agency_dashboard(request):
         "applications": applications,
         "status_choices": Application.Status.choices,
         "gender_choices": ModelProfile.Gender.choices,
+        "experience_choices": ModelProfile.ExperienceLevel.choices,
         "status_filter": status_filter,
         "selected_gender": gender,
+        "selected_experience_level": experience_level,
         "selected_cities": selected_cities,
         "applicant_cities": applicant_cities,
         "applicant_hair_colors": applicant_hair_colors,
@@ -330,6 +336,14 @@ def update_application_status(request, application_id):
         application.reviewed_at = timezone.now()
         application.save(update_fields=["status", "reviewed_by", "reviewed_at"])
         messages.success(request, f"Application status updated to {application.get_status_display()}.")
+
+        if new_status == Application.Status.SIGNED:
+            model_profile = application.applicant_profile
+            if model_profile.represented_by_agency != agency:
+                from apps.agencies.models import AgencyBan
+                AgencyBan.objects.filter(model_profile=model_profile, agency=agency).delete()
+                model_profile.represented_by_agency = agency
+                model_profile.save(update_fields=["represented_by_agency"])
 
         from apps.core.emails import send_status_changed_email
         send_status_changed_email(application)
