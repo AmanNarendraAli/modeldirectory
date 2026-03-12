@@ -4,12 +4,9 @@
 {% block content %}
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
-    <div class="mb-8 flex items-center justify-between">
-        <div>
-            <h1 class="font-display text-3xl font-bold text-stone-900">Your Dashboard</h1>
-            <p class="text-stone-500 text-sm mt-1">Hello, {{ profile.public_display_name }}</p>
-        </div>
-        <a href="{% url 'portfolio-create' %}" class="bg-stone-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-stone-700 transition-colors">+ New Post</a>
+    <div class="mb-8">
+        <h1 class="font-display text-3xl font-bold text-stone-900">Your Dashboard</h1>
+        <p class="text-stone-500 text-sm mt-1">Hello, {{ profile.public_display_name }}</p>
     </div>
 
     <!-- Profile completeness -->
@@ -87,7 +84,7 @@
                 {% endfor %}
             </div>
             {% else %}
-            <p class="text-stone-400 text-sm">No portfolio posts yet.</p>
+            <p class="text-stone-400 text-sm">No portfolio posts yet. <a href="{% url 'portfolio-create' %}" class="text-stone-700 hover:underline">Create your first post →</a></p>
             {% endif %}
         </section>
 

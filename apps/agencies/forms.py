@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory
-from .models import Agency, AgencyRequirement, AgencyPortfolioItem
+from .models import Agency, AgencyRequirement, AgencyPortfolioPost, AgencyPortfolioAsset
 
 INPUT_CLASS = "w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
 
@@ -94,19 +94,32 @@ class AgencyRequirementForm(forms.ModelForm):
                 field.widget.attrs.update({"class": INPUT_CLASS})
 
 
-class AgencyPortfolioItemForm(forms.ModelForm):
+class AgencyPortfolioPostForm(forms.ModelForm):
     class Meta:
-        model = AgencyPortfolioItem
-        fields = ["title", "image", "caption", "credit", "display_order"]
+        model = AgencyPortfolioPost
+        fields = ["title", "caption", "cover_image", "is_public"]
         widgets = {
-            "caption": forms.Textarea(attrs={"rows": 2}),
+            "caption": forms.Textarea(attrs={"rows": 4}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for field in self.fields.values():
-            if not isinstance(field.widget, (forms.CheckboxInput, forms.RadioSelect, forms.FileInput)):
+        if not (self.instance and self.instance.pk and self.instance.cover_image):
+            self.fields["cover_image"].required = True
+        for name, field in self.fields.items():
+            if not isinstance(field.widget, forms.CheckboxInput):
                 field.widget.attrs.update({"class": INPUT_CLASS})
+
+
+AgencyPortfolioAssetFormset = inlineformset_factory(
+    AgencyPortfolioPost,
+    AgencyPortfolioAsset,
+    fields=["image", "alt_text", "display_order"],
+    extra=1,
+    max_num=10,
+    validate_max=True,
+    can_delete=True,
+)
 
 
 AgencyRequirementFormSet = inlineformset_factory(

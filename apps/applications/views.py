@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
+from django_ratelimit.decorators import ratelimit
 
 from apps.agencies.models import Agency
 from apps.models_app.models import ModelProfile
@@ -10,6 +11,7 @@ from .forms import ApplicationForm
 
 
 @login_required
+@ratelimit(key="user", rate="10/h", method="POST")
 def apply(request, agency_slug):
     if not request.user.is_model_user:
         messages.error(request, "Only model accounts can apply to agencies.")

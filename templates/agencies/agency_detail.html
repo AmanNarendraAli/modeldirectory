@@ -212,12 +212,29 @@
             </div>
         {% endif %}
 
-        {% if portfolio_items %}
-            <div>
-                <h2 class="font-display text-xl font-bold text-stone-900 mb-4">Portfolio</h2>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {% for item in portfolio_items %}<div class="group aspect-square bg-stone-100 rounded-lg overflow-hidden relative"><img src="{{ item.image.url }}" alt="{{ item.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy"><div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity"><p class="text-white text-sm font-medium truncate">{{ item.title }}</p>{% if item.credit %}<p class="text-white/70 text-xs truncate">{{ item.credit }}</p>{% endif %}</div></div>{% endfor %}
+        {% if portfolio_posts or can_edit_agency %}
+            <div class="mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-display text-xl font-bold text-stone-900">Portfolio</h2>
+                    {% if can_edit_agency %}<a href="{% url 'agency-portfolio-create' %}" class="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors">+ Add post</a>{% endif %}
                 </div>
+                {% if portfolio_posts %}
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {% for post in portfolio_posts %}
+                    {% if post.is_public or is_agency_staff %}
+                    <a href="{% url 'agency-portfolio-detail' agency.slug post.id %}" class="group aspect-square bg-stone-100 rounded-lg overflow-hidden relative block">
+                        {% if post.cover_image %}
+                            <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">
+                        {% else %}
+                            <div class="w-full h-full flex items-center justify-center bg-stone-200"><span class="text-xs text-stone-400 font-medium text-center px-2">{{ post.title }}</span></div>
+                        {% endif %}
+                    </a>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-stone-400 text-sm">No portfolio posts yet.</p>
+                {% endif %}
             </div>
         {% endif %}
 
@@ -243,6 +260,10 @@
                 <p class="text-sm text-stone-400">No models listed yet.</p>
                 {% endif %}
             </div>
+        {% endif %}
+
+        {% if not agency.description and not requirements and not highlights and not portfolio_posts and roster_models is none and not roster_is_private %}
+            <p class="text-stone-400 text-sm">This agency hasn't added any details yet.</p>
         {% endif %}
 
         {% if roster_is_private %}

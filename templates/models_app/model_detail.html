@@ -6,7 +6,7 @@
 <div class="bg-amber-50 border-b border-amber-200 text-amber-800 text-sm text-center py-2 px-4">
     Your profile is set to <strong>private</strong>. Only you can see this page. <a href="{% url 'edit-profile' %}" class="underline hover:text-amber-900">Change visibility</a>
 </div>
-{% elif is_agency_viewer %}
+{% elif is_agency_viewer and not profile.is_public %}
 <div class="bg-blue-50 border-b border-blue-200 text-blue-800 text-sm text-center py-2 px-4">
     This model's profile is private. You can view it because they are on your roster.
 </div>
@@ -100,21 +100,31 @@
                 </div>
             {% endif %}
 
-            {% if portfolio_posts %}
+            {% if not portfolio_posts and not profile.bio %}
+                <p class="text-stone-400 text-sm">This model hasn't added any content yet.</p>
+            {% endif %}
+
+            {% if portfolio_posts or is_own_profile %}
                 <div class="mb-8">
-                    <h2 class="font-display text-xl font-bold text-stone-900 mb-4">Portfolio</h2>
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="font-display text-xl font-bold text-stone-900">Portfolio</h2>
+                        {% if is_own_profile %}<a href="{% url 'portfolio-create' %}" class="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors">+ Add post</a>{% endif %}
+                    </div>
+                    {% if portfolio_posts %}
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {% for post in portfolio_posts %}
-                            <div class="group aspect-square bg-stone-100 rounded-lg overflow-hidden relative">
+                            <a href="{% url 'portfolio-detail' post.slug %}" class="group aspect-square bg-stone-100 rounded-lg overflow-hidden relative block">
                                 {% if post.cover_image %}
-                                    <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" data-lightbox="{{ post.cover_image.url }}" data-lightbox-alt="{{ post.title }}">
-                                    <a href="{% url 'portfolio-detail' post.slug %}" class="absolute bottom-1 right-1 bg-black/50 text-white text-xs px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">View</a>
+                                    <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">
                                 {% else %}
-                                    <a href="{% url 'portfolio-detail' post.slug %}" class="w-full h-full flex items-center justify-center bg-stone-200"><span class="text-xs text-stone-400 font-medium text-center px-2">{{ post.title }}</span></a>
+                                    <div class="w-full h-full flex items-center justify-center bg-stone-200"><span class="text-xs text-stone-400 font-medium text-center px-2">{{ post.title }}</span></div>
                                 {% endif %}
-                            </div>
+                            </a>
                         {% endfor %}
                     </div>
+                    {% elif is_own_profile %}
+                    <p class="text-stone-400 text-sm">No portfolio posts yet. <a href="{% url 'portfolio-create' %}" class="text-stone-700 hover:underline">Create your first post →</a></p>
+                    {% endif %}
                 </div>
             {% endif %}
         </div>

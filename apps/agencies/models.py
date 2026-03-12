@@ -120,22 +120,42 @@ class AgencyHighlight(models.Model):
         return f"{self.agency.name} — {self.title}"
 
 
-class AgencyPortfolioItem(models.Model):
-    agency = models.ForeignKey(Agency, on_delete=models.CASCADE, related_name="portfolio_items")
+class AgencyPortfolioPost(models.Model):
+    agency = models.ForeignKey(Agency, on_delete=models.CASCADE, related_name="portfolio_posts")
     title = models.CharField(max_length=255)
-    image = models.ImageField(upload_to="agencies/portfolio/")
-    image_thumbnail = ImageSpecField(source="image", processors=[ResizeToFill(400, 400)], format="WEBP", options={"quality": 80})
-    image_display = ImageSpecField(source="image", processors=[ResizeToFit(1200, 1200)], format="WEBP", options={"quality": 85})
+    slug = models.SlugField(blank=True)
     caption = models.TextField(blank=True)
-    credit = models.CharField(max_length=255, blank=True, help_text="e.g. Photographer, brand, or campaign name")
-    display_order = models.PositiveSmallIntegerField(default=0)
+    cover_image = models.ImageField(upload_to="agencies/portfolio/covers/", blank=True, null=True)
+    cover_image_thumbnail = ImageSpecField(source="cover_image", processors=[ResizeToFill(400, 400)], format="WEBP", options={"quality": 80})
+    is_public = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ["display_order", "-created_at"]
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"{self.agency.name} — {self.title}"
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+
+
+class AgencyPortfolioAsset(models.Model):
+    portfolio_post = models.ForeignKey(AgencyPortfolioPost, on_delete=models.CASCADE, related_name="assets")
+    image = models.ImageField(upload_to="agencies/portfolio/assets/")
+    image_thumbnail = ImageSpecField(source="image", processors=[ResizeToFill(400, 400)], format="WEBP", options={"quality": 80})
+    image_display = ImageSpecField(source="image", processors=[ResizeToFit(1200, 1200)], format="WEBP", options={"quality": 85})
+    alt_text = models.CharField(max_length=255, blank=True)
+    display_order = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ["display_order"]
+
+    def __str__(self):
+        return f"{self.portfolio_post.title} — asset {self.display_order}"
 
 
 class AgencyBan(models.Model):

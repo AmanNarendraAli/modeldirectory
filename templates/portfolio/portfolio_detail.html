@@ -17,8 +17,8 @@
     {% if post.cover_image or assets %}
     <div class="relative overflow-hidden rounded-xl bg-stone-950 mb-8 select-none" id="portfolioCarousel">
         <div class="flex" id="carouselTrack" style="transition: transform 0.3s ease; will-change: transform;">
-            {% if post.cover_image %}<div class="carousel-slide flex-shrink-0 w-full flex items-center justify-center" style="min-height:40vh; max-height:80vh;"><img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="max-w-full max-h-[80vh] object-contain" loading="lazy"></div>{% endif %}
-            {% for asset in assets %}<div class="carousel-slide flex-shrink-0 w-full flex items-center justify-center" style="min-height:40vh; max-height:80vh;"><img src="{{ asset.image.url }}" alt="{{ asset.alt_text|default:post.title }}" class="max-w-full max-h-[80vh] object-contain" loading="lazy"></div>{% endfor %}
+            {% if post.cover_image %}<div class="carousel-slide flex-shrink-0 w-full" style="height:70vh;"><img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="w-full h-full object-contain" loading="lazy"></div>{% endif %}
+            {% for asset in assets %}<div class="carousel-slide flex-shrink-0 w-full" style="height:70vh;"><img src="{{ asset.image.url }}" alt="{{ asset.alt_text|default:post.title }}" class="w-full h-full object-contain" loading="lazy"></div>{% endfor %}
         </div>
         <button type="button" id="carouselPrev" class="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-10 h-10 items-center justify-center transition-colors hidden" aria-label="Previous">&larr;</button>
         <button type="button" id="carouselNext" class="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-10 h-10 items-center justify-center transition-colors hidden" aria-label="Next">&rarr;</button>

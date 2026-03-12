@@ -13,6 +13,8 @@ class PortfolioPostForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if not (self.instance and self.instance.pk and self.instance.cover_image):
+            self.fields["cover_image"].required = True
         for name, field in self.fields.items():
             if not isinstance(field.widget, forms.CheckboxInput):
                 field.widget.attrs.update({

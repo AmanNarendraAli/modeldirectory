@@ -11,6 +11,7 @@ urlpatterns = [
     path("agency/<int:agency_id>/link-model/", views.link_model, name="link-model"),
     path("agency/<int:agency_id>/unlink-model/<int:model_id>/", views.unlink_model, name="unlink-model"),
     path("agency/<int:agency_id>/search-models/", views.search_models_for_roster, name="search-models-for-roster"),
-    path("agency/<slug:agency_slug>/portfolio/add/", views.add_portfolio_item, name="agency-portfolio-add"),
-    path("agency/portfolio/<int:item_id>/delete/", views.delete_portfolio_item, name="agency-portfolio-delete"),
+    path("agency/portfolio/new/", views.agency_portfolio_create, name="agency-portfolio-create"),
+    path("agency/portfolio/<int:post_id>/edit/", views.agency_portfolio_edit, name="agency-portfolio-edit"),
+    path("agency/portfolio/<int:post_id>/delete/", views.agency_portfolio_delete, name="agency-portfolio-delete"),
 ]

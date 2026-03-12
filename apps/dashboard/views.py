@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
 from django.http import JsonResponse
+from django_ratelimit.decorators import ratelimit
 
 from apps.models_app.models import ModelProfile
 from apps.applications.models import Application
@@ -10,8 +11,8 @@ from apps.applications.forms import FeedbackForm
 from apps.discovery.models import SavedAgency, Follow
 from apps.portfolio.models import PortfolioPost
 from apps.accounts.forms import OnboardingForm
-from apps.agencies.models import AgencyStaff, AgencyPortfolioItem
-from apps.agencies.forms import AgencyEditForm, AgencyRequirementFormSet, AgencyPortfolioItemForm
+from apps.agencies.models import AgencyStaff, AgencyPortfolioPost, AgencyPortfolioAsset
+from apps.agencies.forms import AgencyEditForm, AgencyRequirementFormSet, AgencyPortfolioPostForm, AgencyPortfolioAssetFormset
 
 
 def _get_agency_for_staff(user):
@@ -35,7 +36,7 @@ def model_dashboard(request):
     if not request.user.onboarding_completed:
         return redirect("onboarding")
 
-    profile = get_object_or_404(ModelProfile, user=request.user)
+    profile = get_object_or_404(ModelProfile.objects.select_related("represented_by_agency"), user=request.user)
     applications = Application.objects.filter(applicant_profile=profile).select_related("agency").order_by("-submitted_at")
     portfolio_posts = PortfolioPost.objects.filter(owner_profile=profile).order_by("-created_at")
     saved_agencies = SavedAgency.objects.filter(user=request.user).select_related("agency")
@@ -224,6 +225,7 @@ def agency_dashboard(request):
     )
 
     can_edit = AgencyStaff.objects.filter(user=request.user, agency=agency, can_edit_agency=True).exists()
+    portfolio_posts = agency.portfolio_posts.prefetch_related("assets").all()
     roster_models = agency.represented_models.all().order_by('public_display_name')
     agency_requirements = list(agency.requirements.filter(is_current=True))
 
@@ -262,6 +264,7 @@ def agency_dashboard(request):
         "selected_eye_colors": selected_eye_colors,
         "verified": verified,
         "can_edit": can_edit,
+        "portfolio_posts": portfolio_posts,
         "roster_models": roster_models,
         "agency_requirements": agency_requirements,
         "has_filters": has_filters,
@@ -287,14 +290,10 @@ def edit_agency(request):
     else:
         form = AgencyEditForm(instance=agency)
         req_formset = AgencyRequirementFormSet(instance=agency, prefix="req")
-    portfolio_items = agency.portfolio_items.all()
-    portfolio_form = AgencyPortfolioItemForm()
     return render(request, "dashboard/edit_agency.html", {
         "form": form,
         "agency": agency,
         "req_formset": req_formset,
-        "portfolio_items": portfolio_items,
-        "portfolio_form": portfolio_form,
     })
 
 
@@ -304,7 +303,7 @@ def applicant_detail(request, application_id):
     if not agency:
         return redirect("home")
 
-    application = get_object_or_404(Application, id=application_id, agency=agency)
+    application = get_object_or_404(Application.objects.select_related("applicant_profile", "applicant_profile__user"), id=application_id, agency=agency)
     snapshot = getattr(application, "snapshot", None)
     portfolio_posts = PortfolioPost.objects.filter(
         owner_profile=application.applicant_profile, is_public=True
@@ -356,6 +355,7 @@ def update_application_status(request, application_id):
 
 
 @login_required
+@ratelimit(key="user", rate="30/h", method="POST")
 def submit_feedback(request, application_id):
     if request.method != "POST":
         return redirect("agency-dashboard")
@@ -428,6 +428,7 @@ def unlink_model(request, agency_id, model_id):
 
 
 @login_required
+@ratelimit(key="user", rate="60/m", method="GET")
 def search_models_for_roster(request, agency_id):
     agency = _get_agency_for_staff(request.user)
     if not agency or agency.id != agency_id:
@@ -457,34 +458,75 @@ def search_models_for_roster(request, agency_id):
     return JsonResponse({"results": results})
 
 
+def _get_agency_staff_for_edit(user):
+    return AgencyStaff.objects.filter(user=user, can_edit_agency=True).select_related("agency").first()
+
+
 @login_required
-def add_portfolio_item(request, agency_slug):
-    staff = AgencyStaff.objects.filter(user=request.user, can_edit_agency=True).select_related("agency").first()
-    if not staff or staff.agency.slug != agency_slug:
+def agency_portfolio_create(request):
+    staff = _get_agency_staff_for_edit(request.user)
+    if not staff:
         messages.error(request, "You don't have permission to edit this agency.")
         return redirect("dashboard")
     agency = staff.agency
     if request.method == "POST":
-        form = AgencyPortfolioItemForm(request.POST, request.FILES)
-        if form.is_valid():
-            item = form.save(commit=False)
-            item.agency = agency
-            item.save()
-            messages.success(request, "Portfolio item added.")
-        else:
-            messages.error(request, "Please fix the errors below.")
-    return redirect("edit-agency")
+        form = AgencyPortfolioPostForm(request.POST, request.FILES)
+        formset = AgencyPortfolioAssetFormset(request.POST, request.FILES)
+        if form.is_valid() and formset.is_valid():
+            post = form.save(commit=False)
+            post.agency = agency
+            post.save()
+            formset.instance = post
+            formset.save()
+            messages.success(request, "Portfolio post created.")
+            return redirect("agency-portfolio-detail", slug=agency.slug, post_id=post.id)
+    else:
+        form = AgencyPortfolioPostForm()
+        formset = AgencyPortfolioAssetFormset()
+    return render(request, "agencies/portfolio_form.html", {
+        "form": form,
+        "formset": formset,
+        "agency": agency,
+        "action": "Create",
+    })
 
 
 @login_required
-def delete_portfolio_item(request, item_id):
-    if request.method != "POST":
-        return redirect("edit-agency")
-    staff = AgencyStaff.objects.filter(user=request.user, can_edit_agency=True).select_related("agency").first()
+def agency_portfolio_edit(request, post_id):
+    staff = _get_agency_staff_for_edit(request.user)
+    if not staff:
+        messages.error(request, "You don't have permission to edit this agency.")
+        return redirect("dashboard")
+    post = get_object_or_404(AgencyPortfolioPost, id=post_id, agency=staff.agency)
+    if request.method == "POST":
+        form = AgencyPortfolioPostForm(request.POST, request.FILES, instance=post)
+        formset = AgencyPortfolioAssetFormset(request.POST, request.FILES, instance=post)
+        if form.is_valid() and formset.is_valid():
+            form.save()
+            formset.save()
+            messages.success(request, "Portfolio post updated.")
+            return redirect("agency-portfolio-detail", slug=staff.agency.slug, post_id=post.id)
+    else:
+        form = AgencyPortfolioPostForm(instance=post)
+        formset = AgencyPortfolioAssetFormset(instance=post)
+    return render(request, "agencies/portfolio_form.html", {
+        "form": form,
+        "formset": formset,
+        "agency": staff.agency,
+        "post": post,
+        "action": "Edit",
+    })
+
+
+@login_required
+def agency_portfolio_delete(request, post_id):
+    staff = _get_agency_staff_for_edit(request.user)
     if not staff:
         messages.error(request, "You don't have permission.")
         return redirect("dashboard")
-    item = get_object_or_404(AgencyPortfolioItem, id=item_id, agency=staff.agency)
-    item.delete()
-    messages.success(request, "Portfolio item deleted.")
-    return redirect("edit-agency")
+    post = get_object_or_404(AgencyPortfolioPost, id=post_id, agency=staff.agency)
+    if request.method == "POST":
+        post.delete()
+        messages.success(request, "Portfolio post deleted.")
+        return redirect("dashboard")
+    return render(request, "agencies/portfolio_confirm_delete.html", {"post": post})

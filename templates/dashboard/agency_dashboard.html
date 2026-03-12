@@ -325,7 +325,7 @@
             </ul>
             {% else %}
             <div class="p-8 text-center text-stone-400 text-sm">
-                No models currently on your roster.
+                No models currently on your roster. Use the search above to add models.
             </div>
             {% endif %}
         </div>
@@ -458,6 +458,39 @@
         </script>
         {% endif %}
     </div>
+
+    <!-- Portfolio -->
+    <section class="mt-12 bg-white rounded-xl border border-stone-200 p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="font-semibold text-stone-900">Portfolio</h2>
+            {% if can_edit %}<a href="{% url 'agency-portfolio-create' %}" class="text-xs text-stone-600 hover:text-stone-900">+ Add post</a>{% endif %}
+        </div>
+        {% if portfolio_posts %}
+        <div class="grid grid-cols-3 gap-3">
+            {% for post in portfolio_posts %}
+            <div class="relative group">
+                <a href="{% url 'agency-portfolio-detail' agency.slug post.id %}" class="block aspect-square rounded-lg overflow-hidden bg-stone-100">
+                    {% if post.cover_image %}
+                    <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover" loading="lazy">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center">
+                        <span class="text-xs text-stone-400 text-center px-1">{{ post.title }}</span>
+                    </div>
+                    {% endif %}
+                </a>
+                {% if can_edit %}
+                <div class="absolute top-1 right-1 hidden group-hover:flex gap-1">
+                    <a href="{% url 'agency-portfolio-edit' post.id %}" class="bg-white/90 text-stone-700 text-xs px-1.5 py-0.5 rounded">Edit</a>
+                    <a href="{% url 'agency-portfolio-delete' post.id %}" class="bg-white/90 text-red-600 text-xs px-1.5 py-0.5 rounded">Del</a>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-stone-400 text-sm">No portfolio posts yet.{% if can_edit %} <a href="{% url 'agency-portfolio-create' %}" class="text-stone-700 hover:underline">Create your first post →</a>{% endif %}</p>
+        {% endif %}
+    </section>
 
 </div>
 

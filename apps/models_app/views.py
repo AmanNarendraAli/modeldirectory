@@ -2,6 +2,7 @@ import datetime
 
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Q
+from django.core.cache import cache
 from .models import ModelProfile
 
 
@@ -150,9 +151,10 @@ def model_list(request):
 
     # Distinct values for filter panels
     base_public = ModelProfile.objects.filter(is_public=True, is_discoverable=True)
-    all_cities = (
-        base_public.exclude(city="").values_list("city", flat=True).distinct().order_by("city")
-    )
+    all_cities = cache.get("model_cities")
+    if all_cities is None:
+        all_cities = list(base_public.exclude(city="").values_list("city", flat=True).distinct().order_by("city"))
+        cache.set("model_cities", all_cities, 300)
     all_hair_colors = (
         base_public.exclude(hair_color="").values_list("hair_color", flat=True).distinct().order_by("hair_color")
     )
@@ -210,7 +212,7 @@ def model_list(request):
 
 
 def model_detail(request, slug):
-    profile = get_object_or_404(ModelProfile, slug=slug)
+    profile = get_object_or_404(ModelProfile.objects.select_related("represented_by_agency"), slug=slug)
 
     # If profile is private, only the owner or their agency can view it
     is_own_profile = request.user.is_authenticated and request.user == profile.user
@@ -230,7 +232,10 @@ def model_detail(request, slug):
     if not profile.is_public and not is_own_profile and not is_agency_viewer:
         return render(request, "models_app/model_private.html", status=403)
 
-    portfolio_posts = profile.portfolio_posts.filter(is_public=True)
+    if is_own_profile:
+        portfolio_posts = profile.portfolio_posts.all()
+    else:
+        portfolio_posts = profile.portfolio_posts.filter(is_public=True)
 
     is_following = False
     if request.user.is_authenticated:
@@ -244,6 +249,7 @@ def model_detail(request, slug):
         "portfolio_posts": portfolio_posts,
         "is_following": is_following,
         "follower_count": follower_count,
+        "is_own_profile": is_own_profile,
         "is_own_private_profile": is_own_profile and not profile.is_public,
         "is_agency_viewer": is_agency_viewer,
     })

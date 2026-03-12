@@ -5,11 +5,10 @@ from django.shortcuts import render, redirect
 from django.views.generic.edit import CreateView
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 
 from .forms import SignupForm, OnboardingForm
-from .models import User
 from apps.models_app.models import ModelProfile
-from apps.agencies.models import AgencyStaff
 from apps.applications.models import Application
 
 
@@ -29,6 +28,10 @@ class SignupView(CreateView):
         if request.user.is_authenticated:
             return redirect("home")
         return super().dispatch(request, *args, **kwargs)
+
+    @method_decorator(ratelimit(key="ip", rate="5/h", method="POST"))
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
 
 
 @login_required
@@ -60,35 +63,9 @@ def onboarding(request):
     return render(request, "accounts/onboarding.html", {"form": form})
 
 
-@login_required
-def switch_role(request):
-    if request.method != "POST":
-        return redirect("dashboard")
-
-    user = request.user
-    target_role = request.POST.get("role")
-
-    if target_role == User.Role.MODEL and user.role != User.Role.MODEL:
-        user.role = User.Role.MODEL
-        user.save(update_fields=["role"])
-        if not ModelProfile.objects.filter(user=user).exists():
-            user.onboarding_completed = False
-            user.save(update_fields=["onboarding_completed"])
-            return redirect("onboarding")
-        return redirect("dashboard")
-
-    elif target_role == User.Role.AGENCY_STAFF and user.role != User.Role.AGENCY_STAFF:
-        if not AgencyStaff.objects.filter(user=user).exists():
-            messages.error(request, "You need to be linked to an agency first. Contact an admin.")
-            return redirect("dashboard")
-        user.role = User.Role.AGENCY_STAFF
-        user.save(update_fields=["role"])
-        return redirect("dashboard")
-
-    return redirect("dashboard")
-
 
 @login_required
+@ratelimit(key="user", rate="3/h", method="POST")
 def delete_account(request):
     if request.method == "POST":
         confirm_text = request.POST.get("confirm", "")

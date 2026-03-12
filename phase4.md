@@ -35,92 +35,42 @@ Ship a polished, production-ready platform. Phase 4 adds an agency portfolio/pas
 
 ## Phase 4 Steps
 
-### 1. Agency Portfolio / Past Work Section
+### ✅ 1. Agency Portfolio / Past Work Section
 
-Add a portfolio/past work showcase to the agency detail page, displayed above the "Our Models" roster section. This gives agencies a visual way to show off campaigns, editorials, and other work they've done.
+Agency portfolio mirrors the model portfolio post structure exactly: `AgencyPortfolioPost` (cover image + metadata) with `AgencyPortfolioAsset` items (multiple photos per post). Managed from the agency dashboard; dedicated create/edit/delete pages with Cropper.js support.
 
-#### 1a. Model
+#### Models (`apps/agencies/models.py`, migration `agencies.0007`)
+- `AgencyPortfolioPost`: `agency` FK, `title`, `slug`, `caption`, `cover_image`, `is_public`, timestamps
+- `AgencyPortfolioAsset`: `portfolio_post` FK, `image`, `alt_text`, `display_order`
+- Replaces the earlier single-image `AgencyPortfolioItem` model (deleted in migration 0007)
 
-**Do:**
-- In `apps/agencies/models.py`, add a new `AgencyPortfolioItem` model:
-  ```python
-  class AgencyPortfolioItem(models.Model):
-      agency = models.ForeignKey(Agency, on_delete=models.CASCADE, related_name="portfolio_items")
-      title = models.CharField(max_length=255)
-      image = models.ImageField(upload_to="agencies/portfolio/")
-      image_thumbnail = ImageSpecField(source="image", processors=[ResizeToFill(400, 400)], format="WEBP", options={"quality": 80})
-      image_display = ImageSpecField(source="image", processors=[ResizeToFit(1200, 1200)], format="WEBP", options={"quality": 85})
-      caption = models.TextField(blank=True)
-      credit = models.CharField(max_length=255, blank=True, help_text="e.g. Photographer, brand, or campaign name")
-      display_order = models.PositiveSmallIntegerField(default=0)
-      created_at = models.DateTimeField(auto_now_add=True)
+#### Forms (`apps/agencies/forms.py`)
+- `AgencyPortfolioPostForm` (title, caption, cover_image, is_public)
+- `AgencyPortfolioAssetFormset` (inline from AgencyPortfolioPost → AgencyPortfolioAsset, max 10, can_delete)
 
-      class Meta:
-          ordering = ["display_order", "-created_at"]
+#### Views (`apps/dashboard/views.py`)
+- `agency_portfolio_create` / `agency_portfolio_edit` / `agency_portfolio_delete` — gated to `can_edit_agency` staff
+- `agency_dashboard` passes `portfolio_posts` and `can_edit` to template
 
-      def __str__(self):
-          return f"{self.agency.name} — {self.title}"
-  ```
-- Run `python manage.py makemigrations agencies` and `python manage.py migrate`
-- Register the model in `apps/agencies/admin.py` as an inline on `AgencyAdmin` (or standalone)
+#### URLs (`apps/dashboard/urls.py`)
+```python
+path("agency/portfolio/new/", views.agency_portfolio_create, name="agency-portfolio-create"),
+path("agency/portfolio/<int:post_id>/edit/", views.agency_portfolio_edit, name="agency-portfolio-edit"),
+path("agency/portfolio/<int:post_id>/delete/", views.agency_portfolio_delete, name="agency-portfolio-delete"),
+```
 
-#### 1b. View
+#### Templates
+- `templates/agencies/portfolio_form.html` — full create/edit page (cover image + additional photos formset, Add Photo / Remove JS, `data-crop` on all file inputs). Mirrors `portfolio/portfolio_form.html`.
+- `templates/agencies/portfolio_confirm_delete.html` — delete confirmation page
+- `templates/dashboard/agency_dashboard.html` — Portfolio section at the bottom; `+ New Post` / Edit / Delete only visible to `can_edit` staff; read-only view for other staff
+- `templates/agencies/agency_detail.html` — Portfolio section visible to all; `+ Add post` link only for `can_edit_agency` staff; private posts visible to agency staff only
+- Model public view (`templates/models_app/model_detail.html`) and agency public view both show `+ Add post` to owners/edit-staff
 
-**Do:**
-- In `apps/agencies/views.py` `agency_detail()`, fetch portfolio items and pass them to context:
-  ```python
-  portfolio_items = agency.portfolio_items.all()
-  ```
-  Add `"portfolio_items": portfolio_items,` to the context dict.
-
-#### 1c. Template — Agency Detail
-
-**Do:**
-- In `templates/agencies/agency_detail.html`, add a "Portfolio" section in the main content column (`lg:col-span-2`), between the Highlights section and the "Our Models" roster section:
-  ```html
-  {% if portfolio_items %}
-      <div>
-          <h2 class="font-display text-xl font-bold text-stone-900 mb-4">Portfolio</h2>
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {% for item in portfolio_items %}
-                  <div class="group aspect-square bg-stone-100 rounded-lg overflow-hidden relative">
-                      <img src="{{ item.image.url }}" alt="{{ item.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" data-lightbox="{{ item.image.url }}" data-lightbox-alt="{{ item.title }}">
-                      <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <p class="text-white text-sm font-medium truncate">{{ item.title }}</p>
-                          {% if item.credit %}<p class="text-white/70 text-xs truncate">{{ item.credit }}</p>{% endif %}
-                      </div>
-                  </div>
-              {% endfor %}
-          </div>
-      </div>
-  {% endif %}
-  ```
-
-#### 1d. Dashboard Management
-
-**Do:**
-- In `apps/agencies/forms.py`, add an `AgencyPortfolioItemForm`:
-  ```python
-  class AgencyPortfolioItemForm(forms.ModelForm):
-      class Meta:
-          model = AgencyPortfolioItem
-          fields = ["title", "image", "caption", "credit", "display_order"]
-  ```
-- In `apps/dashboard/views.py`, add views for adding and deleting portfolio items (follow the same pattern used for highlights management — agency staff with `can_edit_agency` permission):
-  - `add_portfolio_item(request, agency_slug)` — handles form submission, saves with `item.agency = agency`
-  - `delete_portfolio_item(request, item_id)` — deletes the item (POST only, verify ownership)
-- In `apps/dashboard/urls.py`, add URL patterns:
-  ```python
-  path("agency/portfolio/add/", views.add_portfolio_item, name="agency-portfolio-add"),
-  path("agency/portfolio/<int:item_id>/delete/", views.delete_portfolio_item, name="agency-portfolio-delete"),
-  ```
-- In `templates/dashboard/edit_agency.html`, add a "Portfolio" management section (similar to highlights management) where staff can see existing items, add new ones, and delete them. Include image preview thumbnails for existing items.
-
-**Test:** As agency staff, add a portfolio item with an image, title, and credit. Visit the agency detail page — portfolio grid appears above "Our Models". Delete the item — it disappears. Agency with no portfolio items — section is hidden.
+**Test:** As edit-staff, create a portfolio post with cover + 2 extra photos. Visit agency detail — posts appear. Visit as non-staff — only public posts visible. Non-edit staff see posts but no add/edit/delete buttons.
 
 ---
 
-### 3. Toast Auto-Dismiss + Polished Messages
+### ✅ 3. Toast Auto-Dismiss + Polished Messages
 
 Currently, flash messages in `base.html` stay on screen indefinitely with no close button.
 
@@ -151,7 +101,7 @@ Keep the entire toast `<div>` tag and all its class attributes on a single line 
 
 ---
 
-### 4. Custom Error Pages (400, 403, 404, 500)
+### ✅ 4. Custom Error Pages (400, 403, 404, 500)
 
 **Do:**
 - Create `templates/400.html`, `templates/403.html`, `templates/404.html`, `templates/500.html`. Each extends `base.html` and shows:
@@ -199,7 +149,7 @@ Keep the entire toast `<div>` tag and all its class attributes on a single line 
 
 ---
 
-### 4b. Custom Access-Restriction Pages
+### ✅ 4b. Custom Access-Restriction Pages
 
 HTTP error pages (403, 404) are generic. When a user hits an application-level access restriction — private profile, private roster, banned from an agency — they deserve a contextual, helpful page rather than a blank 404 or silent empty section.
 
@@ -286,7 +236,7 @@ Currently, when `is_roster_public=False` the "Our Models" section is completely 
 
 ---
 
-### 5. Empty State Polish
+### ✅ 5. Empty State Polish
 
 Audit every page for empty/zero-data scenarios and ensure they look clean and guide the user.
 
@@ -309,7 +259,7 @@ Audit every page for empty/zero-data scenarios and ensure they look clean and gu
 
 ---
 
-### 6. Production Deployment Prep — WhiteNoise + S3 Storage
+### ✅ 6. Production Deployment Prep — WhiteNoise + S3 Storage
 
 **Do:**
 - Install packages: `pipenv install whitenoise django-storages[boto3]`
@@ -366,7 +316,7 @@ Audit every page for empty/zero-data scenarios and ensure they look clean and gu
 
 ---
 
-### 7. Security Hardening
+### ✅ 7. Security Hardening
 
 **Do:**
 
@@ -429,7 +379,7 @@ Audit every page for empty/zero-data scenarios and ensure they look clean and gu
 
 ---
 
-### 8. Performance — Query Optimization
+### ✅ 8. Performance — Query Optimization
 
 Audit all views for N+1 queries and add `select_related` / `prefetch_related` where missing.
 
@@ -471,7 +421,7 @@ Audit all views for N+1 queries and add `select_related` / `prefetch_related` wh
 
 ---
 
-### 9. Caching for Public List Views
+### ✅ 9. Caching for Public List Views
 
 **Do:**
 - In `modeldirectory/settings/base.py`, add a local-memory cache backend (sufficient for single-server deployments; swap to Redis in production if needed):
@@ -517,7 +467,7 @@ Audit all views for N+1 queries and add `select_related` / `prefetch_related` wh
 
 ---
 
-### 10. Navbar Mobile Menu
+### ✅ 10. Navbar Mobile Menu
 
 The navbar currently hides nav links on mobile (`hidden md:flex`). There is no hamburger menu.
 
@@ -553,7 +503,7 @@ The navbar currently hides nav links on mobile (`hidden md:flex`). There is no h
 
 ---
 
-### 11. Role Switch in Navbar - DO NOT ADD. instead, just remove all trace of the role switch functionality - only admin should be able to do it.
+### ✅ 11. Role Switch in Navbar - DO NOT ADD. instead, just remove all trace of the role switch functionality - only admin should be able to do it.
 
 Phase 3 added the `switch_role` view but no UI in the navbar. Add it.
 
@@ -579,7 +529,7 @@ Phase 3 added the `switch_role` view but no UI in the navbar. Add it.
 
 ---
 
-### 12. Agency Verification Badge Parity
+### ✅ 12. Agency Verification Badge Parity
 
 Agency already has a verification badge on `agency_detail.html` (line 37–41). Extend to the list view.
 
@@ -619,14 +569,13 @@ Run these yourself after each step:
 | 8 | Load model list with 20+ models (check queries) | No N+1 — agency names fetched in one query |
 | 9 | Load model list twice, check second load queries | Cities dropdown served from cache |
 | 10 | Resize to mobile → click hamburger | Menu opens/closes with navigation links |
-| 11 | As MODEL, click "Switch to Agency" in navbar | Redirects to agency dashboard (or shows error) |
-| 12 | Set agency verified in admin → browse agency list | Emerald badge on card |
+| 11 | Set agency verified in admin → browse agency list | Emerald badge on card |
 
 ---
 
 ## What's Done After Phase 4
 
-- ✅ Agency portfolio / past work showcase on detail page with dashboard management
+- ✅ Agency portfolio (mirrors model portfolio): `AgencyPortfolioPost` + `AgencyPortfolioAsset`, dedicated create/edit/delete pages with Cropper.js, managed from agency dashboard, `+ Add post` on public views for edit-staff
 - ✅ Send-email form removed from applicant detail
 - ✅ Model verification badges across list, detail, applicant review, and agency inbox
 - ✅ Agency verification badges across list and landing page (parity with detail page)
@@ -653,9 +602,9 @@ Run these yourself after each step:
 - ✅ Consistent cm/in toggle styling and initial unit display across all pages
 
 ## Future improvements
-- Agencies and models can pull portfolios from instagram. They can connect their IG account and select 6 posts to show on their profile. This requires IG API integration, a new model to store connected accounts and selected posts, and UI in the dashboard (agency - edit, model - onboarding and edit) to manage the connection and post selection. Also this only works for business/creator accounts, so we need to handle the case where a user tries to connect a personal account (error message, instructions to switch to business/creator). However, the visual style of the portfolio grid and cards would be the same as the existing portfolios. The ig posts would not be embedded with the native IG widget, but rather we would fetch the post image and caption and display them in our own card design for consistency with uploaded portfolio items.
 - Mobile interface testing
 - Live messaging on app linkedin style. Only agency staff can initiate contact, but then they can message back and forth with applicants in real time. Would require a messaging model, inbox UI, and notification system. Models should be able to message request each other. 
+- Agencies and models can pull portfolios from instagram. They can connect their IG account and select 6 posts to show on their profile. This requires IG API integration, a new model to store connected accounts and selected posts, and UI in the dashboard (agency - edit, model - onboarding and edit) to manage the connection and post selection. Also this only works for business/creator accounts, so we need to handle the case where a user tries to connect a personal account (error message, instructions to switch to business/creator). However, the visual style of the portfolio grid and cards would be the same as the existing portfolios. The ig posts would not be embedded with the native IG widget, but rather we would fetch the post image and caption and display them in our own card design for consistency with uploaded portfolio items. will also need to change limit on portfolio carousel items to 20 images, and portfolio will need to be able to handle video.
 - Resources section fleshing out
 - Email verification flow (is_verified_email field exists but unused)
 - Model/agency verification workflows
