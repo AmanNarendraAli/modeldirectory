@@ -120,14 +120,6 @@ Add a portfolio/past work showcase to the agency detail page, displayed above th
 
 ---
 
-### 2. Remove Send Email Form ✅
-
-~~The "Send Email" card on the applicant detail page and its supporting backend code should be removed entirely.~~
-
-**Done.** "Send Email" card removed from `applicant_detail.html`. `ContactApplicantForm` removed from `apps/applications/forms.py`; `contact_applicant` view and `applications/<id>/contact/` URL removed from dashboard app. Contact Information card (email, phone, Instagram) retained on applicant detail for reference.
-
----
-
 ### 3. Toast Auto-Dismiss + Polished Messages
 
 Currently, flash messages in `base.html` stay on screen indefinitely with no close button.
@@ -204,6 +196,109 @@ Keep the entire toast `<div>` tag and all its class attributes on a single line 
   Note: `error_500` does NOT take an `exception` parameter — Django calls it with only `request`.
 
 **Test:** Set `DEBUG=False` temporarily, visit `/nonexistent-page/` — custom 404 page appears. Force a 500 (e.g. raise an exception in a view) — custom 500 page appears. Verify all four templates render correctly.
+
+---
+
+### 4b. Custom Access-Restriction Pages
+
+HTTP error pages (403, 404) are generic. When a user hits an application-level access restriction — private profile, private roster, banned from an agency — they deserve a contextual, helpful page rather than a blank 404 or silent empty section.
+
+#### 4b-i. Private Profile Page
+
+Currently, visiting a private model profile raises `Http404` (in `apps/models_app/views.py` line 230–232). This pretends the profile doesn't exist. Instead, show a dedicated "private profile" page.
+
+**Do:**
+- Create `templates/models_app/model_private.html`:
+  ```html
+  {% extends "base.html" %}
+  {% block title %}Private Profile — The Modelling Directory{% endblock %}
+  {% block content %}
+  <div class="max-w-md mx-auto px-4 py-32 text-center">
+      <div class="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-stone-400"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
+      </div>
+      <h1 class="font-display text-2xl font-bold text-stone-900 mb-2">This Profile is Private</h1>
+      <p class="text-stone-500 mb-8">This model has chosen to keep their profile private. Only their representing agency can view it.</p>
+      <a href="{% url 'model-list' %}" class="bg-stone-900 text-white text-sm font-medium px-6 py-2.5 rounded-lg hover:bg-stone-700 transition-colors">Browse Models</a>
+  </div>
+  {% endblock %}
+  ```
+- In `apps/models_app/views.py`, replace the `Http404` raise (line 230–232) with a render of the private page:
+  ```python
+  if not profile.is_public and not is_own_profile and not is_agency_viewer:
+      return render(request, "models_app/model_private.html", status=403)
+  ```
+
+**Test:** Visit a private model's profile URL while logged out — see "This Profile is Private" page with a lock icon and "Browse Models" link. Visit while logged in as the owner — normal profile renders. Visit as the model's agency staff — normal profile renders with blue banner.
+
+#### 4b-ii. Banned Model — Apply Block
+
+Currently, there is **no check** for `AgencyBan` in the apply view (`apps/applications/views.py`). A model that was removed/banned by an agency can still submit new applications. This is a security gap.
+
+**Do:**
+- In `apps/applications/views.py` `apply()`, add a ban check after the duplicate guard (after line 36):
+  ```python
+  from apps.agencies.models import AgencyBan
+  if AgencyBan.objects.filter(model_profile=profile, agency=agency).exists():
+      messages.error(request, "You are unable to apply to this agency.")
+      return redirect("agency-detail", slug=agency_slug)
+  ```
+- Also hide the "Apply" button on `agency_detail.html` when the user is banned. In `apps/agencies/views.py` `agency_detail()`, add a context variable:
+  ```python
+  is_banned = False
+  if request.user.is_authenticated and hasattr(request.user, "model_profile"):
+      from apps.agencies.models import AgencyBan
+      is_banned = AgencyBan.objects.filter(
+          model_profile=request.user.model_profile, agency=agency
+      ).exists()
+  ```
+  Pass `"is_banned": is_banned` in the context dict.
+- In `templates/agencies/agency_detail.html`, wrap the Apply button with `{% if not is_banned %}`. Where the button would be, show a subtle message if banned:
+  ```html
+  {% if is_banned %}
+      <p class="text-sm text-stone-400 italic">You are not eligible to apply to this agency.</p>
+  {% endif %}
+  ```
+
+**Test:** As agency staff, remove a model from the roster (creating a ban). Log in as that model, visit the agency — no Apply button, subtle "not eligible" message. Try the apply URL directly — error message, redirect back to agency detail.
+
+#### 4b-iii. Private Roster Explanation
+
+Currently, when `is_roster_public=False` the "Our Models" section is completely hidden with no explanation. Visitors don't know whether the agency has no models or has chosen to hide them.
+
+**Do:**
+- In `apps/agencies/views.py` `agency_detail()`, add a context flag:
+  ```python
+  roster_is_private = not agency.is_roster_public and not is_agency_staff
+  ```
+  Pass `"roster_is_private": roster_is_private` in the context dict.
+- In `templates/agencies/agency_detail.html`, after the `{% if roster_models is not None %}...{% endif %}` block, add:
+  ```html
+  {% if roster_is_private %}
+  <div class="text-center py-10">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-stone-300 mx-auto mb-3"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
+      <p class="text-stone-400 text-sm">This agency's roster is private.</p>
+  </div>
+  {% endif %}
+  ```
+
+**Test:** Set an agency's `is_roster_public=False`. Visit the agency as a non-staff user — see "This agency's roster is private" with a lock icon. Visit as agency staff — full roster visible as normal.
+
+#### 4b-iv. Not Accepting Applications State
+
+Currently, when `is_accepting_applications=False`, the apply view shows an error toast and redirects. But the agency detail page still shows the Apply button — users click it only to get bounced back.
+
+**Do:**
+- In `templates/agencies/agency_detail.html`, update the Apply button conditional to also check `agency.is_accepting_applications`:
+  ```html
+  {% if agency.is_accepting_applications and not is_banned and not existing_application %}
+      <a href="{% url 'apply' agency.slug %}" class="...">Apply Now</a>
+  {% elif not agency.is_accepting_applications %}
+      <p class="text-sm text-stone-400 italic">This agency is not currently accepting applications.</p>
+  {% endif %}
+  ```
+
+**Test:** Set `is_accepting_applications=False` on an agency. Visit the agency detail — "Not currently accepting applications" message where the Apply button would be.
 
 ---
 
@@ -530,6 +625,11 @@ Run these yourself after each step:
 | 2 | Load applicant detail, hit old `/contact/` URL | No "Send Email" card; old URL returns 404 |
 | 3 | Trigger a message → wait 5 seconds | Toast fades out automatically; X closes early |
 | 4 | Set `DEBUG=False`, visit `/nonexistent/` | Custom 404 page with "Go Home" button |
+| 4b-i | Visit a private model's profile while logged out | "This Profile is Private" page with lock icon |
+| 4b-ii | As a banned model, visit the agency that banned you | No Apply button; "not eligible" message shown |
+| 4b-ii | As a banned model, try the apply URL directly | Error message, redirect to agency detail |
+| 4b-iii | Visit agency with `is_roster_public=False` as non-staff | "This agency's roster is private" message |
+| 4b-iv | Visit agency with `is_accepting_applications=False` | "Not currently accepting applications" instead of Apply button |
 | 5 | Model with no portfolio → view detail page | "This model hasn't added any content yet." |
 | 6 | `python manage.py collectstatic --noinput` | Completes without errors; files in `staticfiles/` |
 | 7 | Sign up 6 times in 1 hour from same IP | 6th attempt shows 429 page |
@@ -549,6 +649,8 @@ Run these yourself after each step:
 - ✅ Agency verification badges across list and landing page (parity with detail page)
 - ✅ Toast messages auto-dismiss with close button
 - ✅ Custom error pages (400, 403, 404, 429, 500)
+- ✅ Custom access-restriction pages (private profile, banned applicant, private roster, not accepting applications)
+- ✅ AgencyBan enforcement on the apply view (security fix)
 - ✅ Empty state polish across all views
 - ✅ WhiteNoise for static files in production
 - ✅ S3 media storage configuration for production
