@@ -48,16 +48,18 @@
     <!-- Flash messages -->
     {% if messages %}
     <div class="fixed top-20 right-4 z-50 space-y-2 w-80">
-        {% for message in messages %}
-        <div class="flex items-start gap-3 rounded-lg p-4 shadow-lg text-sm font-medium
-            {% if message.tags == 'error' %}bg-red-50 border border-red-200 text-red-800
-            {% elif message.tags == 'success' %}bg-emerald-50 border border-emerald-200 text-emerald-800
-            {% elif message.tags == 'warning' %}bg-amber-50 border border-amber-200 text-amber-800
-            {% else %}bg-blue-50 border border-blue-200 text-blue-800{% endif %}">
-            <span>{{ message }}</span>
-        </div>
-        {% endfor %}
+        {% for message in messages %}<div data-toast role="alert" style="opacity:1;transition:opacity 0.3s ease-out" class="relative flex items-start gap-3 rounded-lg p-4 shadow-lg text-sm font-medium {% if message.tags == 'error' %}bg-red-50 border border-red-200 text-red-800{% elif message.tags == 'success' %}bg-emerald-50 border border-emerald-200 text-emerald-800{% elif message.tags == 'warning' %}bg-amber-50 border border-amber-200 text-amber-800{% else %}bg-blue-50 border border-blue-200 text-blue-800{% endif %}"><span class="flex-1">{{ message }}</span><button data-toast-close type="button" class="flex-shrink-0 text-current opacity-50 hover:opacity-100 leading-none text-base font-bold">&times;</button></div>{% endfor %}
     </div>
+    <script>
+    (function() {
+        document.querySelectorAll('[data-toast]').forEach(function(toast) {
+            var closeBtn = toast.querySelector('[data-toast-close]');
+            function dismiss() { toast.style.opacity = '0'; setTimeout(function() { toast.remove(); }, 300); }
+            if (closeBtn) closeBtn.addEventListener('click', dismiss);
+            setTimeout(dismiss, 5000);
+        });
+    })();
+    </script>
     {% endif %}
 
     <main class="flex-1">

@@ -212,6 +212,15 @@
             </div>
         {% endif %}
 
+        {% if portfolio_items %}
+            <div>
+                <h2 class="font-display text-xl font-bold text-stone-900 mb-4">Portfolio</h2>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {% for item in portfolio_items %}<div class="group aspect-square bg-stone-100 rounded-lg overflow-hidden relative"><img src="{{ item.image.url }}" alt="{{ item.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy"><div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity"><p class="text-white text-sm font-medium truncate">{{ item.title }}</p>{% if item.credit %}<p class="text-white/70 text-xs truncate">{{ item.credit }}</p>{% endif %}</div></div>{% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
         {% if roster_models is not None %}
             <div>
                 <h2 class="font-display text-xl font-bold text-stone-900 mb-4">Our Models</h2>
@@ -234,6 +243,13 @@
                 <p class="text-sm text-stone-400">No models listed yet.</p>
                 {% endif %}
             </div>
+        {% endif %}
+
+        {% if roster_is_private %}
+        <div class="text-center py-10">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-stone-300 mx-auto mb-3"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
+            <p class="text-stone-400 text-sm">This agency's roster is private.</p>
+        </div>
         {% endif %}
 
     </div>
@@ -260,11 +276,7 @@
                             View in Dashboard
                         </a>
                     {% elif user.is_model_user %}
-                        <p class="text-sm text-stone-500 mb-4">Submit your portfolio and profile to this agency.</p>
-                        <a href="{% url 'apply' agency.slug %}"
-                           class="block w-full text-center bg-stone-900 text-white font-medium py-2.5 rounded-lg text-sm hover:bg-stone-700 transition-colors">
-                            Apply Now
-                        </a>
+                        {% if is_banned %}<p class="text-sm text-stone-400 italic">You are not eligible to apply to this agency.</p>{% else %}<p class="text-sm text-stone-500 mb-4">Submit your portfolio and profile to this agency.</p><a href="{% url 'apply' agency.slug %}" class="block w-full text-center bg-stone-900 text-white font-medium py-2.5 rounded-lg text-sm hover:bg-stone-700 transition-colors">Apply Now</a>{% endif %}
                     {% else %}
                         <p class="text-sm text-stone-500">Log in as a model to apply.</p>
                     {% endif %}

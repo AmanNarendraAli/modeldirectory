@@ -35,6 +35,11 @@ def apply(request, agency_slug):
         messages.info(request, f"You've already applied to {agency.name}.")
         return redirect("agency-detail", slug=agency_slug)
 
+    from apps.agencies.models import AgencyBan
+    if AgencyBan.objects.filter(model_profile=profile, agency=agency).exists():
+        messages.error(request, "You are unable to apply to this agency.")
+        return redirect("agency-detail", slug=agency_slug)
+
     if request.method == "POST":
         form = ApplicationForm(request.POST)
         if form.is_valid():

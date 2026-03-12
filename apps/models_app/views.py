@@ -228,8 +228,7 @@ def model_detail(request, slug):
         ).exists()
 
     if not profile.is_public and not is_own_profile and not is_agency_viewer:
-        from django.http import Http404
-        raise Http404
+        return render(request, "models_app/model_private.html", status=403)
 
     portfolio_posts = profile.portfolio_posts.filter(is_public=True)
 

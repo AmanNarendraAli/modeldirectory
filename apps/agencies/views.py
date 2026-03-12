@@ -81,6 +81,15 @@ def agency_detail(request, slug):
     )
     viewer_profile = getattr(request.user, "model_profile", None) if request.user.is_authenticated else None
 
+    portfolio_items = agency.portfolio_items.all()
+
+    is_banned = False
+    if request.user.is_authenticated and hasattr(request.user, "model_profile"):
+        from apps.agencies.models import AgencyBan
+        is_banned = AgencyBan.objects.filter(
+            model_profile=request.user.model_profile, agency=agency
+        ).exists()
+
     if is_agency_staff:
         roster_models = agency.represented_models.all().order_by("public_display_name")
     elif agency.is_roster_public:
@@ -94,10 +103,15 @@ def agency_detail(request, slug):
     else:
         roster_models = None
 
+    roster_is_private = not agency.is_roster_public and not is_agency_staff
+
     return render(request, "agencies/agency_detail.html", {
         "agency": agency,
         "requirements": requirements,
         "highlights": highlights,
+        "portfolio_items": portfolio_items,
+        "is_banned": is_banned,
+        "roster_is_private": roster_is_private,
         "is_saved": is_saved,
         "existing_application": existing_application,
         "roster_models": roster_models,

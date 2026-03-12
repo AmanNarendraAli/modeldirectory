@@ -553,7 +553,7 @@ The navbar currently hides nav links on mobile (`hidden md:flex`). There is no h
 
 ---
 
-### 11. Role Switch in Navbar
+### 11. Role Switch in Navbar - DO NOT ADD. instead, just remove all trace of the role switch functionality - only admin should be able to do it.
 
 Phase 3 added the `switch_role` view but no UI in the navbar. Add it.
 
@@ -653,6 +653,7 @@ Run these yourself after each step:
 - ✅ Consistent cm/in toggle styling and initial unit display across all pages
 
 ## Future improvements
+- Agencies and models can pull portfolios from instagram. They can connect their IG account and select 6 posts to show on their profile. This requires IG API integration, a new model to store connected accounts and selected posts, and UI in the dashboard (agency - edit, model - onboarding and edit) to manage the connection and post selection. Also this only works for business/creator accounts, so we need to handle the case where a user tries to connect a personal account (error message, instructions to switch to business/creator). However, the visual style of the portfolio grid and cards would be the same as the existing portfolios. The ig posts would not be embedded with the native IG widget, but rather we would fetch the post image and caption and display them in our own card design for consistency with uploaded portfolio items.
 - Mobile interface testing
 - Live messaging on app linkedin style. Only agency staff can initiate contact, but then they can message back and forth with applicants in real time. Would require a messaging model, inbox UI, and notification system. Models should be able to message request each other. 
 - Resources section fleshing out

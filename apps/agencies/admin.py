@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Agency, AgencyRequirement, AgencyHighlight, AgencyStaff
+from .models import Agency, AgencyRequirement, AgencyHighlight, AgencyStaff, AgencyPortfolioItem
 
 
 class AgencyRequirementInline(admin.TabularInline):
@@ -17,6 +17,11 @@ class AgencyStaffInline(admin.TabularInline):
     extra = 1
 
 
+class AgencyPortfolioItemInline(admin.TabularInline):
+    model = AgencyPortfolioItem
+    extra = 1
+
+
 @admin.register(Agency)
 class AgencyAdmin(admin.ModelAdmin):
     list_display = ("name", "city", "is_active", "is_accepting_applications", "is_featured", "verification_status")
@@ -24,7 +29,7 @@ class AgencyAdmin(admin.ModelAdmin):
     search_fields = ("name", "slug", "city", "contact_email")
     prepopulated_fields = {"slug": ("name",)}
     readonly_fields = ("created_at", "updated_at")
-    inlines = [AgencyRequirementInline, AgencyHighlightInline, AgencyStaffInline]
+    inlines = [AgencyRequirementInline, AgencyHighlightInline, AgencyStaffInline, AgencyPortfolioItemInline]
 
 
 @admin.register(AgencyRequirement)

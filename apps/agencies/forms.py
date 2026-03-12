@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory
-from .models import Agency, AgencyRequirement
+from .models import Agency, AgencyRequirement, AgencyPortfolioItem
 
 INPUT_CLASS = "w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
 
@@ -91,6 +91,21 @@ class AgencyRequirementForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             if not isinstance(field.widget, (forms.CheckboxInput, forms.RadioSelect)):
+                field.widget.attrs.update({"class": INPUT_CLASS})
+
+
+class AgencyPortfolioItemForm(forms.ModelForm):
+    class Meta:
+        model = AgencyPortfolioItem
+        fields = ["title", "image", "caption", "credit", "display_order"]
+        widgets = {
+            "caption": forms.Textarea(attrs={"rows": 2}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            if not isinstance(field.widget, (forms.CheckboxInput, forms.RadioSelect, forms.FileInput)):
                 field.widget.attrs.update({"class": INPUT_CLASS})
 
 

@@ -354,6 +354,61 @@
         </section>
 
         <section class="bg-white rounded-xl border border-stone-200 p-6">
+            <h2 class="font-semibold text-stone-900 text-lg mb-1">Portfolio</h2>
+            <p class="text-stone-400 text-sm mb-5">Showcase campaigns, editorials, and past work on your agency page.</p>
+
+            {% if portfolio_items %}
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+                {% for item in portfolio_items %}
+                <div class="relative group bg-stone-100 rounded-lg overflow-hidden aspect-square">
+                    <img src="{{ item.image.url }}" alt="{{ item.title }}" class="w-full h-full object-cover" loading="lazy">
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2">
+                        <p class="text-white text-xs font-medium truncate">{{ item.title }}</p>
+                        {% if item.credit %}<p class="text-white/70 text-xs truncate">{{ item.credit }}</p>{% endif %}
+                    </div>
+                    <form method="post" action="{% url 'agency-portfolio-delete' item.id %}" class="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {% csrf_token %}
+                        <button type="submit" class="bg-red-600 text-white rounded-md px-2 py-1 text-xs font-medium hover:bg-red-700 transition-colors" onclick="return confirm('Delete this item?')">Delete</button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-stone-400 text-sm mb-5">No portfolio items yet.</p>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data" action="{% url 'agency-portfolio-add' agency.slug %}" class="border border-dashed border-stone-300 rounded-lg p-4 space-y-3">
+                {% csrf_token %}
+                <p class="text-sm font-medium text-stone-700">Add a new item</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-stone-500 mb-1">Title *</label>
+                        {{ portfolio_form.title }}
+                        {% if portfolio_form.title.errors %}<p class="text-red-600 text-xs mt-1">{{ portfolio_form.title.errors|join:", " }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-stone-500 mb-1">Credit</label>
+                        {{ portfolio_form.credit }}
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-stone-500 mb-1">Image *</label>
+                        <input type="file" name="image" accept="image/*" class="w-full text-sm text-stone-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer">
+                        {% if portfolio_form.image.errors %}<p class="text-red-600 text-xs mt-1">{{ portfolio_form.image.errors|join:", " }}</p>{% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-stone-500 mb-1">Display order</label>
+                        {{ portfolio_form.display_order }}
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-medium text-stone-500 mb-1">Caption</label>
+                        {{ portfolio_form.caption }}
+                    </div>
+                </div>
+                <button type="submit" class="text-sm font-medium bg-stone-900 text-white px-4 py-2 rounded-lg hover:bg-stone-700 transition-colors">Add Item</button>
+            </form>
+        </section>
+
+        <section class="bg-white rounded-xl border border-stone-200 p-6">
             <h2 class="font-semibold text-stone-900 text-lg mb-4">Settings</h2>
             <div class="space-y-3">
                 <label class="flex items-center gap-3 cursor-pointer">

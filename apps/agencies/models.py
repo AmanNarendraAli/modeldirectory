@@ -120,6 +120,24 @@ class AgencyHighlight(models.Model):
         return f"{self.agency.name} — {self.title}"
 
 
+class AgencyPortfolioItem(models.Model):
+    agency = models.ForeignKey(Agency, on_delete=models.CASCADE, related_name="portfolio_items")
+    title = models.CharField(max_length=255)
+    image = models.ImageField(upload_to="agencies/portfolio/")
+    image_thumbnail = ImageSpecField(source="image", processors=[ResizeToFill(400, 400)], format="WEBP", options={"quality": 80})
+    image_display = ImageSpecField(source="image", processors=[ResizeToFit(1200, 1200)], format="WEBP", options={"quality": 85})
+    caption = models.TextField(blank=True)
+    credit = models.CharField(max_length=255, blank=True, help_text="e.g. Photographer, brand, or campaign name")
+    display_order = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["display_order", "-created_at"]
+
+    def __str__(self):
+        return f"{self.agency.name} — {self.title}"
+
+
 class AgencyBan(models.Model):
     """Records when an agency removes a model — prevents the model from self-adding back."""
     model_profile = models.ForeignKey(

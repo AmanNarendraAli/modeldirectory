@@ -10,8 +10,8 @@ from apps.applications.forms import FeedbackForm
 from apps.discovery.models import SavedAgency, Follow
 from apps.portfolio.models import PortfolioPost
 from apps.accounts.forms import OnboardingForm
-from apps.agencies.models import AgencyStaff
-from apps.agencies.forms import AgencyEditForm, AgencyRequirementFormSet
+from apps.agencies.models import AgencyStaff, AgencyPortfolioItem
+from apps.agencies.forms import AgencyEditForm, AgencyRequirementFormSet, AgencyPortfolioItemForm
 
 
 def _get_agency_for_staff(user):
@@ -287,10 +287,14 @@ def edit_agency(request):
     else:
         form = AgencyEditForm(instance=agency)
         req_formset = AgencyRequirementFormSet(instance=agency, prefix="req")
+    portfolio_items = agency.portfolio_items.all()
+    portfolio_form = AgencyPortfolioItemForm()
     return render(request, "dashboard/edit_agency.html", {
         "form": form,
         "agency": agency,
         "req_formset": req_formset,
+        "portfolio_items": portfolio_items,
+        "portfolio_form": portfolio_form,
     })
 
 
@@ -451,3 +455,36 @@ def search_models_for_roster(request, agency_id):
         })
 
     return JsonResponse({"results": results})
+
+
+@login_required
+def add_portfolio_item(request, agency_slug):
+    staff = AgencyStaff.objects.filter(user=request.user, can_edit_agency=True).select_related("agency").first()
+    if not staff or staff.agency.slug != agency_slug:
+        messages.error(request, "You don't have permission to edit this agency.")
+        return redirect("dashboard")
+    agency = staff.agency
+    if request.method == "POST":
+        form = AgencyPortfolioItemForm(request.POST, request.FILES)
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.agency = agency
+            item.save()
+            messages.success(request, "Portfolio item added.")
+        else:
+            messages.error(request, "Please fix the errors below.")
+    return redirect("edit-agency")
+
+
+@login_required
+def delete_portfolio_item(request, item_id):
+    if request.method != "POST":
+        return redirect("edit-agency")
+    staff = AgencyStaff.objects.filter(user=request.user, can_edit_agency=True).select_related("agency").first()
+    if not staff:
+        messages.error(request, "You don't have permission.")
+        return redirect("dashboard")
+    item = get_object_or_404(AgencyPortfolioItem, id=item_id, agency=staff.agency)
+    item.delete()
+    messages.success(request, "Portfolio item deleted.")
+    return redirect("edit-agency")
