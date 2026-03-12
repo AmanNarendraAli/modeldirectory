@@ -284,22 +284,6 @@ Currently, when `is_roster_public=False` the "Our Models" section is completely 
 
 **Test:** Set an agency's `is_roster_public=False`. Visit the agency as a non-staff user — see "This agency's roster is private" with a lock icon. Visit as agency staff — full roster visible as normal.
 
-#### 4b-iv. Not Accepting Applications State
-
-Currently, when `is_accepting_applications=False`, the apply view shows an error toast and redirects. But the agency detail page still shows the Apply button — users click it only to get bounced back.
-
-**Do:**
-- In `templates/agencies/agency_detail.html`, update the Apply button conditional to also check `agency.is_accepting_applications`:
-  ```html
-  {% if agency.is_accepting_applications and not is_banned and not existing_application %}
-      <a href="{% url 'apply' agency.slug %}" class="...">Apply Now</a>
-  {% elif not agency.is_accepting_applications %}
-      <p class="text-sm text-stone-400 italic">This agency is not currently accepting applications.</p>
-  {% endif %}
-  ```
-
-**Test:** Set `is_accepting_applications=False` on an agency. Visit the agency detail — "Not currently accepting applications" message where the Apply button would be.
-
 ---
 
 ### 5. Empty State Polish
@@ -629,7 +613,6 @@ Run these yourself after each step:
 | 4b-ii | As a banned model, visit the agency that banned you | No Apply button; "not eligible" message shown |
 | 4b-ii | As a banned model, try the apply URL directly | Error message, redirect to agency detail |
 | 4b-iii | Visit agency with `is_roster_public=False` as non-staff | "This agency's roster is private" message |
-| 4b-iv | Visit agency with `is_accepting_applications=False` | "Not currently accepting applications" instead of Apply button |
 | 5 | Model with no portfolio → view detail page | "This model hasn't added any content yet." |
 | 6 | `python manage.py collectstatic --noinput` | Completes without errors; files in `staticfiles/` |
 | 7 | Sign up 6 times in 1 hour from same IP | 6th attempt shows 429 page |
@@ -649,7 +632,7 @@ Run these yourself after each step:
 - ✅ Agency verification badges across list and landing page (parity with detail page)
 - ✅ Toast messages auto-dismiss with close button
 - ✅ Custom error pages (400, 403, 404, 429, 500)
-- ✅ Custom access-restriction pages (private profile, banned applicant, private roster, not accepting applications)
+- ✅ Custom access-restriction pages (private profile, banned applicant, private roster)
 - ✅ AgencyBan enforcement on the apply view (security fix)
 - ✅ Empty state polish across all views
 - ✅ WhiteNoise for static files in production
