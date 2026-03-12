@@ -215,7 +215,7 @@
         {% if portfolio_posts or can_edit_agency %}
             <div class="mb-8">
                 <div class="flex items-center justify-between mb-4">
-                    <h2 class="font-display text-xl font-bold text-stone-900">Portfolio</h2>
+                    <h2 class="font-display text-xl font-bold text-stone-900">Our Work</h2>
                     {% if can_edit_agency %}<a href="{% url 'agency-portfolio-create' %}" class="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors">+ Add post</a>{% endif %}
                 </div>
                 {% if portfolio_posts %}
@@ -233,7 +233,7 @@
                     {% endfor %}
                 </div>
                 {% else %}
-                <p class="text-stone-400 text-sm">No portfolio posts yet.</p>
+                <p class="text-stone-400 text-sm">No posts yet.</p>
                 {% endif %}
             </div>
         {% endif %}

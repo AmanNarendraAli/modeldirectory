@@ -318,12 +318,34 @@ python-3.11.7
 
 **After first deploy:**
 - Render runs the build command which includes `migrate` — this creates all tables in Supabase
-- Create a superuser via Render Shell: `cd modeldirectory && python manage.py createsuperuser`
 - Verify the site loads at `https://<your-app>.onrender.com`
 
 ---
 
-#### 2e. Migrate Local Data to Production (optional, you do this)
+#### 2e. Create Site Admin — CRITICAL (you do this)
+
+**The app will not function without a superuser.** Verification badges, agency activation, bans, resource publishing, and all admin-panel operations require a staff/superuser account.
+
+1. On Render → your service → Shell tab
+2. Run:
+   ```bash
+   cd modeldirectory && python manage.py createsuperuser
+   ```
+3. Enter a username, email, and strong password
+4. Verify by visiting `https://<your-app>.onrender.com/admin/` and logging in
+5. From the admin panel, you can now:
+   - Activate agencies (`is_active = True`)
+   - Set verification status on models and agencies
+   - Manage bans, applications, and all other data
+   - Publish resources/articles
+
+**Without this step, no agencies can be activated and no content can be moderated.**
+
+---
+
+#### 2f. Migrate Local Data to Production (optional, you do this)
+
+**Note:** If you go with Option A (fresh start), you still need the superuser from step 2e above.
 
 If you want to move your dev data to production:
 
@@ -345,7 +367,7 @@ python manage.py loaddata datadump.json
 
 ---
 
-#### 2f. Custom Domain (optional, you do this)
+#### 2g. Custom Domain (optional, you do this)
 
 1. On Render → your service → Settings → Custom Domains → Add your domain
 2. Update DNS (CNAME to `<your-app>.onrender.com`)
