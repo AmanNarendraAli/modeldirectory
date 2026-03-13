@@ -26,6 +26,7 @@ STORAGES = {
             "secret_key": env("AWS_SECRET_ACCESS_KEY", default=""),
             "endpoint_url": env("AWS_S3_ENDPOINT_URL", default=""),
             "region_name": "auto",
+            "signature_version": "s3v4",
             "default_acl": None,
             "file_overwrite": False,
             "querystring_auth": True,
