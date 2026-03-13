@@ -11,7 +11,7 @@ env = environ.Env(
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-_env_file = BASE_DIR / ".env"
+_env_file = Path("/etc/secrets/.env") if Path("/etc/secrets/.env").exists() else BASE_DIR / ".env"
 if _env_file.exists():
     environ.Env.read_env(_env_file)
 
@@ -80,9 +80,9 @@ WSGI_APPLICATION = "modeldirectory.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": env("DB_NAME"),
-        "USER": env("DB_USER"),
-        "PASSWORD": env("DB_PASSWORD"),
+        "NAME": env("DB_NAME", default=""),
+        "USER": env("DB_USER", default=""),
+        "PASSWORD": env("DB_PASSWORD", default=""),
         "HOST": env("DB_HOST", default="localhost"),
         "PORT": env("DB_PORT", default="5432"),
     }
