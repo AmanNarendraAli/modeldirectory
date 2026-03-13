@@ -11,7 +11,9 @@ env = environ.Env(
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-environ.Env.read_env(BASE_DIR / ".env")
+_env_file = BASE_DIR / ".env"
+if _env_file.exists():
+    environ.Env.read_env(_env_file)
 
 SECRET_KEY = env("SECRET_KEY")
 DEBUG = env("DEBUG")
