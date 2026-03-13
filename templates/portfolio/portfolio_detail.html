@@ -20,9 +20,9 @@
             {% if post.cover_image %}<div class="carousel-slide flex-shrink-0 w-full" style="height:70vh;"><img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="w-full h-full object-contain" loading="lazy"></div>{% endif %}
             {% for asset in assets %}<div class="carousel-slide flex-shrink-0 w-full" style="height:70vh;"><img src="{{ asset.image.url }}" alt="{{ asset.alt_text|default:post.title }}" class="w-full h-full object-contain" loading="lazy"></div>{% endfor %}
         </div>
-        <button type="button" id="carouselPrev" class="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-10 h-10 items-center justify-center transition-colors hidden" aria-label="Previous">&larr;</button>
-        <button type="button" id="carouselNext" class="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-10 h-10 items-center justify-center transition-colors hidden" aria-label="Next">&rarr;</button>
-        <div id="carouselDots" class="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 hidden"></div>
+        <button type="button" id="carouselPrev" class="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-11 h-11 items-center justify-center transition-colors hidden" aria-label="Previous">&larr;</button>
+        <button type="button" id="carouselNext" class="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full w-11 h-11 items-center justify-center transition-colors hidden" aria-label="Next">&rarr;</button>
+        <div id="carouselDots" class="absolute bottom-3 left-0 right-0 flex justify-center gap-2 hidden"></div>
     </div>
     {% endif %}
 
@@ -51,7 +51,7 @@
     slides.forEach(function (_, i) {
         var d = document.createElement('button');
         d.type = 'button';
-        d.className = 'w-2 h-2 rounded-full transition-colors ' + (i === 0 ? 'bg-white' : 'bg-white/40');
+        d.className = 'w-2.5 h-2.5 rounded-full transition-colors ' + (i === 0 ? 'bg-white' : 'bg-white/40');
         d.setAttribute('aria-label', 'Go to slide ' + (i + 1));
         d.addEventListener('click', function () { go(i); });
         dotsContainer.appendChild(d);
@@ -70,7 +70,7 @@
         current = (idx + total) % total;
         track.style.transform = 'translateX(-' + (current * 100) + '%)';
         dots.forEach(function (d, i) {
-            d.className = 'w-2 h-2 rounded-full transition-colors ' + (i === current ? 'bg-white' : 'bg-white/40');
+            d.className = 'w-2.5 h-2.5 rounded-full transition-colors ' + (i === current ? 'bg-white' : 'bg-white/40');
         });
     }
 

@@ -94,7 +94,7 @@
                         <label class="text-xs text-stone-500 block mb-1">Image file</label>
                         <input type="file" name="{{ asset_form.image.html_name }}" accept="image/*" id="{{ asset_form.image.id_for_label }}" data-crop data-filename="agency_portfolio_asset" {% if asset_form.instance.pk and asset_form.instance.image %}data-preview-target="asset-preview-{{ forloop.counter0 }}"{% endif %} class="w-full text-sm text-stone-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer">
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <label class="text-xs text-stone-500 block mb-1">Alt text</label>
                             <input type="text" name="{{ asset_form.alt_text.html_name }}"
@@ -131,7 +131,7 @@
                     <label class="text-xs text-stone-500 block mb-1">Image file</label>
                     <input type="file" name="assets-__prefix__-image" accept="image/*" data-crop data-filename="agency_portfolio_asset" class="w-full text-sm text-stone-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer">
                 </div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="text-xs text-stone-500 block mb-1">Alt text</label>
                         <input type="text" name="assets-__prefix__-alt_text" value=""
