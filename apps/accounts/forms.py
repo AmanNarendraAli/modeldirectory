@@ -9,8 +9,8 @@ class SignupForm(UserCreationForm):
     full_name = forms.CharField(max_length=255, required=True)
     role = forms.ChoiceField(
         choices=[
-            (User.Role.MODEL, "I'm a Model"),
-            (User.Role.AGENCY_STAFF, "I'm Agency Staff"),
+            (User.Role.MODEL, "Model"),
+            (User.Role.AGENCY_STAFF, "Agency Staff"),
         ],
         widget=forms.RadioSelect,
         initial=User.Role.MODEL,
