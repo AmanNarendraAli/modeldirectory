@@ -38,6 +38,12 @@ urlpatterns = [
 
     # Resources / transparency
     path("resources/", include("apps.resources.urls")),
+
+    # Notifications
+    path("notifications/", include("apps.notifications.urls")),
+
+    # Messaging
+    path("messages/", include("apps.messaging.urls")),
 ]
 
 if settings.DEBUG:

@@ -1,0 +1,103 @@
+<!-- Notification bell with dropdown -->
+<div class="relative" id="notification-bell">
+    <button type="button" id="notification-bell-btn" class="relative text-stone-600 hover:text-stone-900 transition-colors p-1" aria-label="Notifications">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+        </svg>
+        {% if unread_notification_count > 0 %}
+        <span id="notification-badge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+            {{ unread_notification_count }}
+        </span>
+        {% endif %}
+    </button>
+
+    <!-- Dropdown panel -->
+    <div id="notification-dropdown" class="hidden absolute right-0 top-full mt-2 w-80 max-h-96 bg-white rounded-xl shadow-lg border border-stone-200 overflow-hidden z-50">
+        <div class="px-4 py-3 border-b border-stone-100">
+            <h3 class="text-sm font-semibold text-stone-900">Notifications</h3>
+        </div>
+        <div id="notification-list" class="divide-y divide-stone-100 max-h-72 overflow-y-auto">
+            <div class="px-4 py-6 text-center text-sm text-stone-400">Loading...</div>
+        </div>
+        <div class="px-4 py-2 border-t border-stone-100 bg-stone-50">
+            <a href="{% url 'notification-list' %}" class="text-sm font-medium text-stone-600 hover:text-stone-900">View all</a>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var btn = document.getElementById('notification-bell-btn');
+    var dropdown = document.getElementById('notification-dropdown');
+    var badge = document.getElementById('notification-badge');
+    var listEl = document.getElementById('notification-list');
+    var isOpen = false;
+
+    btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        isOpen = !isOpen;
+        dropdown.classList.toggle('hidden', !isOpen);
+        if (isOpen) {
+            loadNotifications();
+            markAsRead();
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!dropdown.contains(e.target) && e.target !== btn) {
+            isOpen = false;
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    function loadNotifications() {
+        fetch('{% url "notification-list" %}?format=partial')
+            .then(function(r) { return r.text(); })
+            .then(function(html) {
+                if (html.trim()) {
+                    listEl.innerHTML = html;
+                } else {
+                    listEl.innerHTML = '<div class="px-4 py-6 text-center text-sm text-stone-400">No notifications yet</div>';
+                }
+            })
+            .catch(function() {
+                listEl.innerHTML = '<div class="px-4 py-6 text-center text-sm text-stone-400">Could not load notifications</div>';
+            });
+    }
+
+    function markAsRead() {
+        var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (!csrfToken) {
+            // Get from cookie
+            var cookie = document.cookie.split(';').find(function(c) { return c.trim().startsWith('csrftoken='); });
+            var token = cookie ? cookie.split('=')[1] : '';
+        } else {
+            var token = csrfToken.value;
+        }
+        fetch('{% url "mark-notifications-read" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': token || getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            },
+        }).then(function() {
+            if (badge) badge.style.display = 'none';
+        });
+    }
+
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+})();
+</script>

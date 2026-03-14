@@ -136,8 +136,13 @@
                     {% if application.reviewed_by %}<p>By: {{ application.reviewed_by.full_name }}</p>{% endif %}
                 </div>
 
-                <div class="mt-4">
+                <div class="mt-4 space-y-2">
                     <a href="{% url 'model-detail' application.applicant_profile.slug %}" target="_blank" class="block text-center text-xs text-stone-600 hover:text-stone-900 border border-stone-200 py-2 rounded-lg hover:bg-stone-50 transition-colors">View Public Profile →</a>
+                    {% if applicant_conversation %}
+                        <a href="{% url 'conversation-detail' pk=applicant_conversation.pk %}" class="block text-center text-xs text-white bg-stone-900 py-2 rounded-lg hover:bg-stone-700 transition-colors font-medium">View Messages</a>
+                    {% else %}
+                        <button type="button" onclick="document.getElementById('msg-applicant-modal').classList.remove('hidden')" class="w-full text-center text-xs text-white bg-stone-900 py-2 rounded-lg hover:bg-stone-700 transition-colors font-medium">Message Applicant</button>
+                    {% endif %}
                 </div>
             </div>
 
@@ -155,4 +160,30 @@
     </div>
 </div>
 {% include "partials/_lightbox.html" %}
+
+{% if not applicant_conversation %}
+<!-- Message Applicant Modal -->
+<div id="msg-applicant-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+        <h2 class="font-display text-lg font-bold text-stone-900 mb-1">Message {{ application.applicant_profile.public_display_name }}</h2>
+        <p class="text-xs text-stone-400 mb-4">This will start a direct conversation with the applicant.</p>
+        <form method="post" action="{% url 'start-conversation' application.applicant_profile.slug %}">
+            {% csrf_token %}
+            <textarea name="message" rows="3" required placeholder="Write your message..."
+                class="w-full border border-stone-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400 resize-none"></textarea>
+            <div class="flex justify-end gap-2 mt-3">
+                <button type="button" onclick="document.getElementById('msg-applicant-modal').classList.add('hidden')"
+                    class="border border-stone-300 text-stone-600 text-sm font-medium px-4 py-2 rounded-lg hover:bg-stone-50 transition-colors">Cancel</button>
+                <button type="submit"
+                    class="bg-stone-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-stone-700 transition-colors">Send Message</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+document.getElementById('msg-applicant-modal').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.add('hidden');
+});
+</script>
+{% endif %}
 {% endblock %}

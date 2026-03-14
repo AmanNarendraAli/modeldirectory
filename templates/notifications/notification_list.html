@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Notifications — The Modelling Directory{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <div class="mb-8">
+        <h1 class="font-display text-3xl font-bold text-stone-900">Notifications</h1>
+    </div>
+
+    {% if page_obj.object_list %}
+    <div class="bg-white rounded-xl border border-stone-200 divide-y divide-stone-100 overflow-hidden">
+        {% for notif in page_obj %}
+        <a href="{% if notif.notification_type == 'follow' and notif.target_profile %}{% url 'model-detail' notif.target_profile.slug %}{% elif notif.target_conversation %}{% url 'conversation-detail' pk=notif.target_conversation.pk %}{% else %}#{% endif %}" class="block px-5 py-4 hover:bg-stone-50 transition-colors {% if not notif.is_read %}bg-blue-50/40{% endif %}">
+            <div class="flex items-center justify-between gap-4">
+                <div>
+                    <p class="text-sm text-stone-800 font-medium">{{ notif.display_text }}</p>
+                    <p class="text-xs text-stone-400 mt-0.5">{{ notif.created_at|timesince }} ago</p>
+                </div>
+                {% if not notif.is_read %}
+                <span class="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></span>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <div class="flex justify-center gap-2 mt-6">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="border border-stone-300 text-stone-600 text-sm font-medium px-4 py-2 rounded-lg hover:bg-stone-50">Previous</a>
+        {% endif %}
+        <span class="text-sm text-stone-500 px-4 py-2">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="border border-stone-300 text-stone-600 text-sm font-medium px-4 py-2 rounded-lg hover:bg-stone-50">Next</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="bg-white rounded-xl border border-stone-200 p-12 text-center">
+        <p class="text-stone-400 text-sm">No notifications yet.</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

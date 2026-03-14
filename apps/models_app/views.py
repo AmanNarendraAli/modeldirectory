@@ -244,6 +244,34 @@ def model_detail(request, slug):
 
     follower_count = profile.followers.count()
 
+    # Messaging context
+    existing_conversation = None
+    can_message = False
+    is_blocked = False
+    if request.user.is_authenticated and not is_own_profile:
+        from apps.messaging.models import Conversation, MessageBlock
+        from django.db.models import Q
+
+        # Check if blocked
+        is_blocked = MessageBlock.objects.filter(
+            Q(blocker=request.user, blocked=profile.user)
+            | Q(blocker=profile.user, blocked=request.user)
+        ).exists()
+
+        if not is_blocked:
+            existing_conversation = Conversation.objects.filter(
+                Q(participant_one=request.user, participant_two=profile.user)
+                | Q(participant_one=profile.user, participant_two=request.user)
+            ).first()
+
+            if existing_conversation:
+                can_message = existing_conversation.status in (
+                    Conversation.Status.ACCEPTED,
+                    Conversation.Status.PENDING,
+                )
+            else:
+                can_message = True  # Can start a new conversation
+
     return render(request, "models_app/model_detail.html", {
         "profile": profile,
         "portfolio_posts": portfolio_posts,
@@ -252,4 +280,7 @@ def model_detail(request, slug):
         "is_own_profile": is_own_profile,
         "is_own_private_profile": is_own_profile and not profile.is_public,
         "is_agency_viewer": is_agency_viewer,
+        "existing_conversation": existing_conversation,
+        "can_message": can_message,
+        "is_blocked": is_blocked,
     })

@@ -310,6 +310,15 @@ def applicant_detail(request, application_id):
     )
     feedback_form = FeedbackForm(instance=application)
 
+    # Check for existing conversation with this applicant
+    from apps.messaging.models import Conversation
+    from django.db.models import Q
+    applicant_user = application.applicant_profile.user
+    applicant_conversation = Conversation.objects.filter(
+        Q(participant_one=request.user, participant_two=applicant_user)
+        | Q(participant_one=applicant_user, participant_two=request.user)
+    ).first()
+
     return render(request, "dashboard/applicant_detail.html", {
         "application": application,
         "snapshot": snapshot,
@@ -317,6 +326,7 @@ def applicant_detail(request, application_id):
         "agency": agency,
         "status_choices": Application.Status.choices,
         "feedback_form": feedback_form,
+        "applicant_conversation": applicant_conversation,
     })
 
 

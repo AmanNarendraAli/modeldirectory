@@ -38,6 +38,8 @@ LOCAL_APPS = [
     "apps.discovery",
     "apps.dashboard",
     "apps.resources",
+    "apps.notifications",
+    "apps.messaging",
 ]
 
 THIRD_PARTY_APPS = [
@@ -70,6 +72,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "apps.notifications.context_processors.unread_notification_count",
             ],
         },
     },

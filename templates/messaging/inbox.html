@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Messages — The Modelling Directory{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+    <div class="mb-8">
+        <h1 class="font-display text-3xl font-bold text-stone-900">Messages</h1>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex gap-1 mb-6 border-b border-stone-200">
+        <a href="?tab=messages" class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors {% if active_tab == 'messages' %}border-stone-900 text-stone-900{% else %}border-transparent text-stone-500 hover:text-stone-700{% endif %}">
+            Messages
+            {% if accepted_conversations %}
+            <span class="ml-1 text-xs text-stone-400">({{ accepted_conversations|length }})</span>
+            {% endif %}
+        </a>
+        <a href="?tab=requests" class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors {% if active_tab == 'requests' %}border-stone-900 text-stone-900{% else %}border-transparent text-stone-500 hover:text-stone-700{% endif %}">
+            Requests
+            {% if requests_received %}
+            <span class="ml-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] inline-flex items-center justify-center px-1">{{ requests_received|length }}</span>
+            {% endif %}
+        </a>
+    </div>
+
+    {% if active_tab == 'messages' %}
+    <!-- Accepted conversations -->
+    {% if accepted_conversations %}
+    <div class="bg-white rounded-xl border border-stone-200 divide-y divide-stone-100 overflow-hidden">
+        {% for conv in accepted_conversations %}
+        <a href="{% url 'conversation-detail' pk=conv.pk %}" class="block px-5 py-4 hover:bg-stone-50 transition-colors">
+            <div class="flex items-center justify-between gap-4">
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-medium text-stone-900 truncate">
+                        {{ conv.other_participant.full_name|default:conv.other_participant.email }}
+                        {% if conv.is_agency_initiated %}
+                        <span class="text-xs text-stone-400 font-normal ml-1">(Agency)</span>
+                        {% endif %}
+                    </p>
+                    {% if conv.last_message %}
+                    <p class="text-xs text-stone-500 mt-0.5 truncate">{{ conv.last_message.content|truncatewords:12 }}</p>
+                    {% endif %}
+                </div>
+                <div class="flex-shrink-0 text-right">
+                    {% if conv.last_message_at %}
+                    <p class="text-xs text-stone-400">{{ conv.last_message_at|timesince }} ago</p>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white rounded-xl border border-stone-200 p-12 text-center">
+        <p class="text-stone-400 text-sm">No conversations yet.</p>
+        <p class="text-stone-400 text-xs mt-1">Visit a model's profile to start a conversation.</p>
+    </div>
+    {% endif %}
+
+    <!-- Sent requests waiting for response -->
+    {% if requests_sent %}
+    <div class="mt-8">
+        <h2 class="text-sm font-semibold text-stone-500 uppercase tracking-wide mb-3">Waiting for response</h2>
+        <div class="bg-white rounded-xl border border-stone-200 divide-y divide-stone-100 overflow-hidden">
+            {% for conv in requests_sent %}
+            <a href="{% url 'conversation-detail' pk=conv.pk %}" class="block px-5 py-4 hover:bg-stone-50 transition-colors">
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-sm font-medium text-stone-900">{{ conv.other_participant.full_name|default:conv.other_participant.email }}</p>
+                        <p class="text-xs text-amber-600 mt-0.5">Request pending</p>
+                    </div>
+                    <p class="text-xs text-stone-400">{{ conv.created_at|timesince }} ago</p>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% elif active_tab == 'requests' %}
+    <!-- Received message requests -->
+    {% if requests_received %}
+    <div class="bg-white rounded-xl border border-stone-200 divide-y divide-stone-100 overflow-hidden">
+        {% for conv in requests_received %}
+        <a href="{% url 'conversation-detail' pk=conv.pk %}" class="block px-5 py-4 hover:bg-stone-50 transition-colors">
+            <div class="flex items-center justify-between gap-4">
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-medium text-stone-900 truncate">{{ conv.other_participant.full_name|default:conv.other_participant.email }}</p>
+                    {% if conv.last_message %}
+                    <p class="text-xs text-stone-500 mt-0.5 truncate">{{ conv.last_message.content|truncatewords:12 }}</p>
+                    {% endif %}
+                </div>
+                <div class="flex-shrink-0">
+                    <span class="bg-amber-100 text-amber-700 text-xs font-medium px-2 py-0.5 rounded-full">New request</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white rounded-xl border border-stone-200 p-12 text-center">
+        <p class="text-stone-400 text-sm">No message requests.</p>
+    </div>
+    {% endif %}
+    {% endif %}
+
+</div>
+{% endblock %}
