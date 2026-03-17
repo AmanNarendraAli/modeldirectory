@@ -54,7 +54,6 @@ class AgencyRequirementForm(forms.ModelForm):
             "max_inseam_cm",
             "preferred_hair_colors",
             "preferred_eye_colors",
-            "accepts_beginners",
             "notes",
             "application_guidance_text",
             "is_current",

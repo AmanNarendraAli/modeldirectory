@@ -85,7 +85,6 @@ def agency_dashboard(request):
 
     status_filter = request.GET.get("status", "")
     gender = request.GET.get("gender", "")
-    experience_level = request.GET.get("experience_level", "").strip()
     selected_cities = request.GET.getlist("city")
     min_age = request.GET.get("min_age", "").strip()
     max_age = request.GET.get("max_age", "").strip()
@@ -112,9 +111,6 @@ def agency_dashboard(request):
 
     if gender:
         applications = applications.filter(applicant_profile__gender=gender)
-
-    if experience_level:
-        applications = applications.filter(applicant_profile__experience_level=experience_level)
 
     if selected_cities:
         from django.db.models import Q as DQ
@@ -230,7 +226,7 @@ def agency_dashboard(request):
     agency_requirements = list(agency.requirements.filter(is_current=True))
 
     has_filters = any([
-        status_filter, gender, experience_level, selected_cities, min_age, max_age, min_height, max_height,
+        status_filter, gender, selected_cities, min_age, max_age, min_height, max_height,
         min_bust, max_bust, min_waist, max_waist, min_hips, max_hips,
         min_inseam, max_inseam, selected_hair_colors, selected_eye_colors, verified,
     ])
@@ -240,10 +236,8 @@ def agency_dashboard(request):
         "applications": applications,
         "status_choices": Application.Status.choices,
         "gender_choices": ModelProfile.Gender.choices,
-        "experience_choices": ModelProfile.ExperienceLevel.choices,
         "status_filter": status_filter,
         "selected_gender": gender,
-        "selected_experience_level": experience_level,
         "selected_cities": selected_cities,
         "applicant_cities": applicant_cities,
         "applicant_hair_colors": applicant_hair_colors,

@@ -29,7 +29,6 @@ class OnboardingForm(forms.ModelForm):
             "city",
             "date_of_birth",
             "gender",
-            "experience_level",
             "bio",
             "height_cm",
             "bust_cm",
@@ -58,7 +57,6 @@ class OnboardingForm(forms.ModelForm):
             "date_of_birth": forms.DateInput(attrs={"type": "date"}),
             "bio": forms.Textarea(attrs={"rows": 4}),
             "gender": forms.Select(),
-            "experience_level": forms.Select(),
             "represented_by_agency": forms.Select(),
         }
 

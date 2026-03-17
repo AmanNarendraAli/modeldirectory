@@ -264,13 +264,6 @@
                 </script>
             {% endif %}
 
-            {% if profile.experience_level %}
-                <div class="bg-stone-50 rounded-xl border border-stone-100 p-5">
-                    <h3 class="font-semibold text-stone-900 text-sm mb-2">Experience level</h3>
-                    <p class="text-sm text-stone-700">{{ profile.get_experience_level_display }}</p>
-                </div>
-            {% endif %}
-
             {% if profile.available_for_editorial or profile.available_for_runway or profile.available_for_commercial or profile.available_for_fittings %}
                 <div class="bg-stone-50 rounded-xl border border-stone-100 p-5">
                     <h3 class="font-semibold text-stone-900 text-sm mb-3">Available for</h3>

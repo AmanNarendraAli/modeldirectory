@@ -61,15 +61,6 @@
                 </select>
             </div>
             <div>
-                <label class="block text-[10px] font-medium text-stone-500 mb-0.5">Experience</label>
-                <select name="experience_level" class="border border-stone-300 rounded-lg px-1 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-stone-400 w-full">
-                    <option value="">Any</option>
-                    {% for val, label in experience_choices %}
-                    <option value="{{ val }}" {% if val == selected_experience_level %}selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
                 <label class="block text-[10px] font-medium text-stone-500 mb-0.5">Verified</label>
                 <select name="verified" class="border border-stone-300 rounded-lg px-1 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-stone-400 w-full">
                     <option value="">Any</option>
