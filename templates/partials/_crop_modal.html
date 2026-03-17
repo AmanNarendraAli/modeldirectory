@@ -31,14 +31,13 @@
     var cropMinResNote = document.getElementById('cropMinResNote');
     var cropper = null;
     var activeInput = null;
-    var activeMinWidth = 0;
-    var activeMinHeight = 0;
+    var activeAspectRatio = NaN;
 
     function initCropper() {
         if (cropper) { cropper.destroy(); cropper = null; }
         cropper = new Cropper(cropPreviewImg, {
             viewMode: 1,
-            aspectRatio: NaN,
+            aspectRatio: activeAspectRatio,
             autoCropArea: 1,
             movable: true,
             zoomable: true,
@@ -46,11 +45,10 @@
         });
     }
 
-    function openModalWithDataUrl(dataUrl, input, minW, minH) {
+    function openModalWithDataUrl(dataUrl, input, ratio) {
         activeInput = input;
-        activeMinWidth = minW;
-        activeMinHeight = minH;
-        cropMinResNote.textContent = (minW && minH) ? 'Minimum size: ' + minW + ' \u00d7 ' + minH + ' px' : '';
+        activeAspectRatio = ratio;
+        cropMinResNote.textContent = isNaN(ratio) ? '' : (ratio === 1 ? 'Aspect ratio: 1:1 (square)' : 'Aspect ratio: ' + ratio + ':1');
 
         if (cropper) { cropper.destroy(); cropper = null; }
 
@@ -65,20 +63,20 @@
         cropPreviewImg.src = dataUrl;
     }
 
-    function openModalFromFile(file, input, minW, minH) {
+    function openModalFromFile(file, input, ratio) {
         var reader = new FileReader();
         reader.onload = function (e) {
-            openModalWithDataUrl(e.target.result, input, minW, minH);
+            openModalWithDataUrl(e.target.result, input, ratio);
         };
         reader.readAsDataURL(file);
     }
 
-    window.openCropFromUrl = function (url, input, minW, minH) {
+    window.openCropFromUrl = function (url, input, ratio) {
         fetch(url)
             .then(function (r) { return r.blob(); })
             .then(function (blob) {
                 var objectUrl = URL.createObjectURL(blob);
-                openModalWithDataUrl(objectUrl, input, minW, minH);
+                openModalWithDataUrl(objectUrl, input, ratio);
             });
     };
 
@@ -110,13 +108,8 @@
 
     document.getElementById('cropConfirm').addEventListener('click', function () {
         if (!cropper || !activeInput) return;
-        // No minWidth/minHeight — canvas is the true pixel size of the cropped area
         var canvas = cropper.getCroppedCanvas();
         if (!canvas) { closeModal(); return; }
-        if (activeMinWidth && activeMinHeight && (canvas.width < activeMinWidth || canvas.height < activeMinHeight)) {
-            alert('The cropped area is too small. Minimum required: ' + activeMinWidth + ' \u00d7 ' + activeMinHeight + ' px. Select a larger area or upload a larger image.');
-            return;
-        }
         canvas.toBlob(function (blob) {
             var fileName = (activeInput.dataset.filename || 'image') + '.webp';
             var file = new File([blob], fileName, { type: 'image/webp' });
@@ -141,9 +134,9 @@
         if (input.tagName !== 'INPUT' || input.type !== 'file' || !input.hasAttribute('data-crop')) return;
         var file = input.files[0];
         if (!file) return;
-        var minW = parseInt(input.dataset.cropMinWidth || '0', 10);
-        var minH = parseInt(input.dataset.cropMinHeight || '0', 10);
-        openModalFromFile(file, input, minW, minH);
+        var ratio = parseFloat(input.dataset.cropRatio);
+        if (isNaN(ratio)) ratio = NaN;
+        openModalFromFile(file, input, ratio);
     });
 
     // Wire re-crop buttons
@@ -152,10 +145,10 @@
             e.preventDefault();
             var inputEl = document.getElementById(btn.dataset.recropInput);
             var url = btn.dataset.recropUrl;
-            var minW = parseInt(btn.dataset.cropMinWidth || '0', 10);
-            var minH = parseInt(btn.dataset.cropMinHeight || '0', 10);
+            var ratio = parseFloat(btn.dataset.cropRatio);
+            if (isNaN(ratio)) ratio = NaN;
             if (!inputEl || !url) return;
-            window.openCropFromUrl(url, inputEl, minW, minH);
+            window.openCropFromUrl(url, inputEl, ratio);
         });
     });
 })();
