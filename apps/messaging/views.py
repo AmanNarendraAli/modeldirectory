@@ -1,9 +1,11 @@
 from django.contrib import messages as django_messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Max, Exists, OuterRef
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 
+from apps.accounts.models import User
+from apps.agencies.models import AgencyStaff
 from apps.models_app.models import ModelProfile
 from apps.notifications.models import Notification
 from .models import Conversation, Message, MessageBlock
@@ -13,7 +15,11 @@ def _get_user_conversations(user):
     """Return all conversations where the user is a participant."""
     return Conversation.objects.filter(
         Q(participant_one=user) | Q(participant_two=user)
-    ).select_related("participant_one", "participant_two", "initiated_by")
+    ).select_related(
+        "participant_one", "participant_one__model_profile",
+        "participant_two", "participant_two__model_profile",
+        "initiated_by",
+    )
 
 
 def _get_or_normalize_conversation(user_a, user_b):
@@ -33,9 +39,42 @@ def _is_blocked(user_a, user_b):
 
 def _attach_other_participant(conversations, user):
     """Attach `other_participant` attribute to each conversation for template use."""
+    from django.urls import reverse
+    from apps.agencies.models import AgencyStaff
+
     result = list(conversations)
+
+    # Collect all other participant IDs to batch-fetch agency staff info
+    other_users = []
     for conv in result:
         conv.other_participant = conv.get_other_participant(user)
+        other_users.append(conv.other_participant)
+
+    # Batch fetch agency staff roles with agency info
+    other_user_ids = [u.pk for u in other_users]
+    staff_map = {}
+    for staff in AgencyStaff.objects.filter(user_id__in=other_user_ids).select_related("agency"):
+        staff_map[staff.user_id] = staff
+
+    for conv in result:
+        other = conv.other_participant
+        if other.is_agency_staff and other.pk in staff_map:
+            staff = staff_map[other.pk]
+            conv.other_role_label = f"Agency Staff – {staff.agency.name}"
+            conv.other_profile_url = reverse("agency-detail", kwargs={"slug": staff.agency.slug})
+            conv.other_avatar_url = staff.agency.logo_thumbnail.url if staff.agency.logo else ""
+            conv.other_avatar_full_url = staff.agency.logo.url if staff.agency.logo else ""
+        elif other.is_model_user and hasattr(other, "model_profile"):
+            conv.other_role_label = "Model"
+            conv.other_profile_url = reverse("model-detail", kwargs={"slug": other.model_profile.slug})
+            conv.other_avatar_url = other.model_profile.profile_image_thumbnail.url if other.model_profile.profile_image else ""
+            conv.other_avatar_full_url = other.model_profile.profile_image.url if other.model_profile.profile_image else ""
+        else:
+            conv.other_role_label = ""
+            conv.other_profile_url = ""
+            conv.other_avatar_url = ""
+            conv.other_avatar_full_url = ""
+
     return result
 
 
@@ -92,18 +131,37 @@ def conversation_detail(request, pk):
     conversation.messages.filter(is_read=False).exclude(sender=request.user).update(is_read=True)
 
     # Determine if the user can send messages
-    can_send = (
-        conversation.status == Conversation.Status.ACCEPTED
-        or (conversation.status == Conversation.Status.PENDING and conversation.initiated_by == request.user)
-    )
-    # Even if pending and initiator, they already sent one message — can't send more
+    can_send = conversation.status == Conversation.Status.ACCEPTED
+    # Pending initiator can send only if they haven't sent any messages yet
+    # (happens when conversation was created via search with no initial message)
     if conversation.status == Conversation.Status.PENDING and conversation.initiated_by == request.user:
-        can_send = False
+        can_send = not conversation.messages.exists()
 
     is_pending_for_me = (
         conversation.status == Conversation.Status.PENDING
         and conversation.initiated_by != request.user
     )
+
+    # Profile URL and role label for other user
+    from django.urls import reverse
+    from apps.agencies.models import AgencyStaff
+
+    other_profile_url = ""
+    other_role_label = ""
+    other_avatar_url = ""
+    if other_user.is_agency_staff:
+        staff = AgencyStaff.objects.filter(user=other_user).select_related("agency").first()
+        if staff:
+            other_role_label = f"Agency Staff – {staff.agency.name}"
+            other_profile_url = reverse("agency-detail", kwargs={"slug": staff.agency.slug})
+            other_avatar_url = staff.agency.logo_thumbnail.url if staff.agency.logo else ""
+    elif other_user.is_model_user:
+        try:
+            other_role_label = "Model"
+            other_profile_url = reverse("model-detail", kwargs={"slug": other_user.model_profile.slug})
+            other_avatar_url = other_user.model_profile.profile_image_thumbnail.url if other_user.model_profile.profile_image else ""
+        except ModelProfile.DoesNotExist:
+            pass
 
     return render(request, "messaging/conversation_detail.html", {
         "conversation": conversation,
@@ -111,6 +169,9 @@ def conversation_detail(request, pk):
         "messages_list": all_messages,
         "can_send": can_send,
         "is_pending_for_me": is_pending_for_me,
+        "other_profile_url": other_profile_url,
+        "other_role_label": other_role_label,
+        "other_avatar_url": other_avatar_url,
     })
 
 
@@ -139,11 +200,17 @@ def start_conversation(request, slug):
         if existing.status == Conversation.Status.BLOCKED:
             django_messages.error(request, "You cannot message this user.")
             return redirect("model-detail", slug=slug)
-        if existing.status in (Conversation.Status.ACCEPTED, Conversation.Status.PENDING):
+        if existing.status == Conversation.Status.ACCEPTED:
+            return redirect("conversation-detail", pk=existing.pk)
+        if existing.status == Conversation.Status.PENDING:
+            if request.user.is_agency_staff:
+                existing.status = Conversation.Status.ACCEPTED
+                existing.save(update_fields=["status", "updated_at"])
             return redirect("conversation-detail", pk=existing.pk)
         # If declined, allow a new request by resetting status
+        is_agency = request.user.is_agency_staff
         if existing.status == Conversation.Status.DECLINED:
-            existing.status = Conversation.Status.PENDING
+            existing.status = Conversation.Status.ACCEPTED if is_agency else Conversation.Status.PENDING
             existing.initiated_by = request.user
             existing.save(update_fields=["status", "initiated_by", "updated_at"])
             conversation = existing
@@ -198,7 +265,13 @@ def send_message(request, pk):
     if not conversation.is_participant(request.user):
         return HttpResponseForbidden()
 
-    if conversation.status != Conversation.Status.ACCEPTED:
+    # Allow sending in accepted conversations, or first message in pending (from search)
+    is_pending_first_message = (
+        conversation.status == Conversation.Status.PENDING
+        and conversation.initiated_by == request.user
+        and not conversation.messages.exists()
+    )
+    if conversation.status != Conversation.Status.ACCEPTED and not is_pending_first_message:
         django_messages.error(request, "This conversation is not active.")
         return redirect("conversation-detail", pk=pk)
 
@@ -212,14 +285,15 @@ def send_message(request, pk):
         # Update conversation timestamp
         conversation.save(update_fields=["updated_at"])
 
-        # Notify the other participant
-        other_user = conversation.get_other_participant(request.user)
-        Notification.objects.create(
-            user=other_user,
-            notification_type=Notification.Type.NEW_MESSAGE,
-            actor=request.user,
-            target_conversation=conversation,
-        )
+        # Create notification for first message in a pending conversation
+        if is_pending_first_message:
+            other_user = conversation.get_other_participant(request.user)
+            Notification.objects.create(
+                user=other_user,
+                notification_type=Notification.Type.MESSAGE_REQUEST,
+                actor=request.user,
+                target_conversation=conversation,
+            )
 
     return redirect("conversation-detail", pk=pk)
 
@@ -280,3 +354,104 @@ def block_user(request, pk):
     conversation.save(update_fields=["status", "updated_at"])
     django_messages.success(request, "User blocked. They can no longer message you.")
     return redirect("message-inbox")
+
+
+@login_required
+def search_users_for_messaging(request):
+    """Search for users to message. Returns JSON."""
+    q = request.GET.get("q", "").strip()
+    if len(q) < 2:
+        return JsonResponse({"results": []})
+
+    user = request.user
+
+    # Get all blocked user IDs (bidirectional)
+    block_pairs = MessageBlock.objects.filter(
+        Q(blocker=user) | Q(blocked=user)
+    ).values_list("blocker", "blocked")
+    excluded_ids = {user.pk}
+    for blocker_id, blocked_id in block_pairs:
+        excluded_ids.add(blocker_id)
+        excluded_ids.add(blocked_id)
+    excluded_ids.discard(user.pk)
+    excluded_ids.add(user.pk)
+
+    results = []
+
+    # Search models by public_display_name
+    model_profiles = (
+        ModelProfile.objects
+        .filter(public_display_name__icontains=q)
+        .exclude(user_id__in=excluded_ids)
+        .select_related("user")[:10]
+    )
+    for p in model_profiles:
+        conv = _get_or_normalize_conversation(user, p.user)
+        results.append({
+            "user_id": p.user_id,
+            "name": p.public_display_name or p.user.full_name,
+            "role_label": "Model",
+            "avatar_url": p.profile_image_thumbnail.url if p.profile_image else "",
+            "initial": (p.public_display_name or p.user.full_name or "?")[0].upper(),
+            "conversation_id": conv.pk if conv else None,
+            "status": conv.status if conv else None,
+        })
+
+    # Deduplicate by user_id, cap at 10
+    seen = set()
+    deduped = []
+    for r in results:
+        if r["user_id"] not in seen:
+            seen.add(r["user_id"])
+            deduped.append(r)
+        if len(deduped) >= 10:
+            break
+
+    return JsonResponse({"results": deduped})
+
+
+@login_required
+def start_conversation_with_user(request, user_id):
+    """Start a new conversation with any user (from search). POST only."""
+    if request.method != "POST":
+        return redirect("message-inbox")
+
+    target_user = get_object_or_404(User, pk=user_id, is_active=True)
+
+    if target_user == request.user:
+        django_messages.error(request, "You cannot message yourself.")
+        return redirect("message-inbox")
+
+    if _is_blocked(request.user, target_user):
+        django_messages.error(request, "You cannot message this user.")
+        return redirect("message-inbox")
+
+    existing = _get_or_normalize_conversation(request.user, target_user)
+    if existing:
+        if existing.status == Conversation.Status.BLOCKED:
+            django_messages.error(request, "You cannot message this user.")
+            return redirect("message-inbox")
+        if existing.status == Conversation.Status.ACCEPTED:
+            return redirect("conversation-detail", pk=existing.pk)
+        if existing.status == Conversation.Status.PENDING:
+            if request.user.is_agency_staff:
+                existing.status = Conversation.Status.ACCEPTED
+                existing.save(update_fields=["status", "updated_at"])
+            return redirect("conversation-detail", pk=existing.pk)
+        if existing.status == Conversation.Status.DECLINED:
+            is_agency = request.user.is_agency_staff
+            existing.status = Conversation.Status.ACCEPTED if is_agency else Conversation.Status.PENDING
+            existing.initiated_by = request.user
+            existing.save(update_fields=["status", "initiated_by", "updated_at"])
+            return redirect("conversation-detail", pk=existing.pk)
+
+    is_agency = request.user.is_agency_staff
+    conversation = Conversation.objects.create(
+        participant_one=request.user,
+        participant_two=target_user,
+        initiated_by=request.user,
+        is_agency_initiated=is_agency,
+        status=Conversation.Status.ACCEPTED if is_agency else Conversation.Status.PENDING,
+    )
+
+    return redirect("conversation-detail", pk=conversation.pk)

@@ -10,7 +10,7 @@ from .models import Notification
 
 @login_required
 def notification_list(request):
-    notifications = Notification.objects.filter(user=request.user).select_related("actor")
+    notifications = Notification.objects.filter(user=request.user).select_related("actor", "target_application__agency")
 
     # Return partial HTML for the dropdown (last 5)
     if request.GET.get("format") == "partial":

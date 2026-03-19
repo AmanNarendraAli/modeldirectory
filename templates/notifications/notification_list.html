@@ -11,7 +11,7 @@
     {% if page_obj.object_list %}
     <div class="bg-white rounded-xl border border-stone-200 divide-y divide-stone-100 overflow-hidden">
         {% for notif in page_obj %}
-        <a href="{% if notif.notification_type == 'follow' and notif.target_profile %}{% url 'model-detail' notif.target_profile.slug %}{% elif notif.target_conversation %}{% url 'conversation-detail' pk=notif.target_conversation.pk %}{% else %}#{% endif %}" class="block px-5 py-4 hover:bg-stone-50 transition-colors {% if not notif.is_read %}bg-blue-50/40{% endif %}">
+        <a href="{% if notif.notification_type == 'follow' and notif.target_profile %}{% url 'model-detail' notif.target_profile.slug %}{% elif notif.notification_type == 'application_status_updated' %}{% url 'dashboard' %}{% elif notif.target_conversation %}{% url 'conversation-detail' pk=notif.target_conversation.pk %}{% else %}#{% endif %}" class="block px-5 py-4 hover:bg-stone-50 transition-colors {% if not notif.is_read %}bg-blue-50/40{% endif %}">
             <div class="flex items-center justify-between gap-4">
                 <div>
                     <p class="text-sm text-stone-800 font-medium">{{ notif.display_text }}</p>

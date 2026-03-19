@@ -12,13 +12,14 @@ Real-time notification system with navbar bell icon and full-page list.
 
 **Notification** (`apps/notifications/models.py`)
 - `user` (FK to User) - who receives the notification
-- `notification_type` - one of: `follow`, `message_request`, `new_message`
+- `notification_type` - one of: `follow`, `message_request`, `new_message`, `application_status_updated`
 - `actor` (FK to User) - who triggered it
 - `target_profile` (FK to ModelProfile, nullable) - for follow notifications
 - `target_conversation` (FK to Conversation, nullable) - for messaging notifications
 - `is_read` (bool, default False)
 - `created_at` (auto)
-- `display_text` property returns human-readable text based on type
+- `target_application` (FK to Application, nullable) - for application status notifications
+- `display_text` property returns human-readable text based on type. For `application_status_updated`, shows agency name (from `target_application.agency.name`) rather than the staff member's name.
 
 ### Signals (`apps/notifications/signals.py`)
 
@@ -28,7 +29,8 @@ Real-time notification system with navbar bell icon and full-page list.
 ### Context Processor (`apps/notifications/context_processors.py`)
 
 - `unread_notification_count(request)` injects `{{ unread_notification_count }}` into every template
-- Registered in `modeldirectory/settings/base.py` under TEMPLATES context_processors
+- `unread_message_indicator(request)` injects `{{ has_unread_messages }}` (bool) into every template — used for red dot on Messages nav link
+- Both registered in `modeldirectory/settings/base.py` under TEMPLATES context_processors
 
 ### URLs
 
@@ -54,6 +56,7 @@ Real-time notification system with navbar bell icon and full-page list.
 
 - Bell icon with red badge (unread count) between Messages link and Logout
 - Mobile menu: "Notifications" link with badge count
+- Red dot next to "Messages" link (desktop + mobile) when `has_unread_messages` is true — disappears when conversations are opened
 
 ---
 
@@ -95,7 +98,9 @@ Model-to-model messaging with request/accept flow. Agency-to-model messaging aut
 | Recipient accepts | status=accepted, both can message freely |
 | Recipient declines | status=declined, removed from recipient's inbox, sender can re-request later |
 | Recipient blocks | MessageBlock created, status=blocked, sender can never request again |
-| Agency -> Model | status=accepted immediately, is_agency_initiated=True |
+| Agency -> Model (new) | status=accepted immediately, is_agency_initiated=True. No modal/request flow — direct redirect to chat |
+| Agency hits pending conv | Auto-accepts the conversation regardless of who initiated it |
+| Agency hits declined conv | Resets to accepted (not pending) |
 | Model -> Agency | Not allowed (no Message button on agency pages) |
 | Existing accepted conv | Messages added directly, no request flow |
 | Blocked user | Message button hidden, start_conversation returns error |
@@ -105,7 +110,9 @@ Model-to-model messaging with request/accept flow. Agency-to-model messaging aut
 | URL | View | Name | Method |
 |-----|------|------|--------|
 | `/messages/` | `inbox` | `message-inbox` | GET |
+| `/messages/search/` | `search_users_for_messaging` | `search-users-for-messaging` | GET |
 | `/messages/new/<slug>/` | `start_conversation` | `start-conversation` | POST |
+| `/messages/new-by-user/<user_id>/` | `start_conversation_with_user` | `start-conversation-with-user` | POST |
 | `/messages/<pk>/` | `conversation_detail` | `conversation-detail` | GET |
 | `/messages/<pk>/send/` | `send_message` | `send-message` | POST |
 | `/messages/<pk>/accept/` | `accept_request` | `accept-request` | POST |
@@ -118,27 +125,31 @@ Model-to-model messaging with request/accept flow. Agency-to-model messaging aut
 - `_get_user_conversations(user)` - returns all conversations for a user
 - `_get_or_normalize_conversation(user_a, user_b)` - finds existing conversation between two users (order-independent)
 - `_is_blocked(user_a, user_b)` - checks if either user blocked the other
-- `_attach_other_participant(conversations, user)` - pre-computes `other_participant` on each conversation for templates (Django templates can't call methods with arguments)
+- `_attach_other_participant(conversations, user)` - pre-computes `other_participant`, `other_role_label`, `other_profile_url`, `other_avatar_url`, `other_avatar_full_url` on each conversation. Batch-fetches AgencyStaff for efficiency.
 
 **Views:**
-- `inbox` - Messages tab (accepted convos) + Requests tab (pending received) + "Waiting for response" (pending sent)
-- `conversation_detail` - Full thread, marks other user's messages as read, shows accept/decline/block for pending recipient
-- `start_conversation` - Creates conversation + first message. Handles: self-prevention, block checking, existing conversation reuse, declined re-request, agency auto-accept
-- `send_message` - Only works for accepted conversations. Creates notification for other participant
+- `inbox` - Messages tab (accepted convos) + Requests tab (pending received) + "Waiting for response" (pending sent). Includes search bar for finding models to message.
+- `conversation_detail` - Full thread, marks other user's messages as read, shows accept/decline/block for pending recipient. Pending initiators can send first message if conversation was created via search (no initial message).
+- `start_conversation` - Creates conversation + first message (from model profile page). Handles: self-prevention, block checking, existing conversation reuse, declined re-request, agency auto-accept of any pending conversation.
+- `start_conversation_with_user` - Creates conversation by user ID (from search). No initial message — user types first message on the conversation detail page. Same checks as `start_conversation`.
+- `search_users_for_messaging` - GET endpoint returning JSON. Searches models by `public_display_name`. Excludes self and blocked users. Returns conversation status for each result so frontend knows whether to open existing chat or create new one.
+- `send_message` - Works for accepted conversations and first message in pending conversations (from search flow). Creates MESSAGE_REQUEST notification for first message in pending conversations.
 - `accept_request` / `decline_request` / `block_user` - Status changes with permission checks (only recipient can accept/decline, either party can block)
 
 ### Templates
 
 | Template | Purpose |
 |----------|---------|
-| `templates/messaging/inbox.html` | Two-tab inbox (Messages/Requests), conversation list with other participant name, last message preview, timestamps |
-| `templates/messaging/conversation_detail.html` | Chat bubbles (dark=sender, light=received), pending request banner with Accept/Decline/Block, message input form, auto-scroll to bottom |
+| `templates/messaging/inbox.html` | Two-tab inbox (Messages/Requests) with search bar (right-aligned). Conversation rows show avatar (lightbox-zoomable), name (clickable to profile), role label pill, last message preview, timestamps. Search dropdown with debounced fetch (250ms). |
+| `templates/messaging/conversation_detail.html` | Chat header with clickable avatar + name linking to profile, role label. Message thread, pending request banner with Accept/Decline/Block, message input form, auto-scroll to bottom. |
 
 ### Entry Points
 
 **Model profile page** (`templates/models_app/model_detail.html`):
 - "Message" button next to Follow button
-- Shows: "Message" link (accepted conv exists), "Request Pending" badge (pending conv), or "Message" button -> modal with textarea (no conv)
+- Shows: "Message" link (accepted conv exists), "Request Pending" badge (pending conv), or "Message" button (no conv)
+- For regular users: opens modal with textarea and "Send Request" button
+- For agency staff: direct POST form — no modal, creates accepted conversation and redirects to chat immediately
 - Hidden for: own profile, anonymous users, blocked users
 - View context from `apps/models_app/views.py` `model_detail`: `can_message`, `existing_conversation`, `is_blocked`
 
@@ -154,11 +165,12 @@ Model-to-model messaging with request/accept flow. Agency-to-model messaging aut
 
 | File | Changes |
 |------|---------|
-| `modeldirectory/settings/base.py` | Added `apps.notifications` and `apps.messaging` to INSTALLED_APPS, added notification context processor |
+| `modeldirectory/settings/base.py` | Added `apps.notifications` and `apps.messaging` to INSTALLED_APPS, added notification + unread message context processors |
 | `modeldirectory/urls.py` | Added `notifications/` and `messages/` URL includes |
-| `templates/partials/_navbar.html` | Added Messages link, notification bell include, mobile menu entries |
+| `templates/partials/_navbar.html` | Messages link with unread red dot, notification bell include, mobile menu entries with red dot |
 | `apps/models_app/views.py` | `model_detail` passes messaging context (can_message, existing_conversation, is_blocked) |
 | `apps/dashboard/views.py` | `applicant_detail` passes applicant_conversation context |
+| `apps/accounts/admin.py` | UserAdmin with ModelProfile and AgencyStaff inlines (collapsible) for viewing all user details |
 
 ---
 

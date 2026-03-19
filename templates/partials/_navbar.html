@@ -27,7 +27,7 @@
             <div class="flex items-center gap-3">
                 {% if user.is_authenticated %}
                 <a href="{% url 'dashboard' %}" class="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors hidden sm:block">Dashboard</a>
-                <a href="{% url 'message-inbox' %}" class="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors hidden sm:block">Messages</a>
+                <a href="{% url 'message-inbox' %}" class="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors hidden sm:flex items-center gap-1.5">Messages{% if has_unread_messages %}<span class="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></span>{% endif %}</a>
                 {% include "partials/_notification_bell.html" %}
                 <form method="post" action="{% url 'logout' %}">
                     {% csrf_token %}
@@ -51,7 +51,7 @@
             <a href="{% url 'resource-list' %}" class="block px-4 py-2 text-sm text-stone-600 hover:bg-stone-50">Resources</a>
             {% if user.is_authenticated %}
             <a href="{% url 'dashboard' %}" class="block px-4 py-2 text-sm text-stone-600 hover:bg-stone-50">Dashboard</a>
-            <a href="{% url 'message-inbox' %}" class="block px-4 py-2 text-sm text-stone-600 hover:bg-stone-50">Messages</a>
+            <a href="{% url 'message-inbox' %}" class="flex items-center gap-1.5 px-4 py-2 text-sm text-stone-600 hover:bg-stone-50">Messages{% if has_unread_messages %}<span class="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></span>{% endif %}</a>
             <a href="{% url 'notification-list' %}" class="block px-4 py-2 text-sm text-stone-600 hover:bg-stone-50">
                 Notifications
                 {% if unread_notification_count > 0 %}

@@ -355,6 +355,14 @@ def update_application_status(request, application_id):
         from apps.core.emails import send_status_changed_email
         send_status_changed_email(application)
 
+        from apps.notifications.models import Notification
+        Notification.objects.create(
+            user=application.applicant_profile.user,
+            notification_type=Notification.Type.APPLICATION_STATUS_UPDATED,
+            actor=request.user,
+            target_application=application,
+        )
+
     return redirect("applicant-detail", application_id=application_id)
 
 

@@ -8,47 +8,86 @@
         <h1 class="font-display text-3xl font-bold text-stone-900">Messages</h1>
     </div>
 
-    <!-- Tabs -->
-    <div class="flex gap-1 mb-6 border-b border-stone-200">
-        <a href="?tab=messages" class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors {% if active_tab == 'messages' %}border-stone-900 text-stone-900{% else %}border-transparent text-stone-500 hover:text-stone-700{% endif %}">
-            Messages
-            {% if accepted_conversations %}
-            <span class="ml-1 text-xs text-stone-400">({{ accepted_conversations|length }})</span>
-            {% endif %}
-        </a>
-        <a href="?tab=requests" class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors {% if active_tab == 'requests' %}border-stone-900 text-stone-900{% else %}border-transparent text-stone-500 hover:text-stone-700{% endif %}">
-            Requests
-            {% if requests_received %}
-            <span class="ml-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] inline-flex items-center justify-center px-1">{{ requests_received|length }}</span>
-            {% endif %}
-        </a>
+    <!-- Tabs + Search -->
+    <div class="flex items-center justify-between mb-6 border-b border-stone-200">
+        <div class="flex gap-1">
+            <a href="?tab=messages" class="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors {% if active_tab == 'messages' %}border-stone-900 text-stone-900{% else %}border-transparent text-stone-500 hover:text-stone-700{% endif %}">
+                Messages
+                {% if accepted_conversations %}
+                <span class="text-xs text-stone-400">({{ accepted_conversations|length }})</span>
+                {% endif %}
+                {% if unread_message_count %}
+                <span class="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></span>
+                {% endif %}
+            </a>
+            <a href="?tab=requests" class="px-4 py-2.5 text-sm font-medium border-b-2 transition-colors {% if active_tab == 'requests' %}border-stone-900 text-stone-900{% else %}border-transparent text-stone-500 hover:text-stone-700{% endif %}">
+                Requests
+                {% if requests_received %}
+                <span class="ml-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] inline-flex items-center justify-center px-1">{{ requests_received|length }}</span>
+                {% endif %}
+            </a>
+        </div>
+        <!-- Search -->
+        <div class="relative mb-[-1px]" id="msgSearchContainer">
+            <input type="text" id="msgSearchInput" placeholder="Search users…" autocomplete="off"
+                   class="border border-stone-300 rounded-lg px-3 py-1.5 text-sm w-48 sm:w-56 focus:outline-none focus:ring-2 focus:ring-stone-400 focus:border-transparent">
+            <div id="msgSearchDropdown" class="absolute top-full right-0 z-30 bg-white border border-stone-200 rounded-lg shadow-lg mt-1 hidden overflow-y-auto w-72 sm:w-80" style="max-height:20rem;">
+                <div id="msgSearchInner"></div>
+            </div>
+        </div>
     </div>
+
+    <!-- Hidden form for starting new conversations from search -->
+    <form id="msgStartForm" method="post" class="hidden">
+        {% csrf_token %}
+    </form>
 
     {% if active_tab == 'messages' %}
     <!-- Accepted conversations -->
     {% if accepted_conversations %}
     <div class="bg-white rounded-xl border border-stone-200 divide-y divide-stone-100 overflow-hidden">
         {% for conv in accepted_conversations %}
-        <a href="{% url 'conversation-detail' pk=conv.pk %}" class="block px-5 py-4 hover:bg-stone-50 transition-colors">
-            <div class="flex items-center justify-between gap-4">
-                <div class="min-w-0 flex-1">
-                    <p class="text-sm font-medium text-stone-900 truncate">
-                        {{ conv.other_participant.full_name|default:conv.other_participant.email }}
-                        {% if conv.is_agency_initiated %}
-                        <span class="text-xs text-stone-400 font-normal ml-1">(Agency)</span>
-                        {% endif %}
-                    </p>
-                    {% if conv.last_message %}
-                    <p class="text-xs text-stone-500 mt-0.5 truncate">{{ conv.last_message.content|truncatewords:12 }}</p>
-                    {% endif %}
-                </div>
-                <div class="flex-shrink-0 text-right">
-                    {% if conv.last_message_at %}
-                    <p class="text-xs text-stone-400">{{ conv.last_message_at|timesince }} ago</p>
-                    {% endif %}
-                </div>
+        <div class="flex items-center gap-4 px-5 py-4 hover:bg-stone-50 transition-colors">
+            <!-- Avatar -->
+            {% if conv.other_avatar_url %}
+            <img src="{{ conv.other_avatar_url }}" alt="{{ conv.other_participant.full_name }}" class="w-10 h-10 rounded-full object-cover flex-shrink-0 cursor-zoom-in" data-lightbox="{{ conv.other_avatar_full_url }}">
+            {% else %}
+            <div class="w-10 h-10 rounded-full bg-stone-200 flex-shrink-0 flex items-center justify-center">
+                <span class="text-sm font-medium text-stone-500">{{ conv.other_participant.full_name|truncatechars:1 }}</span>
             </div>
-        </a>
+            {% endif %}
+            <!-- Content -->
+            <div class="min-w-0 flex-1">
+                <a href="{% url 'conversation-detail' pk=conv.pk %}" class="block">
+                    <div class="flex items-center gap-2">
+                        {% if conv.other_profile_url %}
+                        <span class="text-sm font-medium text-stone-900 hover:underline truncate" onclick="event.preventDefault(); window.location='{{ conv.other_profile_url }}'">
+                            {{ conv.other_participant.full_name|default:conv.other_participant.email }}
+                        </span>
+                        {% else %}
+                        <span class="text-sm font-medium text-stone-900 truncate">
+                            {{ conv.other_participant.full_name|default:conv.other_participant.email }}
+                        </span>
+                        {% endif %}
+                        {% if conv.other_role_label %}
+                        {% if conv.other_profile_url %}
+                        <span class="text-[11px] text-stone-400 font-medium bg-stone-100 px-1.5 py-0.5 rounded flex-shrink-0 hover:bg-stone-200 transition-colors" onclick="event.preventDefault(); window.location='{{ conv.other_profile_url }}'">{{ conv.other_role_label }}</span>
+                        {% else %}
+                        <span class="text-[11px] text-stone-400 font-medium bg-stone-100 px-1.5 py-0.5 rounded flex-shrink-0">{{ conv.other_role_label }}</span>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                    {% if conv.last_message %}
+                    <p class="text-xs text-stone-500 mt-1 truncate">{{ conv.last_message.content|truncatewords:12 }}</p>
+                    {% endif %}
+                </a>
+            </div>
+            <div class="flex-shrink-0 text-right">
+                {% if conv.last_message_at %}
+                <a href="{% url 'conversation-detail' pk=conv.pk %}" class="text-xs text-stone-400">{{ conv.last_message_at|timesince }} ago</a>
+                {% endif %}
+            </div>
+        </div>
         {% endfor %}
     </div>
     {% else %}
@@ -64,15 +103,47 @@
         <h2 class="text-sm font-semibold text-stone-500 uppercase tracking-wide mb-3">Waiting for response</h2>
         <div class="bg-white rounded-xl border border-stone-200 divide-y divide-stone-100 overflow-hidden">
             {% for conv in requests_sent %}
-            <a href="{% url 'conversation-detail' pk=conv.pk %}" class="block px-5 py-4 hover:bg-stone-50 transition-colors">
-                <div class="flex items-center justify-between gap-4">
-                    <div>
-                        <p class="text-sm font-medium text-stone-900">{{ conv.other_participant.full_name|default:conv.other_participant.email }}</p>
-                        <p class="text-xs text-amber-600 mt-0.5">Request pending</p>
+            <div class="flex items-center gap-4 px-5 py-4 hover:bg-stone-50 transition-colors">
+                <!-- Avatar -->
+                {% if conv.other_profile_url %}
+                <a href="{{ conv.other_profile_url }}" class="flex-shrink-0">
+                    {% if conv.other_avatar_url %}
+                    <img src="{{ conv.other_avatar_url }}" alt="{{ conv.other_participant.full_name }}" class="w-10 h-10 rounded-full object-cover">
+                    {% else %}
+                    <div class="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center">
+                        <span class="text-sm font-medium text-stone-500">{{ conv.other_participant.full_name|truncatechars:1 }}</span>
                     </div>
-                    <p class="text-xs text-stone-400">{{ conv.created_at|timesince }} ago</p>
+                    {% endif %}
+                </a>
+                {% else %}
+                {% if conv.other_avatar_url %}
+                <img src="{{ conv.other_avatar_url }}" alt="{{ conv.other_participant.full_name }}" class="w-10 h-10 rounded-full object-cover flex-shrink-0">
+                {% else %}
+                <div class="w-10 h-10 rounded-full bg-stone-200 flex-shrink-0 flex items-center justify-center">
+                    <span class="text-sm font-medium text-stone-500">{{ conv.other_participant.full_name|truncatechars:1 }}</span>
                 </div>
-            </a>
+                {% endif %}
+                {% endif %}
+                <!-- Content -->
+                <a href="{% url 'conversation-detail' pk=conv.pk %}" class="min-w-0 flex-1 block">
+                    <div class="flex items-center gap-2">
+                        {% if conv.other_profile_url %}
+                        <span class="text-sm font-medium text-stone-900 hover:underline truncate" onclick="event.preventDefault(); window.location='{{ conv.other_profile_url }}'">{{ conv.other_participant.full_name|default:conv.other_participant.email }}</span>
+                        {% else %}
+                        <p class="text-sm font-medium text-stone-900 truncate">{{ conv.other_participant.full_name|default:conv.other_participant.email }}</p>
+                        {% endif %}
+                        {% if conv.other_role_label %}
+                        {% if conv.other_profile_url %}
+                        <span class="text-[11px] text-stone-400 font-medium bg-stone-100 px-1.5 py-0.5 rounded flex-shrink-0 hover:bg-stone-200 transition-colors" onclick="event.preventDefault(); window.location='{{ conv.other_profile_url }}'">{{ conv.other_role_label }}</span>
+                        {% else %}
+                        <span class="text-[11px] text-stone-400 font-medium bg-stone-100 px-1.5 py-0.5 rounded flex-shrink-0">{{ conv.other_role_label }}</span>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                    <p class="text-xs text-amber-600 mt-1">Request pending</p>
+                </a>
+                <a href="{% url 'conversation-detail' pk=conv.pk %}" class="text-xs text-stone-400 flex-shrink-0">{{ conv.created_at|timesince }} ago</a>
+            </div>
             {% endfor %}
         </div>
     </div>
@@ -83,19 +154,51 @@
     {% if requests_received %}
     <div class="bg-white rounded-xl border border-stone-200 divide-y divide-stone-100 overflow-hidden">
         {% for conv in requests_received %}
-        <a href="{% url 'conversation-detail' pk=conv.pk %}" class="block px-5 py-4 hover:bg-stone-50 transition-colors">
-            <div class="flex items-center justify-between gap-4">
-                <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-4 px-5 py-4 hover:bg-stone-50 transition-colors">
+            <!-- Avatar -->
+            {% if conv.other_profile_url %}
+            <a href="{{ conv.other_profile_url }}" class="flex-shrink-0">
+                {% if conv.other_avatar_url %}
+                <img src="{{ conv.other_avatar_url }}" alt="{{ conv.other_participant.full_name }}" class="w-10 h-10 rounded-full object-cover">
+                {% else %}
+                <div class="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center">
+                    <span class="text-sm font-medium text-stone-500">{{ conv.other_participant.full_name|truncatechars:1 }}</span>
+                </div>
+                {% endif %}
+            </a>
+            {% else %}
+            {% if conv.other_avatar_url %}
+            <img src="{{ conv.other_avatar_url }}" alt="{{ conv.other_participant.full_name }}" class="w-10 h-10 rounded-full object-cover flex-shrink-0">
+            {% else %}
+            <div class="w-10 h-10 rounded-full bg-stone-200 flex-shrink-0 flex items-center justify-center">
+                <span class="text-sm font-medium text-stone-500">{{ conv.other_participant.full_name|truncatechars:1 }}</span>
+            </div>
+            {% endif %}
+            {% endif %}
+            <!-- Content -->
+            <a href="{% url 'conversation-detail' pk=conv.pk %}" class="min-w-0 flex-1 block">
+                <div class="flex items-center gap-2">
+                    {% if conv.other_profile_url %}
+                    <span class="text-sm font-medium text-stone-900 hover:underline truncate" onclick="event.preventDefault(); window.location='{{ conv.other_profile_url }}'">{{ conv.other_participant.full_name|default:conv.other_participant.email }}</span>
+                    {% else %}
                     <p class="text-sm font-medium text-stone-900 truncate">{{ conv.other_participant.full_name|default:conv.other_participant.email }}</p>
-                    {% if conv.last_message %}
-                    <p class="text-xs text-stone-500 mt-0.5 truncate">{{ conv.last_message.content|truncatewords:12 }}</p>
+                    {% endif %}
+                    {% if conv.other_role_label %}
+                    {% if conv.other_profile_url %}
+                    <span class="text-[11px] text-stone-400 font-medium bg-stone-100 px-1.5 py-0.5 rounded flex-shrink-0 hover:bg-stone-200 transition-colors" onclick="event.preventDefault(); window.location='{{ conv.other_profile_url }}'">{{ conv.other_role_label }}</span>
+                    {% else %}
+                    <span class="text-[11px] text-stone-400 font-medium bg-stone-100 px-1.5 py-0.5 rounded flex-shrink-0">{{ conv.other_role_label }}</span>
+                    {% endif %}
                     {% endif %}
                 </div>
-                <div class="flex-shrink-0">
-                    <span class="bg-amber-100 text-amber-700 text-xs font-medium px-2 py-0.5 rounded-full">New request</span>
-                </div>
+                {% if conv.last_message %}
+                <p class="text-xs text-stone-500 mt-1 truncate">{{ conv.last_message.content|truncatewords:12 }}</p>
+                {% endif %}
+            </a>
+            <div class="flex-shrink-0">
+                <span class="bg-amber-100 text-amber-700 text-xs font-medium px-2 py-0.5 rounded-full">New request</span>
             </div>
-        </a>
+        </div>
         {% endfor %}
     </div>
     {% else %}
@@ -106,4 +209,90 @@
     {% endif %}
 
 </div>
+
+{% include "partials/_lightbox.html" %}
+
+<script>
+(function () {
+    var input = document.getElementById('msgSearchInput');
+    var dropdown = document.getElementById('msgSearchDropdown');
+    var inner = document.getElementById('msgSearchInner');
+    var startForm = document.getElementById('msgStartForm');
+    var timer = null;
+    var searchUrl = '{% url "search-users-for-messaging" %}';
+
+    function renderResults(results) {
+        inner.innerHTML = '';
+        if (!results.length) {
+            inner.innerHTML = '<p class="px-4 py-3 text-sm text-stone-400">No users found.</p>';
+            dropdown.classList.remove('hidden');
+            return;
+        }
+        results.forEach(function (r) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'w-full text-left flex items-center gap-3 px-4 py-3 hover:bg-stone-50 transition-colors border-b border-stone-100 last:border-b-0';
+
+            // Avatar
+            var avatarHtml;
+            if (r.avatar_url) {
+                avatarHtml = '<img src="' + r.avatar_url + '" class="w-8 h-8 rounded-full object-cover flex-shrink-0">';
+            } else {
+                avatarHtml = '<div class="w-8 h-8 rounded-full bg-stone-200 flex-shrink-0 flex items-center justify-center"><span class="text-xs font-medium text-stone-500">' + r.initial + '</span></div>';
+            }
+
+            // Status tag
+            var statusHtml = '';
+            if (r.status === 'accepted') {
+                statusHtml = '<span class="text-[10px] text-stone-400">Active chat</span>';
+            } else if (r.status === 'pending') {
+                statusHtml = '<span class="text-[10px] text-amber-600">Request pending</span>';
+            }
+
+            btn.innerHTML = avatarHtml +
+                '<div class="min-w-0 flex-1">' +
+                    '<div class="flex items-center gap-2">' +
+                        '<span class="text-sm font-medium text-stone-900 truncate">' + r.name + '</span>' +
+                        '<span class="text-[11px] text-stone-400 font-medium bg-stone-100 px-1.5 py-0.5 rounded flex-shrink-0">' + r.role_label + '</span>' +
+                    '</div>' +
+                    (statusHtml ? '<div class="mt-0.5">' + statusHtml + '</div>' : '') +
+                '</div>';
+
+            btn.addEventListener('click', function () { handleSelect(r); });
+            inner.appendChild(btn);
+        });
+        dropdown.classList.remove('hidden');
+    }
+
+    function handleSelect(r) {
+        dropdown.classList.add('hidden');
+        input.value = '';
+        if (r.conversation_id && (r.status === 'accepted' || r.status === 'pending')) {
+            window.location = '/messages/' + r.conversation_id + '/';
+        } else {
+            // POST to create new conversation, then redirect
+            startForm.action = '/messages/new-by-user/' + r.user_id + '/';
+            startForm.classList.remove('hidden');
+            startForm.submit();
+        }
+    }
+
+    input.addEventListener('input', function () {
+        clearTimeout(timer);
+        var q = input.value.trim();
+        if (q.length < 2) { dropdown.classList.add('hidden'); return; }
+        timer = setTimeout(function () {
+            fetch(searchUrl + '?q=' + encodeURIComponent(q))
+                .then(function (res) { return res.json(); })
+                .then(function (data) { renderResults(data.results || []); });
+        }, 250);
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+})();
+</script>
 {% endblock %}

@@ -7,11 +7,12 @@ class Notification(models.Model):
         FOLLOW = "follow", "New Follower"
         MESSAGE_REQUEST = "message_request", "Message Request"
         NEW_MESSAGE = "new_message", "New Message"
+        APPLICATION_STATUS_UPDATED = "application_status_updated", "Application Status Updated"
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications"
     )
-    notification_type = models.CharField(max_length=20, choices=Type.choices)
+    notification_type = models.CharField(max_length=30, choices=Type.choices)
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="triggered_notifications"
     )
@@ -20,6 +21,9 @@ class Notification(models.Model):
     )
     target_conversation = models.ForeignKey(
         "messaging.Conversation", on_delete=models.CASCADE, null=True, blank=True
+    )
+    target_application = models.ForeignKey(
+        "applications.Application", on_delete=models.CASCADE, null=True, blank=True
     )
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -39,4 +43,12 @@ class Notification(models.Model):
             return f"{actor_name} wants to message you"
         elif self.notification_type == self.Type.NEW_MESSAGE:
             return f"New message from {actor_name}"
+        elif self.notification_type == self.Type.APPLICATION_STATUS_UPDATED:
+            if self.target_application:
+                agency_name = self.target_application.agency.name
+                status = self.target_application.get_status_display()
+            else:
+                agency_name = actor_name
+                status = "updated"
+            return f"Your application to {agency_name} was marked as {status}"
         return f"Notification from {actor_name}"
