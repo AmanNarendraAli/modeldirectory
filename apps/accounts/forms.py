@@ -70,28 +70,6 @@ class OnboardingForm(forms.ModelForm):
         self.fields["represented_by_agency"].required = False
         self.fields["represented_by_agency"].empty_label = "— Independent (no agency) —"
 
-    def _check_image_dimensions(self, field_name, min_w, min_h):
-        img = self.cleaned_data.get(field_name)
-        if img and hasattr(img, 'file'):
-            try:
-                from PIL import Image
-                pil = Image.open(img)
-                w, h = pil.size
-                if w < min_w or h < min_h:
-                    raise forms.ValidationError(
-                        f"Image must be at least {min_w}×{min_h} px (uploaded: {w}×{h} px)."
-                    )
-            except Exception as exc:
-                if isinstance(exc, forms.ValidationError):
-                    raise
-        return img
-
-    def clean_profile_image(self):
-        return self._check_image_dimensions("profile_image", 400, 400)
-
-    def clean_cover_image(self):
-        return self._check_image_dimensions("cover_image", 1200, 400)
-
     def clean_represented_by_agency(self):
         agency = self.cleaned_data.get("represented_by_agency")
         if agency and self.instance and self.instance.pk:

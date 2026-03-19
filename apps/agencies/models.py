@@ -90,7 +90,6 @@ class AgencyRequirement(models.Model):
         help_text="Comma-separated preferred eye colours, e.g. Brown, Green, Hazel"
     )
     notes = models.TextField(blank=True)
-    accepts_beginners = models.BooleanField(default=False)
     application_guidance_text = models.TextField(blank=True)
     active_from = models.DateField(null=True, blank=True)
     active_to = models.DateField(null=True, blank=True)

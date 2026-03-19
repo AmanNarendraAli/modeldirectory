@@ -42,8 +42,8 @@ class AgencyPortfolioPostAdmin(admin.ModelAdmin):
 
 @admin.register(AgencyRequirement)
 class AgencyRequirementAdmin(admin.ModelAdmin):
-    list_display = ("agency", "category", "min_height_cm", "is_current", "accepts_beginners")
-    list_filter = ("category", "is_current", "accepts_beginners")
+    list_display = ("agency", "category", "min_height_cm", "is_current")
+    list_filter = ("category", "is_current")
     search_fields = ("agency__name",)
 
 

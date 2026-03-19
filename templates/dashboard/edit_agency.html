@@ -80,8 +80,7 @@
                         <button type="button"
                             data-recrop-input="{{ form.logo.id_for_label }}"
                             data-recrop-url="{{ agency.logo.url }}"
-                            data-crop-min-width="200"
-                            data-crop-min-height="200"
+                            data-crop-ratio="1"
                             class="mt-2 text-xs text-stone-500 hover:text-stone-800 flex items-center gap-1 transition-colors">
                             ✂ Recrop existing
                         </button>
@@ -90,7 +89,7 @@
                     <div class="flex-1 w-full">
                         <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.logo.label }}</label>
                         {{ form.logo.errors }}
-                        <input type="file" name="{{ form.logo.name }}" accept="image/*" class="w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer" id="{{ form.logo.id_for_label }}" data-crop data-crop-min-width="200" data-crop-min-height="200" data-filename="logo">
+                        <input type="file" name="{{ form.logo.name }}" accept="image/*" class="w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer" id="{{ form.logo.id_for_label }}" data-crop data-crop-ratio="1" data-filename="logo">
                         {% if agency.logo %}
                         <div class="flex items-center gap-2 mt-2">
                             <input type="checkbox" name="logo-clear" id="logo-clear_id" class="rounded border-stone-300 text-stone-900 focus:ring-stone-900">
@@ -110,8 +109,7 @@
                         <button type="button"
                             data-recrop-input="{{ form.cover_image.id_for_label }}"
                             data-recrop-url="{{ agency.cover_image.url }}"
-                            data-crop-min-width="1200"
-                            data-crop-min-height="400"
+                            data-crop-ratio="3"
                             class="mt-2 text-xs text-stone-500 hover:text-stone-800 flex items-center gap-1 transition-colors">
                             ✂ Recrop existing
                         </button>
@@ -120,7 +118,7 @@
                     <div class="flex-1 w-full">
                         <label class="block text-sm font-medium text-stone-700 mb-1">{{ form.cover_image.label }}</label>
                         {{ form.cover_image.errors }}
-                        <input type="file" name="{{ form.cover_image.name }}" accept="image/*" class="w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer" id="{{ form.cover_image.id_for_label }}" data-crop data-crop-min-width="1200" data-crop-min-height="400" data-filename="cover_image">
+                        <input type="file" name="{{ form.cover_image.name }}" accept="image/*" class="w-full text-sm text-stone-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer" id="{{ form.cover_image.id_for_label }}" data-crop data-crop-ratio="3" data-filename="cover_image">
                         {% if agency.cover_image %}
                         <div class="flex items-center gap-2 mt-2">
                             <input type="checkbox" name="cover_image-clear" id="cover_image-clear_id" class="rounded border-stone-300 text-stone-900 focus:ring-stone-900">
@@ -238,10 +236,6 @@
                     </div>
 
                     <div class="flex items-center gap-6 text-sm">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            {{ req_form.accepts_beginners }}
-                            <span class="text-stone-700">Accepts beginners</span>
-                        </label>
                         <label class="flex items-center gap-2 cursor-pointer">
                             {{ req_form.is_current }}
                             <span class="text-stone-700">Currently active</span>
