@@ -18,9 +18,9 @@ class SignupView(CreateView):
     success_url = reverse_lazy("home")
 
     def form_valid(self, form):
-        response = super().form_valid(form)
-        login(self.request, self.object)
-        if self.object.role == self.object.Role.MODEL:
+        user = form.save()
+        login(self.request, user)
+        if user.role == user.Role.MODEL:
             return redirect("onboarding")
         return redirect("home")
 

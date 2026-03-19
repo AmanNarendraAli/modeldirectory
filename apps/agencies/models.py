@@ -191,3 +191,49 @@ class AgencyStaff(models.Model):
 
     def __str__(self):
         return f"{self.user} @ {self.agency}"
+
+
+class AgencyRequest(models.Model):
+    """Request to list a new agency on the platform."""
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending"
+        ACCEPTED = "accepted", "Accepted"
+        REJECTED = "rejected", "Rejected"
+
+    # Agency info
+    agency_name = models.CharField(max_length=255)
+    agency_city = models.CharField(max_length=100, blank=True)
+    agency_website = models.URLField(blank=True)
+    agency_instagram = models.URLField(blank=True)
+    about_agency = models.TextField(blank=True, help_text="Tell us about your agency")
+
+    # Person submitting
+    contact_name = models.CharField(max_length=255)
+    contact_email = models.EmailField()
+    contact_phone = models.CharField(max_length=20, blank=True)
+    role_at_agency = models.CharField(max_length=100, blank=True, help_text="e.g. Owner, Booker, Manager")
+
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    created_agency = models.OneToOneField(
+        "Agency",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="source_request",
+        help_text="Auto-created when status is set to Accepted",
+    )
+    submitted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="agency_requests",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.agency_name} — {self.contact_email}"

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Agency, AgencyRequirement, AgencyHighlight, AgencyStaff, AgencyPortfolioPost, AgencyPortfolioAsset
+from .models import Agency, AgencyRequirement, AgencyHighlight, AgencyStaff, AgencyPortfolioPost, AgencyPortfolioAsset, AgencyRequest
 
 
 class AgencyRequirementInline(admin.TabularInline):
@@ -59,3 +59,37 @@ class AgencyStaffAdmin(admin.ModelAdmin):
     list_display = ("user", "agency", "role_title", "can_review_applications", "is_primary_contact")
     list_filter = ("agency", "can_review_applications", "is_primary_contact")
     search_fields = ("user__email", "user__full_name", "agency__name")
+
+
+@admin.register(AgencyRequest)
+class AgencyRequestAdmin(admin.ModelAdmin):
+    list_display = ("agency_name", "contact_name", "contact_email", "agency_city", "role_at_agency", "status", "created_agency_link", "created_at")
+    list_filter = ("status",)
+    search_fields = ("agency_name", "contact_name", "contact_email", "agency_city")
+    readonly_fields = ("created_agency",)
+
+    @admin.display(description="Agency")
+    def created_agency_link(self, obj):
+        if obj.created_agency:
+            from django.utils.html import format_html
+            return format_html('<a href="/admin/agencies/agency/{}/change/">{}</a>', obj.created_agency.pk, obj.created_agency.name)
+        return "—"
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        if obj.status == AgencyRequest.Status.ACCEPTED and not obj.created_agency:
+            agency = Agency.objects.create(
+                name=obj.agency_name,
+                city=obj.agency_city or "",
+                website_url=obj.agency_website or "",
+                instagram_url=obj.agency_instagram or "",
+                description=obj.about_agency or "",
+                contact_email=obj.contact_email,
+                is_active=True,
+                is_accepting_applications=False,
+                created_by_admin=request.user,
+            )
+            obj.created_agency = agency
+            obj.save(update_fields=["created_agency"])
+            from django.contrib import messages
+            messages.success(request, f'Agency "{agency.name}" created. Edit it to add logo, requirements, etc.')

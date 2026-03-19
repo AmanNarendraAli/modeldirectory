@@ -54,6 +54,7 @@ SECURE_HSTS_PRELOAD = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
 # Email — console fallback if no SMTP configured (won't send but won't crash)
 _email_host = env("EMAIL_HOST_USER", default="")

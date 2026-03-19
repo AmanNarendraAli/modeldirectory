@@ -1,6 +1,6 @@
 from django import forms
 from django.forms import inlineformset_factory
-from .models import Agency, AgencyRequirement, AgencyPortfolioPost, AgencyPortfolioAsset
+from .models import Agency, AgencyRequirement, AgencyPortfolioPost, AgencyPortfolioAsset, AgencyRequest
 
 INPUT_CLASS = "w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400"
 
@@ -120,6 +120,24 @@ AgencyPortfolioAssetFormset = inlineformset_factory(
     validate_max=True,
     can_delete=True,
 )
+
+
+class AgencyRequestForm(forms.ModelForm):
+    class Meta:
+        model = AgencyRequest
+        fields = [
+            "agency_name", "agency_city", "agency_website", "agency_instagram", "about_agency",
+            "contact_name", "contact_email", "contact_phone", "role_at_agency",
+        ]
+        widgets = {
+            "about_agency": forms.Textarea(attrs={"rows": 4, "placeholder": "Tell us about your agency, what kind of models you represent, etc."}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            if not isinstance(field.widget, (forms.CheckboxInput, forms.RadioSelect)):
+                field.widget.attrs.update({"class": INPUT_CLASS})
 
 
 AgencyRequirementFormSet = inlineformset_factory(

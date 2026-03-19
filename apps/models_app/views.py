@@ -22,7 +22,6 @@ def model_list(request):
     search = request.GET.get("q", "").strip()
     selected_cities = request.GET.getlist("city")
     gender = request.GET.get("gender", "").strip()
-    experience_level = request.GET.get("experience_level", "").strip()
     represented = request.GET.get("represented", "").strip()
     verified = request.GET.get("verified", "").strip()
     min_age = request.GET.get("min_age", "").strip()
@@ -51,9 +50,6 @@ def model_list(request):
 
     if gender:
         qs = qs.filter(gender=gender)
-
-    if experience_level:
-        qs = qs.filter(experience_level=experience_level)
 
     if represented == "yes":
         qs = qs.filter(represented_by_agency__isnull=False)
@@ -184,11 +180,9 @@ def model_list(request):
         "all_hair_colors": all_hair_colors,
         "all_eye_colors": all_eye_colors,
         "gender_choices": ModelProfile.Gender.choices,
-        "experience_choices": ModelProfile.ExperienceLevel.choices,
         "search": search,
         "selected_cities": selected_cities,
         "selected_gender": gender,
-        "selected_experience_level": experience_level,
         "selected_represented": represented,
         "selected_verified": verified,
         "min_age": min_age,

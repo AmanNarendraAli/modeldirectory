@@ -76,8 +76,16 @@
                      data-index="{{ forloop.counter0 }}"
                      {% if asset_form.instance.pk and asset_form.DELETE.value %}style="display:none;"{% endif %}>
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-medium text-stone-500">Photo {{ forloop.counter }}</span>
-                        <button type="button" class="remove-photo-btn text-xs text-red-500 hover:text-red-700 transition-colors">✕ Remove</button>
+                        <span class="slot-label text-xs font-medium text-stone-500">Photo {{ forloop.counter }}</span>
+                        <div class="flex items-center gap-1">
+                            <button type="button" class="move-up-btn p-2 text-stone-400 hover:text-stone-700 transition-colors disabled:opacity-30" title="Move up">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5"/></svg>
+                            </button>
+                            <button type="button" class="move-down-btn p-2 text-stone-400 hover:text-stone-700 transition-colors disabled:opacity-30" title="Move down">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
+                            </button>
+                            <button type="button" class="remove-photo-btn text-xs text-red-500 hover:text-red-700 transition-colors ml-1">✕ Remove</button>
+                        </div>
                     </div>
 
                     {% if asset_form.instance.pk and asset_form.instance.image %}
@@ -94,20 +102,14 @@
                         <label class="text-xs text-stone-500 block mb-1">Image file</label>
                         <input type="file" name="{{ asset_form.image.html_name }}" accept="image/*" id="{{ asset_form.image.id_for_label }}" data-crop data-filename="agency_portfolio_asset" {% if asset_form.instance.pk and asset_form.instance.image %}data-preview-target="asset-preview-{{ forloop.counter0 }}"{% endif %} class="w-full text-sm text-stone-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer">
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="text-xs text-stone-500 block mb-1">Alt text</label>
-                            <input type="text" name="{{ asset_form.alt_text.html_name }}"
-                                value="{{ asset_form.alt_text.value|default:'' }}"
-                                class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
-                        </div>
-                        <div>
-                            <label class="text-xs text-stone-500 block mb-1">Order</label>
-                            <input type="number" name="{{ asset_form.display_order.html_name }}"
-                                value="{{ asset_form.display_order.value|default:'0' }}"
-                                class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
-                        </div>
+                    <div>
+                        <label class="text-xs text-stone-500 block mb-1">Alt text</label>
+                        <input type="text" name="{{ asset_form.alt_text.html_name }}"
+                            value="{{ asset_form.alt_text.value|default:'' }}"
+                            class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
                     </div>
+                    <input type="hidden" name="{{ asset_form.display_order.html_name }}"
+                        value="{{ asset_form.display_order.value|default:'0' }}" class="order-input">
                     {{ asset_form.id }}
                     {% if formset.can_delete %}
                     <input type="checkbox" name="{{ asset_form.DELETE.html_name }}" class="delete-checkbox hidden"
@@ -125,24 +127,26 @@
             <div class="photo-slot border border-stone-100 rounded-xl p-4 bg-stone-50 space-y-3" data-index="__prefix__">
                 <div class="flex items-center justify-between">
                     <span class="slot-label text-xs font-medium text-stone-500">Photo —</span>
-                    <button type="button" class="remove-photo-btn text-xs text-red-500 hover:text-red-700 transition-colors">✕ Remove</button>
+                    <div class="flex items-center gap-1">
+                        <button type="button" class="move-up-btn p-2 text-stone-400 hover:text-stone-700 transition-colors disabled:opacity-30" title="Move up">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5"/></svg>
+                        </button>
+                        <button type="button" class="move-down-btn p-2 text-stone-400 hover:text-stone-700 transition-colors disabled:opacity-30" title="Move down">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg>
+                        </button>
+                        <button type="button" class="remove-photo-btn text-xs text-red-500 hover:text-red-700 transition-colors ml-1">✕ Remove</button>
+                    </div>
                 </div>
                 <div>
                     <label class="text-xs text-stone-500 block mb-1">Image file</label>
                     <input type="file" name="assets-__prefix__-image" accept="image/*" data-crop data-filename="agency_portfolio_asset" class="w-full text-sm text-stone-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-700 hover:file:bg-stone-200 cursor-pointer">
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-xs text-stone-500 block mb-1">Alt text</label>
-                        <input type="text" name="assets-__prefix__-alt_text" value=""
-                            class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
-                    </div>
-                    <div>
-                        <label class="text-xs text-stone-500 block mb-1">Order</label>
-                        <input type="number" name="assets-__prefix__-display_order" value="0"
-                            class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
-                    </div>
+                <div>
+                    <label class="text-xs text-stone-500 block mb-1">Alt text</label>
+                    <input type="text" name="assets-__prefix__-alt_text" value=""
+                        class="w-full border border-stone-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-400">
                 </div>
+                <input type="hidden" name="assets-__prefix__-display_order" value="0" class="order-input">
                 <input type="hidden" name="assets-__prefix__-id" value="">
             </div>
         </template>
@@ -180,6 +184,58 @@
                 }
             }
 
+            function getVisibleSlots() {
+                return Array.from(slotsContainer.querySelectorAll('.photo-slot')).filter(function(s) {
+                    return s.style.display !== 'none';
+                });
+            }
+
+            function recalcOrder() {
+                getVisibleSlots().forEach(function(slot, i) {
+                    var input = slot.querySelector('.order-input');
+                    if (input) input.value = i;
+                });
+                updateArrowStates();
+            }
+
+            function updateArrowStates() {
+                var visible = getVisibleSlots();
+                visible.forEach(function(slot, i) {
+                    var up = slot.querySelector('.move-up-btn');
+                    var down = slot.querySelector('.move-down-btn');
+                    if (up) up.disabled = (i === 0);
+                    if (down) down.disabled = (i === visible.length - 1);
+                });
+            }
+
+            function bindArrowBtns(slot) {
+                var upBtn = slot.querySelector('.move-up-btn');
+                var downBtn = slot.querySelector('.move-down-btn');
+                if (upBtn) {
+                    upBtn.addEventListener('click', function() {
+                        var visible = getVisibleSlots();
+                        var idx = visible.indexOf(slot);
+                        if (idx > 0) {
+                            slotsContainer.insertBefore(slot, visible[idx - 1]);
+                            recalcOrder();
+                            updateLabels();
+                        }
+                    });
+                }
+                if (downBtn) {
+                    downBtn.addEventListener('click', function() {
+                        var visible = getVisibleSlots();
+                        var idx = visible.indexOf(slot);
+                        if (idx < visible.length - 1) {
+                            var next = visible[idx + 1];
+                            slotsContainer.insertBefore(slot, next.nextSibling);
+                            recalcOrder();
+                            updateLabels();
+                        }
+                    });
+                }
+            }
+
             addBtn.addEventListener('click', function () {
                 var currentTotal = parseInt(totalFormsInput.value, 10);
                 if (countVisible() >= maxForms) return;
@@ -190,6 +246,8 @@
                 slotsContainer.appendChild(slot);
                 totalFormsInput.value = currentTotal + 1;
                 bindRemoveBtn(slot);
+                bindArrowBtns(slot);
+                recalcOrder();
                 updateLabels();
             });
 
@@ -200,14 +258,17 @@
                     var deleteCheck = slot.querySelector('.delete-checkbox');
                     if (deleteCheck) { deleteCheck.checked = true; }
                     slot.style.display = 'none';
+                    recalcOrder();
                     updateLabels();
                 });
             }
 
             slotsContainer.querySelectorAll('.photo-slot').forEach(function(slot) {
                 bindRemoveBtn(slot);
+                bindArrowBtns(slot);
             });
 
+            recalcOrder();
             updateLabels();
         })();
         </script>

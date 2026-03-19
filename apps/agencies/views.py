@@ -1,10 +1,13 @@
+from django.contrib import messages
 from django.db.models import Q
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.core.cache import cache
+from django_ratelimit.decorators import ratelimit
 
+from .forms import AgencyRequestForm
 from .models import Agency, AgencyStaff, AgencyPortfolioPost
 
 
@@ -160,3 +163,20 @@ def agency_portfolio_detail(request, slug, post_id):
         "assets": assets,
         "can_edit_agency": can_edit_agency,
     })
+
+
+@ratelimit(key="ip", rate="5/h", method="POST")
+def agency_request(request):
+    """Form to request listing a new agency on the platform."""
+    if request.method == "POST":
+        form = AgencyRequestForm(request.POST)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            if request.user.is_authenticated:
+                obj.submitted_by = request.user
+            obj.save()
+            messages.success(request, "Thank you! Your request has been submitted for review.")
+            return redirect("agency-list")
+    else:
+        form = AgencyRequestForm()
+    return render(request, "agencies/agency_request.html", {"form": form})
