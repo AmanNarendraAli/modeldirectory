@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Max, Exists, OuterRef
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
+from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
 
 from apps.accounts.models import User
 from apps.agencies.models import AgencyStaff
@@ -176,6 +178,7 @@ def conversation_detail(request, pk):
 
 
 @login_required
+@ratelimit(key="user", rate="10/h", method="POST")
 def start_conversation(request, slug):
     """Start a new conversation with a model. POST with message content."""
     if request.method != "POST":
@@ -256,6 +259,7 @@ def start_conversation(request, slug):
 
 
 @login_required
+@ratelimit(key="user", rate="60/h", method="POST")
 def send_message(request, pk):
     """Send a message in an existing conversation."""
     if request.method != "POST":
@@ -285,12 +289,18 @@ def send_message(request, pk):
         # Update conversation timestamp
         conversation.save(update_fields=["updated_at"])
 
-        # Create notification for first message in a pending conversation
+        other_user = conversation.get_other_participant(request.user)
         if is_pending_first_message:
-            other_user = conversation.get_other_participant(request.user)
             Notification.objects.create(
                 user=other_user,
                 notification_type=Notification.Type.MESSAGE_REQUEST,
+                actor=request.user,
+                target_conversation=conversation,
+            )
+        else:
+            Notification.objects.create(
+                user=other_user,
+                notification_type=Notification.Type.NEW_MESSAGE,
                 actor=request.user,
                 target_conversation=conversation,
             )
@@ -411,6 +421,7 @@ def search_users_for_messaging(request):
 
 
 @login_required
+@ratelimit(key="user", rate="10/h", method="POST")
 def start_conversation_with_user(request, user_id):
     """Start a new conversation with any user (from search). POST only."""
     if request.method != "POST":

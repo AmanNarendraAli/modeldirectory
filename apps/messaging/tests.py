@@ -424,9 +424,11 @@ class ConversationDetailTest(MessagingTestMixin, TestCase):
         self.assertContains(response, 'name="message"')
         self.assertContains(response, "Send")
 
-    def test_pending_conversation_hides_send_form_for_initiator(self):
+    def test_pending_conversation_hides_send_form_for_initiator_after_first_message(self):
         self.conv.status = Conversation.Status.PENDING
         self.conv.save()
+        # Initiator already sent the first message
+        Message.objects.create(conversation=self.conv, sender=self.model_a, content="Hey")
         self.client.login(email="alice@test.com", password="testpass123")
         response = self.client.get(reverse("conversation-detail", kwargs={"pk": self.conv.pk}))
         self.assertContains(response, "Waiting for")
@@ -488,15 +490,18 @@ class SendMessageTest(MessagingTestMixin, TestCase):
         self.assertIsNotNone(notif)
         self.assertEqual(notif.actor, self.model_a)
 
-    def test_cannot_send_in_pending_conversation(self):
+    def test_cannot_send_second_message_in_pending_conversation(self):
         self.conv.status = Conversation.Status.PENDING
         self.conv.save()
+        # First message already sent
+        Message.objects.create(conversation=self.conv, sender=self.model_a, content="First msg")
         self.client.login(email="alice@test.com", password="testpass123")
         self.client.post(
             reverse("send-message", kwargs={"pk": self.conv.pk}),
-            {"message": "Sneaky message"},
+            {"message": "Second message attempt"},
         )
-        self.assertEqual(self.conv.messages.count(), 0)
+        # Should still only have the one original message
+        self.assertEqual(self.conv.messages.count(), 1)
 
     def test_cannot_send_in_blocked_conversation(self):
         self.conv.status = Conversation.Status.BLOCKED
