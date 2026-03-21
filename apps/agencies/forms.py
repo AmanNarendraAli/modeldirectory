@@ -89,11 +89,22 @@ class AgencyPortfolioPostForm(forms.ModelForm):
                 field.widget.attrs.update({"class": INPUT_CLASS})
 
 
+class AgencyPortfolioAssetForm(forms.ModelForm):
+    class Meta:
+        model = AgencyPortfolioAsset
+        fields = ["image", "alt_text", "display_order"]
+
+    def has_changed(self):
+        if not self.instance.pk and self.changed_data == ["display_order"]:
+            return False
+        return super().has_changed()
+
+
 AgencyPortfolioAssetFormset = inlineformset_factory(
     AgencyPortfolioPost,
     AgencyPortfolioAsset,
-    fields=["image", "alt_text", "display_order"],
-    extra=1,
+    form=AgencyPortfolioAssetForm,
+    extra=0,
     max_num=10,
     validate_max=True,
     can_delete=True,

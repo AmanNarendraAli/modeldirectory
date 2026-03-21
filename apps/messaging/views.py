@@ -58,6 +58,13 @@ def _attach_other_participant(conversations, user):
     for staff in AgencyStaff.objects.filter(user_id__in=other_user_ids).select_related("agency"):
         staff_map[staff.user_id] = staff
 
+    # Batch fetch model profiles with agency info for represented models
+    model_user_ids = [u.pk for u in other_users if u.is_model_user]
+    from apps.models_app.models import ModelProfile
+    model_map = {}
+    for mp in ModelProfile.objects.filter(user_id__in=model_user_ids).select_related("represented_by_agency"):
+        model_map[mp.user_id] = mp
+
     for conv in result:
         other = conv.other_participant
         if other.is_agency_staff and other.pk in staff_map:
@@ -66,11 +73,20 @@ def _attach_other_participant(conversations, user):
             conv.other_profile_url = reverse("agency-detail", kwargs={"slug": staff.agency.slug})
             conv.other_avatar_url = staff.agency.logo_thumbnail.url if staff.agency.logo else ""
             conv.other_avatar_full_url = staff.agency.logo.url if staff.agency.logo else ""
-        elif other.is_model_user and hasattr(other, "model_profile"):
-            conv.other_role_label = "Model"
-            conv.other_profile_url = reverse("model-detail", kwargs={"slug": other.model_profile.slug})
-            conv.other_avatar_url = other.model_profile.profile_image_thumbnail.url if other.model_profile.profile_image else ""
-            conv.other_avatar_full_url = other.model_profile.profile_image.url if other.model_profile.profile_image else ""
+        elif other.is_agency_staff:
+            conv.other_role_label = "Agency Staff"
+            conv.other_profile_url = ""
+            conv.other_avatar_url = ""
+            conv.other_avatar_full_url = ""
+        elif other.is_model_user and other.pk in model_map:
+            mp = model_map[other.pk]
+            if mp.represented_by_agency:
+                conv.other_role_label = f"Model – {mp.represented_by_agency.name}"
+            else:
+                conv.other_role_label = "Model"
+            conv.other_profile_url = reverse("model-detail", kwargs={"slug": mp.slug})
+            conv.other_avatar_url = mp.profile_image_thumbnail.url if mp.profile_image else ""
+            conv.other_avatar_full_url = mp.profile_image.url if mp.profile_image else ""
         else:
             conv.other_role_label = ""
             conv.other_profile_url = ""
@@ -164,11 +180,17 @@ def conversation_detail(request, pk):
             other_role_label = f"Agency Staff – {staff.agency.name}"
             other_profile_url = reverse("agency-detail", kwargs={"slug": staff.agency.slug})
             other_avatar_url = staff.agency.logo_thumbnail.url if staff.agency.logo else ""
+        else:
+            other_role_label = "Agency Staff"
     elif other_user.is_model_user:
         try:
-            other_role_label = "Model"
-            other_profile_url = reverse("model-detail", kwargs={"slug": other_user.model_profile.slug})
-            other_avatar_url = other_user.model_profile.profile_image_thumbnail.url if other_user.model_profile.profile_image else ""
+            mp = other_user.model_profile
+            if mp.represented_by_agency:
+                other_role_label = f"Model – {mp.represented_by_agency.name}"
+            else:
+                other_role_label = "Model"
+            other_profile_url = reverse("model-detail", kwargs={"slug": mp.slug})
+            other_avatar_url = mp.profile_image_thumbnail.url if mp.profile_image else ""
         except ModelProfile.DoesNotExist:
             pass
 
@@ -396,14 +418,18 @@ def search_users_for_messaging(request):
         ModelProfile.objects
         .filter(public_display_name__icontains=q)
         .exclude(user_id__in=excluded_ids)
-        .select_related("user")[:10]
+        .select_related("user", "represented_by_agency")[:10]
     )
     for p in model_profiles:
         conv = _get_or_normalize_conversation(user, p.user)
+        if p.represented_by_agency:
+            role_label = f"Model – {p.represented_by_agency.name}"
+        else:
+            role_label = "Model"
         results.append({
             "user_id": p.user_id,
             "name": p.public_display_name or p.user.full_name,
-            "role_label": "Model",
+            "role_label": role_label,
             "avatar_url": p.profile_image_thumbnail.url if p.profile_image else "",
             "initial": (p.public_display_name or p.user.full_name or "?")[0].upper(),
             "conversation_id": conv.pk if conv else None,

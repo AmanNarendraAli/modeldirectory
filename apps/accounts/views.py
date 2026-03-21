@@ -116,7 +116,8 @@ def resend_verification(request):
 class VerifiedPasswordResetView(PasswordResetView):
     """Password reset that shows the same page for all outcomes (no info leak)."""
     template_name = "registration/password_reset_form.html"
-    email_template_name = "accounts/emails/password_reset_email.html"
+    email_template_name = "accounts/emails/password_reset_email.txt"
+    html_email_template_name = "accounts/emails/password_reset_email.html"
     subject_template_name = "accounts/emails/password_reset_subject.txt"
     success_url = reverse_lazy("password_reset_done")
 
@@ -129,8 +130,12 @@ class VerifiedPasswordResetView(PasswordResetView):
             return redirect("password_reset_done")
 
         if not user.is_verified_email:
-            # Don't reveal verified/unverified status — same neutral page
-            return redirect("password_reset_done")
+            messages.warning(
+                self.request,
+                "Your email address has not been verified yet. "
+                "Please verify your email before resetting your password.",
+            )
+            return redirect("password_reset")
 
         return super().form_valid(form)
 

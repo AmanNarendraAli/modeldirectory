@@ -13,7 +13,7 @@
     <form method="post" enctype="multipart/form-data" novalidate class="space-y-6">
         {% csrf_token %}
 
-        {% if form.errors or formset.non_form_errors %}
+        {% if form.errors or formset.non_form_errors or formset.total_error_count %}
         <div class="bg-red-50 border border-red-200 rounded-xl p-4">
             <p class="text-sm font-medium text-red-800 mb-1">Please fix the errors below.</p>
             <p class="text-xs text-red-600">Image files need to be re-selected after fixing errors.</p>
@@ -148,6 +148,7 @@
                 </div>
                 <input type="hidden" name="assets-__prefix__-display_order" value="0" class="order-input">
                 <input type="hidden" name="assets-__prefix__-id" value="">
+                <input type="checkbox" name="assets-__prefix__-DELETE" class="delete-checkbox hidden">
             </div>
         </template>
 
@@ -159,12 +160,6 @@
             var addBtn = document.getElementById('addPhotoBtn');
             var limitNote = document.getElementById('photoLimitNote');
             var template = document.getElementById('emptyPhotoSlot');
-
-            function visibleSlotCount() {
-                return slotsContainer.querySelectorAll('.photo-slot:not([style*="display:none"])').filter
-                    ? Array.from(slotsContainer.querySelectorAll('.photo-slot')).filter(function(s) { return s.style.display !== 'none'; }).length
-                    : slotsContainer.querySelectorAll('.photo-slot').length;
-            }
 
             function countVisible() {
                 return Array.from(slotsContainer.querySelectorAll('.photo-slot')).filter(function(s) {

@@ -22,11 +22,24 @@ class PortfolioPostForm(forms.ModelForm):
                 })
 
 
+class PortfolioAssetForm(forms.ModelForm):
+    class Meta:
+        model = PortfolioAsset
+        fields = ["image", "alt_text", "display_order"]
+
+    def has_changed(self):
+        # For new (unsaved) forms, display_order is set by JS on all visible
+        # slots.  If that's the only "change", the form is effectively empty.
+        if not self.instance.pk and self.changed_data == ["display_order"]:
+            return False
+        return super().has_changed()
+
+
 PortfolioAssetFormset = inlineformset_factory(
     PortfolioPost,
     PortfolioAsset,
-    fields=["image", "alt_text", "display_order"],
-    extra=1,
+    form=PortfolioAssetForm,
+    extra=0,
     max_num=10,
     validate_max=True,
     can_delete=True,
