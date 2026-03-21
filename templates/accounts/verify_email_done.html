@@ -11,9 +11,15 @@
         </div>
         <h1 class="font-display text-2xl font-bold text-stone-900 mb-2">Email Verified</h1>
         <p class="text-stone-500 text-sm mb-6">Your email address has been verified successfully.</p>
+        {% if user.is_authenticated %}
         <a href="{% url 'dashboard' %}" class="inline-block bg-stone-900 text-white font-semibold px-6 py-2.5 rounded-lg hover:bg-stone-700 transition-colors">
             Go to Dashboard
         </a>
+        {% else %}
+        <a href="{% url 'login' %}" class="inline-block bg-stone-900 text-white font-semibold px-6 py-2.5 rounded-lg hover:bg-stone-700 transition-colors">
+            Log in to continue
+        </a>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

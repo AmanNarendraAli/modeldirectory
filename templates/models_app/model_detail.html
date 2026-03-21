@@ -11,8 +11,9 @@
     This model's profile is private. You can view it because they are on your roster.
 </div>
 {% endif %}
+
 <!-- Cover -->
-<div class="h-48 sm:h-64 bg-stone-200 overflow-hidden relative">
+<div class="h-48 sm:h-64 bg-stone-200 overflow-hidden">
     {% if profile.cover_image %}
         <img src="{{ profile.cover_image.url }}" alt="{{ profile.public_display_name }} cover" class="w-full h-full object-cover" loading="lazy" data-lightbox="{{ profile.cover_image.url }}" data-lightbox-alt="{{ profile.public_display_name }} cover">
     {% else %}
@@ -20,115 +21,109 @@
     {% endif %}
 </div>
 
-<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-    <!-- Profile header -->
-    <div class="flex flex-col sm:flex-row sm:items-end gap-5 -mt-16 mb-8 relative">
-        <div class="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border-4 border-white bg-stone-100 overflow-hidden flex-shrink-0 shadow-sm">
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+    <!-- Profile photo — large, overlaps banner bottom-left -->
+    <div class="-mt-16 sm:-mt-20 mb-3 relative z-10">
+        <div class="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl border-4 border-white bg-stone-100 overflow-hidden shadow-md">
             {% if profile.profile_image %}
                 <img src="{{ profile.profile_image.url }}" alt="{{ profile.public_display_name }}" class="w-full h-full object-cover" loading="lazy" data-lightbox="{{ profile.profile_image.url }}" data-lightbox-alt="{{ profile.public_display_name }}">
             {% else %}
                 <div class="w-full h-full flex items-center justify-center bg-stone-200">
-                    <span class="font-display text-4xl font-bold text-stone-400">
+                    <span class="font-display text-4xl sm:text-5xl font-bold text-stone-400">
                         {{ profile.public_display_name|slice:":1" }}
                     </span>
                 </div>
             {% endif %}
         </div>
+    </div>
 
-        <div class="flex-1 pb-1">
-            <div class="flex items-center gap-2">
-                <h1 class="font-display text-3xl font-bold text-stone-900">{{ profile.public_display_name }}</h1>
-                {% if profile.verification_status == "verified" %}<span class="inline-block" title="Verified"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-emerald-500"><path fill-rule="evenodd" d="M8.603 3.799A4.49 4.49 0 0 1 12 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 0 1 3.498 1.307 4.491 4.491 0 0 1 1.307 3.497A4.49 4.49 0 0 1 21.75 12a4.49 4.49 0 0 1-1.549 3.397 4.491 4.491 0 0 1-1.307 3.497 4.491 4.491 0 0 1-3.497 1.307A4.49 4.49 0 0 1 12 21.75a4.49 4.49 0 0 1-3.397-1.549 4.49 4.49 0 0 1-3.498-1.307 4.491 4.491 0 0 1-1.307-3.497A4.49 4.49 0 0 1 2.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 0 1 1.307-3.497 4.49 4.49 0 0 1 3.497-1.307Zm7.007 6.387a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" /></svg></span>{% endif %}
+    <!-- Name + info (left) and Agency (right) — two column row -->
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-8 mb-3">
+        <!-- Left: name, metadata, followers -->
+        <div class="min-w-0">
+            <h1 class="font-display text-2xl sm:text-3xl font-bold text-stone-900 leading-tight">{{ profile.public_display_name }}</h1>
+
+            <div class="flex flex-wrap gap-1 mt-1 text-sm text-stone-500">
+                {% if profile.city %}<span>{{ profile.city }}</span>{% endif %}
+                {% if profile.age %}<span>· {{ profile.age }}</span>{% endif %}
+                {% if profile.height_cm %}<span>· {{ profile.height_cm|floatformat:"-1" }} cm</span>{% endif %}
+                {% if profile.gender %}<span>· {{ profile.get_gender_display }}</span>{% endif %}
             </div>
 
-            <div class="flex flex-wrap gap-3 mt-1 text-sm text-stone-500">
-                {% if profile.city %}
-                    <span>{{ profile.city }}</span>
-                {% endif %}
-                {% if profile.age %}
-                    <span>· {{ profile.age }}</span>
-                {% endif %}
-                {% if profile.height_cm %}
-                    <span>· {{ profile.height_cm|floatformat:"-1" }} cm</span>
-                {% endif %}
-                {% if profile.gender %}
-                    <span>· {{ profile.get_gender_display }}</span>
-                {% endif %}
-            </div>
-
-            {% if profile.represented_by_agency %}
-                <a href="{% url 'agency-detail' profile.represented_by_agency.slug %}"
-                   class="inline-block mt-2 text-xs font-medium text-stone-600 bg-stone-100 px-3 py-1 rounded-full hover:bg-stone-200 transition-colors">
-                    {{ profile.represented_by_agency.name }}
-                </a>
-            {% elif profile.custom_agency_name %}
-                <span class="inline-block mt-2 text-xs font-medium text-stone-600 bg-stone-100 px-3 py-1 rounded-full">
-                    {{ profile.custom_agency_name }}
-                </span>
-            {% else %}
-                <span class="inline-block mt-2 text-xs font-medium text-stone-500 bg-stone-100 px-3 py-1 rounded-full">
-                    Independent
-                </span>
+            {% if follower_count %}
+            <p class="text-sm text-stone-500 mt-1">{{ follower_count }} follower{{ follower_count|pluralize }}</p>
             {% endif %}
         </div>
 
-        {% if user.is_authenticated and user != profile.user %}
-            <div class="flex items-center gap-2">
-                <form method="post" action="{% url 'follow-model' profile.slug %}">
-                    {% csrf_token %}
-                    <button type="submit"
-                            class="border border-stone-300 text-stone-700 text-sm font-medium px-5 py-2 rounded-lg hover:bg-stone-50 transition-colors">
-                        {% if is_following %}
-                            ✓ Following
-                        {% else %}
-                            + Follow
-                        {% endif %}
-                    </button>
-                </form>
-
-                {% if can_message %}
-                    {% if existing_conversation and existing_conversation.status == 'accepted' %}
-                        <a href="{% url 'conversation-detail' pk=existing_conversation.pk %}"
-                           class="bg-stone-900 text-white text-sm font-medium px-5 py-2 rounded-lg hover:bg-stone-700 transition-colors">
-                            Message
-                        </a>
-                    {% elif existing_conversation and existing_conversation.status == 'pending' %}
-                        <a href="{% url 'conversation-detail' pk=existing_conversation.pk %}"
-                           class="border border-amber-300 text-amber-700 text-sm font-medium px-5 py-2 rounded-lg hover:bg-amber-50 transition-colors">
-                            Request Pending
-                        </a>
-                    {% else %}
-                        {% if request.user.is_agency_staff %}
-                        <form method="post" action="{% url 'start-conversation' profile.slug %}" class="inline">
-                            {% csrf_token %}
-                            <button type="submit"
-                                    class="bg-stone-900 text-white text-sm font-medium px-5 py-2 rounded-lg hover:bg-stone-700 transition-colors">
-                                Message
-                            </button>
-                        </form>
-                        {% else %}
-                        <button type="button" onclick="document.getElementById('message-modal').classList.remove('hidden')"
-                                class="bg-stone-900 text-white text-sm font-medium px-5 py-2 rounded-lg hover:bg-stone-700 transition-colors">
-                            Message
-                        </button>
-                        {% endif %}
-                    {% endif %}
-                {% endif %}
-            </div>
+        <!-- Right: agency info (like LinkedIn's company/education column) -->
+        {% if profile.represented_by_agency %}
+        <div class="flex-shrink-0 sm:text-right">
+            <a href="{% url 'agency-detail' profile.represented_by_agency.slug %}" class="text-sm font-medium text-stone-800 hover:underline">{{ profile.represented_by_agency.name }}</a>
+        </div>
+        {% elif profile.custom_agency_name %}
+        <div class="flex-shrink-0 sm:text-right">
+            <span class="text-sm font-medium text-stone-800">{{ profile.custom_agency_name }}</span>
+        </div>
         {% endif %}
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 pb-16">
-        <!-- Left -->
-        <div class="lg:col-span-2">
-            <div class="mb-6 text-sm text-stone-500">
-                {% if profile.represented_by_agency %}<span>Represented by </span><a href="{% url 'agency-detail' profile.represented_by_agency.slug %}" class="font-medium text-stone-800 hover:underline">{{ profile.represented_by_agency.name }}</a>{% elif profile.custom_agency_name %}<span>Represented by </span><span class="font-medium text-stone-800">{{ profile.custom_agency_name }}</span>{% else %}<span>Independent</span>{% endif %}
-            </div>
+    <!-- Action buttons -->
+    {% if user.is_authenticated and user != profile.user %}
+    <div class="flex items-center gap-2 pb-5 mb-5 border-b border-stone-200">
+        <form method="post" action="{% url 'follow-model' profile.slug %}">
+            {% csrf_token %}
+            <button type="submit"
+                    class="border border-stone-300 text-stone-700 text-sm font-medium px-5 py-2 rounded-lg hover:bg-stone-50 transition-colors">
+                {% if is_following %}
+                    ✓ Following
+                {% else %}
+                    + Follow
+                {% endif %}
+            </button>
+        </form>
+
+        {% if can_message %}
+            {% if existing_conversation and existing_conversation.status == 'accepted' %}
+                <a href="{% url 'conversation-detail' pk=existing_conversation.pk %}"
+                   class="bg-stone-900 text-white text-sm font-medium px-5 py-2 rounded-lg hover:bg-stone-700 transition-colors">
+                    Message
+                </a>
+            {% elif existing_conversation and existing_conversation.status == 'pending' %}
+                <a href="{% url 'conversation-detail' pk=existing_conversation.pk %}"
+                   class="border border-amber-300 text-amber-700 text-sm font-medium px-5 py-2 rounded-lg hover:bg-amber-50 transition-colors">
+                    Request Pending
+                </a>
+            {% else %}
+                {% if request.user.is_agency_staff %}
+                <form method="post" action="{% url 'start-conversation' profile.slug %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="bg-stone-900 text-white text-sm font-medium px-5 py-2 rounded-lg hover:bg-stone-700 transition-colors">
+                        Message
+                    </button>
+                </form>
+                {% else %}
+                <button type="button" onclick="document.getElementById('message-modal').classList.remove('hidden')"
+                        class="bg-stone-900 text-white text-sm font-medium px-5 py-2 rounded-lg hover:bg-stone-700 transition-colors">
+                    Message
+                </button>
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="pb-5 mb-5 border-b border-stone-200"></div>
+    {% endif %}
+
+    <!-- Two column layout: Main + Sidebar -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Left: Main content -->
+        <div class="lg:col-span-2 space-y-6">
             {% if profile.bio %}
-                <div class="mb-8">
-                    <h2 class="font-display text-xl font-bold text-stone-900 mb-3">About</h2>
-                    <p class="text-stone-600 leading-relaxed whitespace-pre-line">{{ profile.bio }}</p>
-                </div>
+            <div class="bg-white rounded-xl border border-stone-200 p-5">
+                <h2 class="font-semibold text-stone-900 mb-3">About</h2>
+                <p class="text-stone-600 text-sm leading-relaxed whitespace-pre-line">{{ profile.bio }}</p>
+            </div>
             {% endif %}
 
             {% if not portfolio_posts and not profile.bio %}
@@ -136,198 +131,166 @@
             {% endif %}
 
             {% if portfolio_posts or is_own_profile %}
-                <div class="mb-8">
-                    <div class="flex items-center justify-between mb-4">
-                        <h2 class="font-display text-xl font-bold text-stone-900">Portfolio</h2>
-                        {% if is_own_profile %}<a href="{% url 'portfolio-create' %}" class="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors">+ Add post</a>{% endif %}
-                    </div>
-                    {% if portfolio_posts %}
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        {% for post in portfolio_posts %}
-                            <a href="{% url 'portfolio-detail' post.slug %}" class="group aspect-square bg-stone-100 rounded-lg overflow-hidden relative block">
-                                {% if post.cover_image %}
-                                    <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">
-                                {% else %}
-                                    <div class="w-full h-full flex items-center justify-center bg-stone-200"><span class="text-xs text-stone-400 font-medium text-center px-2">{{ post.title }}</span></div>
-                                {% endif %}
-                            </a>
-                        {% endfor %}
-                    </div>
-                    {% elif is_own_profile %}
-                    <p class="text-stone-400 text-sm">No portfolio posts yet. <a href="{% url 'portfolio-create' %}" class="text-stone-700 hover:underline">Create your first post →</a></p>
-                    {% endif %}
+            <div class="bg-white rounded-xl border border-stone-200 p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-semibold text-stone-900">Portfolio</h2>
+                    {% if is_own_profile %}<a href="{% url 'portfolio-create' %}" class="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors">+ Add post</a>{% endif %}
                 </div>
+                {% if portfolio_posts %}
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {% for post in portfolio_posts %}
+                        <a href="{% url 'portfolio-detail' post.slug %}" class="group aspect-square bg-stone-100 rounded-lg overflow-hidden relative block">
+                            {% if post.cover_image %}
+                                <img src="{{ post.cover_image.url }}" alt="{{ post.title }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">
+                            {% else %}
+                                <div class="w-full h-full flex items-center justify-center bg-stone-200"><span class="text-xs text-stone-400 font-medium text-center px-2">{{ post.title }}</span></div>
+                            {% endif %}
+                        </a>
+                    {% endfor %}
+                </div>
+                {% elif is_own_profile %}
+                <p class="text-stone-400 text-sm">No portfolio posts yet. <a href="{% url 'portfolio-create' %}" class="text-stone-700 hover:underline">Create your first post</a></p>
+                {% endif %}
+            </div>
             {% endif %}
         </div>
 
-        <!-- Right sidebar -->
-        <div class="space-y-6">
-            <div class="bg-stone-50 rounded-xl border border-stone-100 p-5">
-                <h3 class="font-semibold text-stone-900 text-sm mb-4">Stats</h3>
-                <div class="space-y-2 text-sm">
-                    <div class="flex justify-between">
-                        <span class="text-stone-400">Followers</span>
-                        <span class="font-medium">{{ follower_count }}</span>
+        <!-- Right: Sidebar -->
+        <div class="space-y-4">
+            <!-- Links -->
+            {% if profile.instagram_url or profile.website_url or profile.contact_email %}
+            <div class="bg-white rounded-xl border border-stone-200 p-5 space-y-3 text-sm">
+                <h3 class="font-semibold text-stone-900 text-sm">Links</h3>
+                {% if profile.instagram_url %}
+                <div>
+                    <span class="text-stone-400 text-xs block">Instagram</span>
+                    <a href="{{ profile.instagram_url }}" target="_blank" class="text-stone-700 hover:text-stone-900 break-all">{{ profile.instagram_url }}</a>
+                </div>
+                {% endif %}
+                {% if profile.website_url %}
+                <div>
+                    <span class="text-stone-400 text-xs block">Website</span>
+                    <a href="{{ profile.website_url }}" target="_blank" class="text-stone-700 hover:text-stone-900 break-all">{{ profile.website_url }}</a>
+                </div>
+                {% endif %}
+                {% if profile.contact_email %}
+                <div>
+                    <span class="text-stone-400 text-xs block">Contact</span>
+                    <a href="mailto:{{ profile.contact_email }}" class="text-stone-700 hover:text-stone-900">{{ profile.contact_email }}</a>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Measurements -->
+            {% if profile.height_cm or profile.bust_cm or profile.waist_cm or profile.hips_cm or profile.inseam_cm or profile.shoe_size or profile.hair_color or profile.eye_color %}
+            <div class="bg-white rounded-xl border border-stone-200 p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-semibold text-stone-900 text-sm">Stats</h3>
+                    {% if profile.height_cm or profile.bust_cm or profile.waist_cm or profile.hips_cm or profile.inseam_cm %}
+                    <div class="flex items-center gap-0.5 bg-stone-100 rounded-lg p-0.5 text-xs font-medium">
+                        <button type="button" id="det-unit-btn-cm" onclick="detSetUnit('cm')"
+                            class="px-2.5 py-1 rounded-md bg-stone-900 text-white">cm</button>
+                        <button type="button" id="det-unit-btn-in" onclick="detSetUnit('in')"
+                            class="px-2.5 py-1 rounded-md text-stone-500 hover:text-stone-700">in</button>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-stone-400">Portfolio posts</span>
-                        <span class="font-medium">{{ portfolio_posts|length }}</span>
+                    {% endif %}
+                </div>
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                    {% if profile.height_cm %}
+                    <div>
+                        <span class="text-stone-400 text-xs block" id="det-label-height">Height (cm)</span>
+                        <span data-cm="{{ profile.height_cm }}">{{ profile.height_cm|floatformat:"-1" }} cm</span>
                     </div>
+                    {% endif %}
+                    {% if profile.bust_cm %}
+                    <div>
+                        <span class="text-stone-400 text-xs block" id="det-label-bust">{{ profile.get_bust_chest_label }} (cm)</span>
+                        <span data-cm="{{ profile.bust_cm }}">{{ profile.bust_cm|floatformat:"-1" }} cm</span>
+                    </div>
+                    {% endif %}
+                    {% if profile.waist_cm %}
+                    <div>
+                        <span class="text-stone-400 text-xs block" id="det-label-waist">Waist (cm)</span>
+                        <span data-cm="{{ profile.waist_cm }}">{{ profile.waist_cm|floatformat:"-1" }} cm</span>
+                    </div>
+                    {% endif %}
+                    {% if profile.hips_cm %}
+                    <div>
+                        <span class="text-stone-400 text-xs block" id="det-label-hips">Hips (cm)</span>
+                        <span data-cm="{{ profile.hips_cm }}">{{ profile.hips_cm|floatformat:"-1" }} cm</span>
+                    </div>
+                    {% endif %}
+                    {% if profile.inseam_cm %}
+                    <div>
+                        <span class="text-stone-400 text-xs block" id="det-label-inseam">Inseam (cm)</span>
+                        <span data-cm="{{ profile.inseam_cm }}">{{ profile.inseam_cm|floatformat:"-1" }} cm</span>
+                    </div>
+                    {% endif %}
+                    {% if profile.shoe_size %}
+                    <div>
+                        <span class="text-stone-400 text-xs block">Shoe</span>
+                        {{ profile.shoe_size }}
+                    </div>
+                    {% endif %}
+                    {% if profile.hair_color %}
+                    <div>
+                        <span class="text-stone-400 text-xs block">Hair</span>
+                        {{ profile.hair_color }}
+                    </div>
+                    {% endif %}
+                    {% if profile.eye_color %}
+                    <div>
+                        <span class="text-stone-400 text-xs block">Eyes</span>
+                        {{ profile.eye_color }}
+                    </div>
+                    {% endif %}
                 </div>
             </div>
-
-            {% if profile.age or profile.height_cm or profile.bust_cm or profile.waist_cm or profile.hips_cm or profile.inseam_cm or profile.shoe_size or profile.hair_color or profile.eye_color %}
-                <div class="bg-stone-50 rounded-xl border border-stone-100 p-5">
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="font-semibold text-stone-900 text-sm">Measurements</h3>
-                        <div class="flex items-center gap-0.5 bg-white border border-stone-200 rounded-lg p-0.5 text-xs font-medium">
-                            <button type="button" id="det-unit-btn-cm" onclick="detSetUnit('cm')"
-                                class="px-2.5 py-1 rounded-md bg-stone-900 text-white">cm</button>
-                            <button type="button" id="det-unit-btn-in" onclick="detSetUnit('in')"
-                                class="px-2.5 py-1 rounded-md text-stone-500 hover:text-stone-700">in</button>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 text-sm">
-                        {% if profile.age %}
-                            <div>
-                                <span class="text-stone-400 text-xs block">Age</span>
-                                {{ profile.age }}
-                            </div>
-                        {% endif %}
-
-                        {% if profile.height_cm %}
-                            <div>
-                                <span class="text-stone-400 text-xs block" id="det-label-height">Height (cm)</span>
-                                <span data-cm="{{ profile.height_cm }}" id="det-val-height">{{ profile.height_cm|floatformat:"-1" }} cm</span>
-                            </div>
-                        {% endif %}
-
-                        {% if profile.bust_cm %}
-                            <div>
-                                <span class="text-stone-400 text-xs block" id="det-label-bust">{{ profile.get_bust_chest_label }} (cm)</span>
-                                <span data-cm="{{ profile.bust_cm }}" id="det-val-bust">{{ profile.bust_cm|floatformat:"-1" }} cm</span>
-                            </div>
-                        {% endif %}
-
-                        {% if profile.waist_cm %}
-                            <div>
-                                <span class="text-stone-400 text-xs block" id="det-label-waist">Waist (cm)</span>
-                                <span data-cm="{{ profile.waist_cm }}">{{ profile.waist_cm|floatformat:"-1" }} cm</span>
-                            </div>
-                        {% endif %}
-
-                        {% if profile.hips_cm %}
-                            <div>
-                                <span class="text-stone-400 text-xs block" id="det-label-hips">Hips (cm)</span>
-                                <span data-cm="{{ profile.hips_cm }}">{{ profile.hips_cm|floatformat:"-1" }} cm</span>
-                            </div>
-                        {% endif %}
-
-                        {% if profile.inseam_cm %}
-                            <div>
-                                <span class="text-stone-400 text-xs block" id="det-label-inseam">Inseam (cm)</span>
-                                <span data-cm="{{ profile.inseam_cm }}">{{ profile.inseam_cm|floatformat:"-1" }} cm</span>
-                            </div>
-                        {% endif %}
-
-                        {% if profile.shoe_size %}
-                            <div>
-                                <span class="text-stone-400 text-xs block">Shoe</span>
-                                {{ profile.shoe_size }}
-                            </div>
-                        {% endif %}
-
-                        {% if profile.hair_color %}
-                            <div>
-                                <span class="text-stone-400 text-xs block">Hair</span>
-                                {{ profile.hair_color }}
-                            </div>
-                        {% endif %}
-
-                        {% if profile.eye_color %}
-                            <div>
-                                <span class="text-stone-400 text-xs block">Eyes</span>
-                                {{ profile.eye_color }}
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-                <script>
-                function detSetUnit(unit) {
-                    document.querySelectorAll('[data-cm]').forEach(function(el) {
-                        var cm = parseFloat(el.dataset.cm);
-                        if (isNaN(cm)) return;
-                        el.textContent = unit === 'in'
-                            ? (Math.round(cm / 2.54 * 10) / 10) + ' in'
-                            : cm + ' cm';
-                    });
-                    // Update labels
-                    var unit_str = '(' + unit + ')';
-                    ['height','bust','waist','hips','inseam'].forEach(function(k) {
-                        var lbl = document.getElementById('det-label-' + k);
-                        if (lbl) lbl.textContent = lbl.textContent.replace(/\(cm\)|\(in\)/, unit_str);
-                    });
-                    // Buttons
-                    document.getElementById('det-unit-btn-cm').className = 'px-2.5 py-1 rounded-md ' + (unit==='cm' ? 'bg-stone-900 text-white' : 'text-stone-500 hover:text-stone-700');
-                    document.getElementById('det-unit-btn-in').className = 'px-2.5 py-1 rounded-md ' + (unit==='in' ? 'bg-stone-900 text-white' : 'text-stone-500 hover:text-stone-700');
-                }
-                </script>
+            <script>
+            function detSetUnit(unit) {
+                document.querySelectorAll('[data-cm]').forEach(function(el) {
+                    var cm = parseFloat(el.dataset.cm);
+                    if (isNaN(cm)) return;
+                    el.textContent = unit === 'in'
+                        ? (Math.round(cm / 2.54 * 10) / 10) + ' in'
+                        : cm + ' cm';
+                });
+                var unit_str = '(' + unit + ')';
+                ['height','bust','waist','hips','inseam'].forEach(function(k) {
+                    var lbl = document.getElementById('det-label-' + k);
+                    if (lbl) lbl.textContent = lbl.textContent.replace(/\(cm\)|\(in\)/, unit_str);
+                });
+                document.getElementById('det-unit-btn-cm').className = 'px-2.5 py-1 rounded-md ' + (unit==='cm' ? 'bg-stone-900 text-white' : 'text-stone-500 hover:text-stone-700');
+                document.getElementById('det-unit-btn-in').className = 'px-2.5 py-1 rounded-md ' + (unit==='in' ? 'bg-stone-900 text-white' : 'text-stone-500 hover:text-stone-700');
+            }
+            </script>
             {% endif %}
 
+            <!-- Available for -->
             {% if profile.available_for_editorial or profile.available_for_runway or profile.available_for_commercial or profile.available_for_fittings %}
-                <div class="bg-stone-50 rounded-xl border border-stone-100 p-5">
-                    <h3 class="font-semibold text-stone-900 text-sm mb-3">Available for</h3>
-                    <div class="flex flex-wrap gap-2">
-                        {% if profile.available_for_editorial %}
-                            <span class="bg-stone-200 text-stone-700 text-xs px-2 py-1 rounded-full">Editorial</span>
-                        {% endif %}
-                        {% if profile.available_for_runway %}
-                            <span class="bg-stone-200 text-stone-700 text-xs px-2 py-1 rounded-full">Runway</span>
-                        {% endif %}
-                        {% if profile.available_for_commercial %}
-                            <span class="bg-stone-200 text-stone-700 text-xs px-2 py-1 rounded-full">Commercial</span>
-                        {% endif %}
-                        {% if profile.available_for_fittings %}
-                            <span class="bg-stone-200 text-stone-700 text-xs px-2 py-1 rounded-full">Fittings</span>
-                        {% endif %}
-                    </div>
+            <div class="bg-white rounded-xl border border-stone-200 p-5">
+                <h3 class="font-semibold text-stone-900 text-sm mb-3">Available for</h3>
+                <div class="flex flex-wrap gap-2">
+                    {% if profile.available_for_editorial %}
+                        <span class="bg-stone-100 text-stone-700 text-xs px-2.5 py-1 rounded-full">Editorial</span>
+                    {% endif %}
+                    {% if profile.available_for_runway %}
+                        <span class="bg-stone-100 text-stone-700 text-xs px-2.5 py-1 rounded-full">Runway</span>
+                    {% endif %}
+                    {% if profile.available_for_commercial %}
+                        <span class="bg-stone-100 text-stone-700 text-xs px-2.5 py-1 rounded-full">Commercial</span>
+                    {% endif %}
+                    {% if profile.available_for_fittings %}
+                        <span class="bg-stone-100 text-stone-700 text-xs px-2.5 py-1 rounded-full">Fittings</span>
+                    {% endif %}
                 </div>
+            </div>
             {% endif %}
 
-            {% if profile.instagram_url or profile.website_url or profile.contact_email %}
-                <div class="bg-stone-50 rounded-xl border border-stone-100 p-5 space-y-2 text-sm">
-                    {% if profile.instagram_url %}
-                        <div>
-                            <span class="text-stone-400 text-xs block">Instagram</span>
-                            <a href="{{ profile.instagram_url }}"
-                               target="_blank"
-                               class="text-stone-700 hover:text-stone-900 break-all">
-                                {{ profile.instagram_url }}
-                            </a>
-                        </div>
-                    {% endif %}
-
-                    {% if profile.website_url %}
-                        <div>
-                            <span class="text-stone-400 text-xs block">Website</span>
-                            <a href="{{ profile.website_url }}"
-                               target="_blank"
-                               class="text-stone-700 hover:text-stone-900 break-all">
-                                {{ profile.website_url }}
-                            </a>
-                        </div>
-                    {% endif %}
-
-                    {% if profile.contact_email %}
-                        <div>
-                            <span class="text-stone-400 text-xs block">Contact</span>
-                            <a href="mailto:{{ profile.contact_email }}"
-                               class="text-stone-700 hover:text-stone-900">
-                                {{ profile.contact_email }}
-                            </a>
-                        </div>
-                    {% endif %}
-                </div>
+            <!-- Unverified email indicator — only visible to profile owner -->
+            {% if is_own_profile and not profile.user.is_verified_email %}
+            <p class="text-xs text-stone-400 text-center">Unverified profile</p>
             {% endif %}
         </div>
     </div>

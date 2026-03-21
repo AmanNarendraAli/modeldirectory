@@ -7,7 +7,7 @@ from django.shortcuts import render, redirect
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
 from django.views.generic.edit import CreateView
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 
@@ -107,7 +107,7 @@ def resend_verification(request):
 
     send_verification_email(request.user, request)
     messages.success(request, "Verification email sent! Check your inbox.")
-    return redirect(request.META.get("HTTP_REFERER", "dashboard"))
+    return redirect(request.META.get("HTTP_REFERER") or reverse("dashboard"))
 
 
 # ─── Forgot Password (verified users only) ─────────────────────────────────
