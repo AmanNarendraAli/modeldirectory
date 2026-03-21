@@ -296,18 +296,14 @@ def send_message(request, pk):
         # Update conversation timestamp
         conversation.save(update_fields=["updated_at"])
 
-        other_user = conversation.get_other_participant(request.user)
+        # Only notify on the first message of a pending conversation (message request)
+        # Ongoing accepted chat messages don't create notifications — the red dot
+        # on the Messages nav link handles that instead
         if is_pending_first_message:
+            other_user = conversation.get_other_participant(request.user)
             Notification.objects.create(
                 user=other_user,
                 notification_type=Notification.Type.MESSAGE_REQUEST,
-                actor=request.user,
-                target_conversation=conversation,
-            )
-        else:
-            Notification.objects.create(
-                user=other_user,
-                notification_type=Notification.Type.NEW_MESSAGE,
                 actor=request.user,
                 target_conversation=conversation,
             )
