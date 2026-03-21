@@ -77,8 +77,8 @@
                         {% endif %}
                         {% endif %}
                     </div>
-                    {% if conv.last_message %}
-                    <p class="text-xs text-stone-500 mt-1 truncate">{{ conv.last_message.content|truncatewords:12 }}</p>
+                    {% if conv.last_message_content %}
+                    <p class="text-xs text-stone-500 mt-1 truncate">{{ conv.last_message_content|truncatewords:12 }}</p>
                     {% endif %}
                 </a>
             </div>

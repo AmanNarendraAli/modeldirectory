@@ -13,12 +13,10 @@ def unread_notification_count(request):
 def unread_message_indicator(request):
     if request.user.is_authenticated:
         user = request.user
-        user_conversations = Conversation.objects.filter(
-            Q(participant_one=user) | Q(participant_two=user),
-            status=Conversation.Status.ACCEPTED,
-        )
+        # Single query: EXISTS subquery is fast and avoids loading conversation objects
         has_unread = Message.objects.filter(
-            conversation__in=user_conversations,
+            Q(conversation__participant_one=user) | Q(conversation__participant_two=user),
+            conversation__status=Conversation.Status.ACCEPTED,
             is_read=False,
         ).exclude(sender=user).exists()
         return {"has_unread_messages": has_unread}

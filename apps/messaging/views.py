@@ -85,11 +85,18 @@ def inbox(request):
     user = request.user
     conversations = _get_user_conversations(user)
 
-    # Accepted conversations with last message info
+    # Accepted conversations with last message info (avoids N+1 from last_message property)
+    from django.db.models import OuterRef, Subquery
+    latest_msg = Message.objects.filter(
+        conversation=OuterRef("pk")
+    ).order_by("-created_at")
     accepted = (
         conversations
         .filter(status=Conversation.Status.ACCEPTED)
-        .annotate(last_message_at=Max("messages__created_at"))
+        .annotate(
+            last_message_at=Max("messages__created_at"),
+            last_message_content=Subquery(latest_msg.values("content")[:1]),
+        )
         .order_by("-last_message_at")
     )
 

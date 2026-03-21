@@ -88,14 +88,11 @@ def agency_detail(request, slug):
             applicant_profile=request.user.model_profile, agency=agency
         ).first()
 
-    is_agency_staff = (
-        request.user.is_authenticated and
-        AgencyStaff.objects.filter(user=request.user, agency=agency).exists()
-    )
-    can_edit_agency = (
-        request.user.is_authenticated and
-        AgencyStaff.objects.filter(user=request.user, agency=agency, can_edit_agency=True).exists()
-    )
+    _staff_record = None
+    if request.user.is_authenticated:
+        _staff_record = AgencyStaff.objects.filter(user=request.user, agency=agency).first()
+    is_agency_staff = _staff_record is not None
+    can_edit_agency = _staff_record is not None and _staff_record.can_edit_agency
     viewer_profile = getattr(request.user, "model_profile", None) if request.user.is_authenticated else None
 
     portfolio_posts = agency.portfolio_posts.all()

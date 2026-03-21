@@ -20,13 +20,20 @@ class PortfolioPost(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        unique_together = [("owner_profile", "slug")]
 
     def __str__(self):
         return f"{self.owner_profile} — {self.title}"
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.title)
+            candidate = slugify(self.title) or "untitled"
+            if PortfolioPost.objects.filter(owner_profile=self.owner_profile, slug=candidate).exclude(pk=self.pk).exists():
+                counter = 2
+                while PortfolioPost.objects.filter(owner_profile=self.owner_profile, slug=f"{candidate}-{counter}").exclude(pk=self.pk).exists():
+                    counter += 1
+                candidate = f"{candidate}-{counter}"
+            self.slug = candidate
         super().save(*args, **kwargs)
 
 

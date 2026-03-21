@@ -121,11 +121,9 @@ def agency_dashboard(request):
 
     today = datetime.date.today()
 
+    from apps.models_app.views import _dob_cutoff as _dob_cutoff_fn
     def _dob_cutoff(years):
-        try:
-            return today.replace(year=today.year - years)
-        except ValueError:
-            return today.replace(year=today.year - years, day=28)
+        return _dob_cutoff_fn(today, years)
 
     if min_age:
         try:

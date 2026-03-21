@@ -69,8 +69,8 @@ class ModelProfile(models.Model):
         help_text="Agency name when the agency is not on the platform.",
     )
 
-    is_public = models.BooleanField(default=False)
-    is_discoverable = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=False, db_index=True)
+    is_discoverable = models.BooleanField(default=False, db_index=True)
     verification_status = models.CharField(
         max_length=20, choices=VerificationStatus.choices, default=VerificationStatus.UNVERIFIED
     )

@@ -38,4 +38,7 @@ class ResourceArticle(models.Model):
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.title)
+        if self.is_published and not self.published_at:
+            from django.utils import timezone
+            self.published_at = timezone.now()
         super().save(*args, **kwargs)
