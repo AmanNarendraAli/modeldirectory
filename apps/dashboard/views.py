@@ -327,7 +327,7 @@ def applicant_detail(request, application_id):
 @login_required
 def update_application_status(request, application_id):
     if request.method != "POST":
-        return redirect("agency-dashboard")
+        return redirect("dashboard")
 
     agency = _get_agency_for_staff(request.user)
     if not agency:
@@ -370,7 +370,7 @@ def update_application_status(request, application_id):
 @ratelimit(key="user", rate="30/h", method="POST")
 def submit_feedback(request, application_id):
     if request.method != "POST":
-        return redirect("agency-dashboard")
+        return redirect("dashboard")
 
     agency = _get_agency_for_staff(request.user)
     if not agency:

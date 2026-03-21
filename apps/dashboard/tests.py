@@ -232,9 +232,9 @@ class UpdateApplicationStatusTests(DashboardTestMixin, TestCase):
         self.assertEqual(self.application.status, Application.Status.SUBMITTED)
 
     def test_get_request_redirects(self):
-        # NOTE: This test is skipped because views.py:330 has redirect("agency-dashboard")
-        # but "agency-dashboard" is not a named URL (should be "dashboard"). Pre-existing bug.
-        pass
+        self.client.login(email="staff@test.com", password="testpass123")
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 302)
 
     @patch("apps.core.emails.send_status_changed_email")
     def test_invalid_status_ignored(self, mock_email):
