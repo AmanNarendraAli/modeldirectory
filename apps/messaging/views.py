@@ -421,6 +421,11 @@ def search_users_for_messaging(request):
     )
     for p in model_profiles:
         conv = _get_or_normalize_conversation(user, p.user)
+        # Ignore empty pending conversations (created from search, no message sent yet)
+        is_empty_pending = (
+            conv and conv.status == Conversation.Status.PENDING
+            and not conv.messages.exists()
+        )
         if p.represented_by_agency:
             role_label = f"Model – {p.represented_by_agency.name}"
         else:
@@ -431,8 +436,8 @@ def search_users_for_messaging(request):
             "role_label": role_label,
             "avatar_url": p.profile_image_thumbnail.url if p.profile_image else "",
             "initial": (p.public_display_name or p.user.full_name or "?")[0].upper(),
-            "conversation_id": conv.pk if conv else None,
-            "status": conv.status if conv else None,
+            "conversation_id": conv.pk if conv and not is_empty_pending else None,
+            "status": conv.status if conv and not is_empty_pending else None,
         })
 
     # Deduplicate by user_id, cap at 10

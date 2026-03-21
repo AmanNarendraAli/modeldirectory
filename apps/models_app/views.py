@@ -259,10 +259,17 @@ def model_detail(request, slug):
             ).first()
 
             if existing_conversation:
-                can_message = existing_conversation.status in (
-                    Conversation.Status.ACCEPTED,
-                    Conversation.Status.PENDING,
-                )
+                # A pending conversation with no messages is just an empty
+                # shell from search — don't treat it as a real request
+                if (existing_conversation.status == Conversation.Status.PENDING
+                        and not existing_conversation.messages.exists()):
+                    existing_conversation = None
+                    can_message = True
+                else:
+                    can_message = existing_conversation.status in (
+                        Conversation.Status.ACCEPTED,
+                        Conversation.Status.PENDING,
+                    )
             else:
                 can_message = True  # Can start a new conversation
 
