@@ -3,8 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Max, Exists, OuterRef
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
-from django.utils.decorators import method_decorator
-from django_ratelimit.decorators import ratelimit
+
 
 from apps.accounts.models import User
 from apps.agencies.models import AgencyStaff
@@ -207,7 +206,7 @@ def conversation_detail(request, pk):
 
 
 @login_required
-@ratelimit(key="user", rate="10/h", method="POST")
+
 def start_conversation(request, slug):
     """Start a new conversation with a model. POST with message content."""
     if request.method != "POST":
@@ -288,7 +287,7 @@ def start_conversation(request, slug):
 
 
 @login_required
-@ratelimit(key="user", rate="60/h", method="POST")
+
 def send_message(request, pk):
     """Send a message in an existing conversation."""
     if request.method != "POST":
@@ -450,7 +449,7 @@ def search_users_for_messaging(request):
 
 
 @login_required
-@ratelimit(key="user", rate="10/h", method="POST")
+
 def start_conversation_with_user(request, user_id):
     """Start a new conversation with any user (from search). POST only."""
     if request.method != "POST":

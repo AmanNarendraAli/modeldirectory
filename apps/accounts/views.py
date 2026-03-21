@@ -28,6 +28,10 @@ class SignupView(CreateView):
         user = form.save()
         login(self.request, user)
         send_verification_email(user, self.request)
+        messages.success(
+            self.request,
+            "Welcome! A verification email has been sent to your inbox.",
+        )
         if user.role == user.Role.MODEL:
             return redirect("onboarding")
         return redirect("home")

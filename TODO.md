@@ -53,6 +53,3 @@ Allow models to have `/models/@username` or `/@username` URLs instead of the aut
 ## Ideas / Backlog
 
 - **Agency self-assignment guard**: currently models can add themselves to any agency via edit-profile (`represented_by_agency` field). This is fine at current scale but should be locked down when user count grows — make roster membership agency-staff-only, remove the field from `OnboardingForm`, add an "agency invitation" flow instead.
-- **Deleted account PII cleanup**: `delete_account` anonymizes user email but not `ModelProfile.contact_email` and `phone_number`. Should clear those too for GDPR compliance.
-- **Portfolio slug uniqueness**: `PortfolioPost.slug` is not unique per owner — duplicate-title posts silently collide. Add `unique_together = [("owner_profile", "slug")]`.
-- **Agency slug collision handling**: `Agency.save()` does `slugify(name)` with no counter suffix. Two agencies with same name = `IntegrityError`. Copy the `ModelProfile.save()` pattern.
