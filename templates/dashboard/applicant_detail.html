@@ -148,7 +148,7 @@
             <div class="bg-white border border-stone-200 rounded-xl p-5 mt-4">
                 <h3 class="font-semibold text-stone-900 text-sm mb-3">Contact Information</h3>
                 <div class="space-y-2 text-xs text-stone-600">
-                    <div><span class="text-stone-400 block">Email</span>{% if application.applicant_profile.contact_email %}{{ application.applicant_profile.contact_email }}{% elif application.applicant_profile.user.email %}{{ application.applicant_profile.user.email }}{% else %}—{% endif %}</div>
+                    <div><span class="text-stone-400 block">Email</span>{% if application.applicant_profile.contact_email %}{{ application.applicant_profile.contact_email }}{% else %}—{% endif %}</div>
                     <div><span class="text-stone-400 block">Phone</span>{% if application.applicant_profile.phone_number %}{{ application.applicant_profile.phone_number }}{% else %}—{% endif %}</div>
                     <div><span class="text-stone-400 block">Instagram</span>{% if application.applicant_profile.instagram_url %}<a href="{{ application.applicant_profile.instagram_url }}" target="_blank" class="text-blue-600 hover:underline break-all">{{ application.applicant_profile.instagram_url }}</a>{% else %}—{% endif %}</div>
                 </div>

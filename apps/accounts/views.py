@@ -156,8 +156,11 @@ def delete_account(request):
                 profile.public_display_name = "Deleted User"
                 profile.is_public = False
                 profile.is_discoverable = False
+                profile.contact_email = ""
+                profile.phone_number = ""
                 profile.save(update_fields=[
                     "slug", "public_display_name", "is_public", "is_discoverable",
+                    "contact_email", "phone_number",
                 ])
 
             user.is_active = False

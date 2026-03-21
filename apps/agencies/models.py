@@ -53,7 +53,13 @@ class Agency(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.name)
+            candidate = slugify(self.name)
+            if Agency.objects.filter(slug=candidate).exclude(pk=self.pk).exists():
+                counter = 2
+                while Agency.objects.filter(slug=f"{candidate}-{counter}").exclude(pk=self.pk).exists():
+                    counter += 1
+                candidate = f"{candidate}-{counter}"
+            self.slug = candidate
         super().save(*args, **kwargs)
 
 

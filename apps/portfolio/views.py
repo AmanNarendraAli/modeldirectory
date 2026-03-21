@@ -7,7 +7,12 @@ from .forms import PortfolioPostForm, PortfolioAssetFormset
 
 
 def portfolio_detail(request, slug):
-    post = get_object_or_404(PortfolioPost, slug=slug, is_public=True)
+    post = get_object_or_404(PortfolioPost, slug=slug)
+    # Private posts only visible to the owner
+    if not post.is_public:
+        if not request.user.is_authenticated or request.user != post.owner_profile.user:
+            from django.http import Http404
+            raise Http404
     assets = post.assets.all()
     return render(request, "portfolio/portfolio_detail.html", {
         "post": post,
