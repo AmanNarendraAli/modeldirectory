@@ -174,16 +174,66 @@ Model-to-model messaging with request/accept flow. Agency-to-model messaging aut
 
 ---
 
+## Password & Email Features (`apps/accounts/`)
+
+### Change Password
+
+Uses Django's built-in `PasswordChangeView` — no custom views needed. Just styled templates.
+
+- `templates/registration/password_change_form.html` — 3-field form (old, new, confirm)
+- `templates/registration/password_change_done.html` — success card
+- Entry points: "Password" section on both `edit_profile.html` and `edit_agency.html` (before Danger Zone)
+
+### Email Verification
+
+Sends verification email on signup with a tokenized link. Persistent amber banner on all pages until verified.
+
+**Views** (`apps/accounts/views.py`):
+- `verify_email(uidb64, token)` — no login required, checks already-verified first, then validates token
+- `resend_verification()` — POST only, rate-limited, guards against already-verified
+
+**Helper** (`apps/accounts/emails.py`):
+- `send_verification_email(user, request)` — generates token via `default_token_generator`, sends HTML email, wrapped in try/except
+
+**Templates:**
+- `templates/accounts/emails/verify_email.html` — branded HTML email with verify button
+- `templates/accounts/verify_email_done.html` — success card
+- `templates/accounts/verify_email_invalid.html` — error card with resend link
+
+**Banner** in `templates/base.html` — amber bar with "Please verify your email" + resend button
+
+**URLs** (`apps/accounts/urls.py`):
+- `/accounts/verify-email/<uidb64>/<token>/` → `verify-email`
+- `/accounts/resend-verification/` → `resend-verification`
+
+### Forgot Password
+
+Custom `VerifiedPasswordResetView` subclass that gates password reset behind `is_verified_email`. Shows the same neutral "check inbox" page for verified, unverified, and nonexistent accounts (no info leak).
+
+**URL:** Custom `password_reset` path in `modeldirectory/urls.py` BEFORE `django.contrib.auth.urls` to override Django's default.
+
+**Templates** (`templates/registration/`):
+- `password_reset_form.html` — email input
+- `password_reset_done.html` — "check inbox" card
+- `password_reset_confirm.html` — set new password (handles expired links)
+- `password_reset_complete.html` — success + login link
+
+**Email:** `templates/accounts/emails/password_reset_email.html` — branded HTML with reset button
+
+**Login page:** "Forgot password?" link added to `templates/registration/login.html`
+
+---
+
 ## Test Settings
 
 `modeldirectory/settings/test.py` - Uses SQLite in-memory for fast tests without Postgres dependency.
 
 Run tests:
 ```bash
-.venv/bin/python manage.py test apps.notifications apps.messaging --settings=modeldirectory.settings.test -v2
+.venv/bin/python manage.py test apps.notifications apps.messaging apps.accounts --settings=modeldirectory.settings.test -v2
 ```
 
-88 tests covering: models, signals, context processors, all views, permission checks, edge cases (blocking, re-requesting, agency auto-accept), and template content verification.
+114 tests total: 88 notifications/messaging + 26 accounts (change password, email verification, forgot password, banner, edge cases).
 
 ---
 

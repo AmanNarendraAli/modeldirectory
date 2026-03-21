@@ -3,6 +3,8 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
+from apps.accounts.views import VerifiedPasswordResetView
+
 handler400 = "apps.core.views.error_400"
 handler403 = "apps.core.views.error_403"
 handler404 = "apps.core.views.error_404"
@@ -11,7 +13,10 @@ handler500 = "apps.core.views.error_500"
 urlpatterns = [
     path("admin/", admin.site.urls),
 
-    # Auth (Django built-in: login, logout, password reset, etc.)
+    # Custom password reset (must be before django.contrib.auth.urls to override)
+    path("accounts/password_reset/", VerifiedPasswordResetView.as_view(), name="password_reset"),
+
+    # Auth (Django built-in: login, logout, password reset confirm/done/complete, etc.)
     path("accounts/", include("django.contrib.auth.urls")),
     path("accounts/", include("apps.accounts.urls")),
 

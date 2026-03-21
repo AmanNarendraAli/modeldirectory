@@ -465,6 +465,12 @@
             <button type="submit" class="bg-stone-900 text-white font-semibold px-6 py-2.5 rounded-lg hover:bg-stone-700 transition-colors">Save Changes</button>
         </div>
 
+        <section class="border border-stone-200 rounded-xl p-6">
+            <h2 class="font-semibold text-stone-900 text-lg mb-2">Password</h2>
+            <p class="text-sm text-stone-500 mb-4">Change your account password.</p>
+            <a href="{% url 'password_change' %}" class="text-sm font-medium text-stone-700 hover:text-stone-900 border border-stone-300 px-4 py-2 rounded-lg hover:bg-stone-50 transition-colors">Change Password</a>
+        </section>
+
         <section class="border border-red-200 rounded-xl p-6">
             <h2 class="font-semibold text-red-700 text-lg mb-2">Danger Zone</h2>
             <p class="text-sm text-stone-500 mb-4">Permanently delete your account. This cannot be undone.</p>

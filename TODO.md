@@ -4,7 +4,7 @@ Features planned but not yet implemented. For context on what's already built, s
 
 
 ### Future: Custom Profile URLs (LinkedIn-style)
-After usernames are stable, allow models to have `/models/@username` or `/@username` URLs instead of the auto-generated slug. This is a bigger change:
+Allow models to have `/models/@username` or `/@username` URLs instead of the auto-generated slug. This is a bigger change:
 - Add URL pattern for `/@<username>/`
 - Keep slug-based URLs working as redirects
 - Allow users to edit their username (with cooldown to prevent abuse)
@@ -12,38 +12,9 @@ After usernames are stable, allow models to have `/models/@username` or `/@usern
 
 ---
 
-## 1. Email Verification Flow
+## 1. Email Notifications
 
-**Status:** Blocked (need Gmail 2FA setup — see `passwordchange.md` for SMTP instructions)
-
-### Requirements
-- On signup, send verification email with a token link
-- DIY with Django's `default_token_generator` + `uidb64` encoding
-- Unverified users can still use the platform but see a banner prompting verification
-- Required before: forgot password, email notifications
-
-### Implementation Plan
-- Add verification view that checks token + marks `is_verified_email = True`
-- Add email template for verification link
-- Add banner to base.html for unverified users
-- Gate forgot-password behind verified email
-
----
-
-## 3. Change Password + Forgot Password
-
-**Status:** Planned (see `passwordchange.md` for full workplan)
-
-- Change password: section on edit profile pages, uses Django's built-in `PasswordChangeView`
-- Forgot password: requires email verification first, uses Django's `PasswordResetView`
-- Styled templates for all password flow pages
-- See `passwordchange.md` for step-by-step implementation details
-
----
-
-## 4. Email Notifications
-
-**Status:** Not started, depends on email verification + SMTP setup
+**Status:** Not started, depends on SMTP setup (now complete)
 
 - Notify users via email when they get a new follower, message request, agency request, or their application to an agency changes
 - Respect user preferences (opt-in/opt-out per notification type)
@@ -51,6 +22,6 @@ After usernames are stable, allow models to have `/models/@username` or `/@usern
 
 ---
 
-## 5. Social Features (Future)
+## 2. Social Features (Future)
 - GROUP CREATION in messaging
 - Instagram integration (pull portfolio from IG)
