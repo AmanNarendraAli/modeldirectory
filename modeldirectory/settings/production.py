@@ -56,16 +56,12 @@ CSRF_COOKIE_SECURE = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
-# Email — console fallback if no SMTP configured (won't send but won't crash)
-_email_host = env("EMAIL_HOST_USER", default="")
-if _email_host:
-    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    EMAIL_HOST = env("EMAIL_HOST", default="smtp.gmail.com")
-    EMAIL_PORT = env.int("EMAIL_PORT", default=465)
-    EMAIL_USE_SSL = env.bool("EMAIL_USE_SSL", default=True)
-    EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
-    EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
-    EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
-    DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@modellingdirectory.com")
-else:
-    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# Email — Resend HTTP API via django-anymail (Render blocks SMTP)
+INSTALLED_APPS += ["anymail"]  # noqa: F405
+
+ANYMAIL = {
+    "RESEND_API_KEY": env("RESEND_API_KEY"),
+}
+
+EMAIL_BACKEND = "anymail.backends.resend.EmailBackend"
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="noreply@modellingdirectory.com")

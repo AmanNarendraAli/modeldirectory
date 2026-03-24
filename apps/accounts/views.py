@@ -27,11 +27,10 @@ class SignupView(CreateView):
     def form_valid(self, form):
         user = form.save()
         login(self.request, user)
-        # TODO: re-enable once Resend domain is verified
-        # send_verification_email(user, self.request)
+        send_verification_email(user, self.request)
         messages.success(
             self.request,
-            "Welcome! Your account has been created.",
+            "Welcome! A verification email has been sent to your inbox.",
         )
         if user.role == user.Role.MODEL:
             return redirect("onboarding")
