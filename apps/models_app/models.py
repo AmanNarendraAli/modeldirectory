@@ -40,7 +40,7 @@ class ModelProfile(models.Model):
     waist_cm = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
     hips_cm = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
     inseam_cm = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)  # primarily for male models
-    shoe_size = models.CharField(max_length=10, blank=True)
+    shoe_size = models.CharField("Shoe Size (UK)", max_length=10, blank=True)
     hair_color = models.CharField(max_length=50, blank=True)
     eye_color = models.CharField(max_length=50, blank=True)
 
