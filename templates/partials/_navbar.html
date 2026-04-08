@@ -3,43 +3,43 @@
         <div class="flex items-center justify-between h-16">
 
             <!-- Logo -->
-            <a href="{% url 'home' %}" class="flex items-center gap-2">
-                <span class="font-display text-xl font-bold tracking-tight text-stone-900">The Modelling
-                    Directory</span>
+            <a href="{% url 'home' %}" class="flex-shrink-0 flex items-center gap-2">
+                <span class="font-display text-xl font-bold tracking-tight text-stone-900">The Modelling Directory</span>
             </a>
 
-            <!-- Nav links -->
-            <div class="hidden md:flex items-center gap-8">
+            <!-- Nav links (desktop) -->
+            <div class="hidden md:flex items-center space-x-8">
                 <a href="{% url 'agency-list' %}"
-                    class="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors">Agencies</a>
+                    class="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors whitespace-nowrap">Agencies</a>
                 <a href="{% url 'model-list' %}"
-                    class="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors">Models</a>
+                    class="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors whitespace-nowrap">Models</a>
                 <a href="{% url 'resource-list' %}"
-                    class="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors">Resources</a>
+                    class="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors whitespace-nowrap">Resources</a>
             </div>
 
-            <!-- Hamburger (mobile only) -->
-            <button type="button" id="mobile-menu-btn" class="md:hidden text-stone-600 hover:text-stone-900" aria-label="Menu">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
-            </button>
-
-            <!-- Auth -->
-            <div class="flex items-center gap-3">
+            <!-- Right side: auth links + hamburger -->
+            <div class="flex items-center space-x-3 flex-shrink-0">
                 {% if user.is_authenticated %}
-                <a href="{% url 'dashboard' %}" class="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors hidden sm:block">Dashboard</a>
-                <a href="{% url 'message-inbox' %}" class="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors hidden sm:flex items-center gap-1.5">Messages{% if has_unread_messages %}<span class="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></span>{% endif %}</a>
+                <a href="{% url 'dashboard' %}" class="hidden sm:block text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors whitespace-nowrap">Dashboard</a>
+                <a href="{% url 'message-inbox' %}" class="hidden sm:flex items-center space-x-1.5 text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors whitespace-nowrap">
+                    <span>Messages</span>{% if has_unread_messages %}<span class="w-2 h-2 bg-red-500 rounded-full flex-shrink-0"></span>{% endif %}
+                </a>
                 {% include "partials/_notification_bell.html" %}
                 <form method="post" action="{% url 'logout' %}">
                     {% csrf_token %}
-                    <button type="submit" class="text-sm font-medium text-stone-500 hover:text-stone-900 transition-colors">Logout</button>
+                    <button type="submit" class="text-sm font-medium text-stone-500 hover:text-stone-900 transition-colors whitespace-nowrap">Logout</button>
                 </form>
                 {% else %}
                 <a href="{% url 'login' %}"
-                    class="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors">Login</a>
+                    class="text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors whitespace-nowrap">Login</a>
                 <a href="{% url 'signup' %}"
-                    class="bg-stone-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-stone-700 transition-colors">Sign
-                    Up</a>
+                    class="bg-stone-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-stone-700 transition-colors whitespace-nowrap">Sign Up</a>
                 {% endif %}
+
+                <!-- Hamburger (mobile only) -->
+                <button type="button" id="mobile-menu-btn" class="md:hidden flex-shrink-0 p-1 text-stone-600 hover:text-stone-900" aria-label="Menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
+                </button>
             </div>
 
         </div>
