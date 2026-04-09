@@ -435,11 +435,11 @@
         useInches = inches;
         if (unitHidden) unitHidden.value = inches ? 'in' : 'cm';
         if (inches) {
-            btnIn.classList.add('bg-stone-900', 'text-white', 'z-10'); btnIn.classList.remove('bg-white', 'text-stone-600');
-            btnCm.classList.remove('bg-stone-900', 'text-white', 'z-10'); btnCm.classList.add('bg-white', 'text-stone-600');
+            btnIn.classList.add('bg-stone-900', 'text-white', 'z-10'); btnIn.classList.remove('bg-white', 'text-stone-600', 'hover:bg-stone-50');
+            btnCm.classList.remove('bg-stone-900', 'text-white', 'z-10'); btnCm.classList.add('bg-white', 'text-stone-600', 'hover:bg-stone-50');
         } else {
-            btnCm.classList.add('bg-stone-900', 'text-white', 'z-10'); btnCm.classList.remove('bg-white', 'text-stone-600');
-            btnIn.classList.remove('bg-stone-900', 'text-white', 'z-10'); btnIn.classList.add('bg-white', 'text-stone-600');
+            btnCm.classList.add('bg-stone-900', 'text-white', 'z-10'); btnCm.classList.remove('bg-white', 'text-stone-600', 'hover:bg-stone-50');
+            btnIn.classList.remove('bg-stone-900', 'text-white', 'z-10'); btnIn.classList.add('bg-white', 'text-stone-600', 'hover:bg-stone-50');
         }
         document.querySelectorAll('.slider-unit').forEach(function (el) { el.textContent = inches ? '(in)' : '(cm)'; });
         sliders.forEach(function (sl) { sl.update('max'); });
